@@ -1,0 +1,23 @@
+[package]
+name = "gbdt"
+version = "0.1.0"
+authors = ["Yu Ding"]
+homepage = "https://github.com/mesalock-linux/gbdt-rs"
+repository = "https://github.com/mesalock-linux/gbdt-rs"
+license = "BSD-3-Clause"
+description = "A implementation of Gradient Boosting Regression Tree in Rust programming language"
+
+include = [
+    "LICENSE",
+    "Readme.md",
+    "Cargo.toml",
+    "src/lib.rs",
+]
+
+[badges]
+
+[lib]
+name = "gbdt"
+crate-type = ["rlib", "staticlib"]
+
+[dependencies]
