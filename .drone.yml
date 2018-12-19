@@ -1,0 +1,611 @@
+kind: pipeline
+name: centos6-nightly-debug
+
+steps:
+- name: centos6-nightly-debug
+  image: baiduxlab/useful-docker:centos.6.nightly
+  commands:
+  - source /root/.profile
+  - cargo test
+  - cargo run --example test-agaricus-lepiota 1>/dev/null
+  - cargo run --example test-iris 1>/dev/null
+  - cargo run --example test-multithreads 1>/dev/null
+  - cargo run --example test-xgb-binary-logistic 1>/dev/null
+  - cargo run --example test-xgb-binary-logitraw 1>/dev/null
+  - cargo run --example test-xgb-multi-softmax 1>/dev/null
+  - cargo run --example test-xgb-multi-softprob 1>/dev/null
+  - cargo run --example test-xgb-rank-pairwise 1>/dev/null
+  - cargo run --example test-xgb-reg-linear 1>/dev/null
+  - cargo run --example test-xgb-reg-logistic 1>/dev/null
+  - cargo run --example test-batch 1>/dev/null
+
+---
+kind: pipeline
+name: centos6-nightly-release
+
+steps:
+- name: centos6-nightly-release
+  image: baiduxlab/useful-docker:centos.6.nightly
+  commands:
+  - source /root/.profile
+  - cargo test --release
+  - cargo run --release --example test-agaricus-lepiota 1>/dev/null
+  - cargo run --release --example test-iris 1>/dev/null
+  - cargo run --release --example test-multithreads 1>/dev/null
+  - cargo run --release --example test-xgb-binary-logistic 1>/dev/null
+  - cargo run --release --example test-xgb-binary-logitraw 1>/dev/null
+  - cargo run --release --example test-xgb-multi-softmax 1>/dev/null
+  - cargo run --release --example test-xgb-multi-softprob 1>/dev/null
+  - cargo run --release --example test-xgb-rank-pairwise 1>/dev/null
+  - cargo run --release --example test-xgb-reg-linear 1>/dev/null
+  - cargo run --release --example test-xgb-reg-logistic 1>/dev/null
+  - cargo run --release --example test-batch 1>/dev/null
+
+---
+kind: pipeline
+name: centos6-stable-debug
+
+steps:
+- name: centos6-stable-debug
+  image: baiduxlab/useful-docker:centos.6.stable
+  commands:
+  - source /root/.profile
+  - cargo test
+  - cargo run --example test-agaricus-lepiota 1>/dev/null
+  - cargo run --example test-iris 1>/dev/null
+  - cargo run --example test-multithreads 1>/dev/null
+  - cargo run --example test-xgb-binary-logistic 1>/dev/null
+  - cargo run --example test-xgb-binary-logitraw 1>/dev/null
+  - cargo run --example test-xgb-multi-softmax 1>/dev/null
+  - cargo run --example test-xgb-multi-softprob 1>/dev/null
+  - cargo run --example test-xgb-rank-pairwise 1>/dev/null
+  - cargo run --example test-xgb-reg-linear 1>/dev/null
+  - cargo run --example test-xgb-reg-logistic 1>/dev/null
+  - cargo run --example test-batch 1>/dev/null
+
+---
+kind: pipeline
+name: centos6-stable-release
+
+steps:
+- name: centos6-stable-release
+  image: baiduxlab/useful-docker:centos.6.stable
+  commands:
+  - source /root/.profile
+  - cargo test --release
+  - cargo run --release --example test-agaricus-lepiota 1>/dev/null
+  - cargo run --release --example test-iris 1>/dev/null
+  - cargo run --release --example test-multithreads 1>/dev/null
+  - cargo run --release --example test-xgb-binary-logistic 1>/dev/null
+  - cargo run --release --example test-xgb-binary-logitraw 1>/dev/null
+  - cargo run --release --example test-xgb-multi-softmax 1>/dev/null
+  - cargo run --release --example test-xgb-multi-softprob 1>/dev/null
+  - cargo run --release --example test-xgb-rank-pairwise 1>/dev/null
+  - cargo run --release --example test-xgb-reg-linear 1>/dev/null
+  - cargo run --release --example test-xgb-reg-logistic 1>/dev/null
+  - cargo run --release --example test-batch 1>/dev/null
+
+---
+
+kind: pipeline
+name: centos7-nightly-debug
+
+steps:
+- name: centos7-nightly-debug
+  image: baiduxlab/useful-docker:centos.6.nightly
+  commands:
+  - source /root/.profile
+  - cargo test
+  - cargo run --example test-agaricus-lepiota 1>/dev/null
+  - cargo run --example test-iris 1>/dev/null
+  - cargo run --example test-multithreads 1>/dev/null
+  - cargo run --example test-xgb-binary-logistic 1>/dev/null
+  - cargo run --example test-xgb-binary-logitraw 1>/dev/null
+  - cargo run --example test-xgb-multi-softmax 1>/dev/null
+  - cargo run --example test-xgb-multi-softprob 1>/dev/null
+  - cargo run --example test-xgb-rank-pairwise 1>/dev/null
+  - cargo run --example test-xgb-reg-linear 1>/dev/null
+  - cargo run --example test-xgb-reg-logistic 1>/dev/null
+  - cargo run --example test-batch 1>/dev/null
+
+---
+kind: pipeline
+name: centos7-nightly-release
+
+steps:
+- name: centos7-nightly-release
+  image: baiduxlab/useful-docker:centos.6.nightly
+  commands:
+  - source /root/.profile
+  - cargo test --release
+  - cargo run --release --example test-agaricus-lepiota 1>/dev/null
+  - cargo run --release --example test-iris 1>/dev/null
+  - cargo run --release --example test-multithreads 1>/dev/null
+  - cargo run --release --example test-xgb-binary-logistic 1>/dev/null
+  - cargo run --release --example test-xgb-binary-logitraw 1>/dev/null
+  - cargo run --release --example test-xgb-multi-softmax 1>/dev/null
+  - cargo run --release --example test-xgb-multi-softprob 1>/dev/null
+  - cargo run --release --example test-xgb-rank-pairwise 1>/dev/null
+  - cargo run --release --example test-xgb-reg-linear 1>/dev/null
+  - cargo run --release --example test-xgb-reg-logistic 1>/dev/null
+  - cargo run --release --example test-batch 1>/dev/null
+
+---
+kind: pipeline
+name: centos7-stable-debug
+
+steps:
+- name: centos7-stable-debug
+  image: baiduxlab/useful-docker:centos.6.stable
+  commands:
+  - source /root/.profile
+  - cargo test
+  - cargo run --example test-agaricus-lepiota 1>/dev/null
+  - cargo run --example test-iris 1>/dev/null
+  - cargo run --example test-multithreads 1>/dev/null
+  - cargo run --example test-xgb-binary-logistic 1>/dev/null
+  - cargo run --example test-xgb-binary-logitraw 1>/dev/null
+  - cargo run --example test-xgb-multi-softmax 1>/dev/null
+  - cargo run --example test-xgb-multi-softprob 1>/dev/null
+  - cargo run --example test-xgb-rank-pairwise 1>/dev/null
+  - cargo run --example test-xgb-reg-linear 1>/dev/null
+  - cargo run --example test-xgb-reg-logistic 1>/dev/null
+  - cargo run --example test-batch 1>/dev/null
+
+---
+kind: pipeline
+name: centos7-stable-release
+
+steps:
+- name: centos7-stable-release
+  image: baiduxlab/useful-docker:centos.6.stable
+  commands:
+  - source /root/.profile
+  - cargo test --release
+  - cargo run --release --example test-agaricus-lepiota 1>/dev/null
+  - cargo run --release --example test-iris 1>/dev/null
+  - cargo run --release --example test-multithreads 1>/dev/null
+  - cargo run --release --example test-xgb-binary-logistic 1>/dev/null
+  - cargo run --release --example test-xgb-binary-logitraw 1>/dev/null
+  - cargo run --release --example test-xgb-multi-softmax 1>/dev/null
+  - cargo run --release --example test-xgb-multi-softprob 1>/dev/null
+  - cargo run --release --example test-xgb-rank-pairwise 1>/dev/null
+  - cargo run --release --example test-xgb-reg-linear 1>/dev/null
+  - cargo run --release --example test-xgb-reg-logistic 1>/dev/null
+  - cargo run --release --example test-batch 1>/dev/null
+
+---
+
+kind: pipeline
+name: ubuntu1604-nightly-debug
+
+steps:
+- name: ubuntu1604-nightly-debug
+  image: baiduxlab/useful-docker:ubuntu.1604.nightly
+  commands:
+  - . /root/.profile
+  - cargo test
+  - cargo run --example test-agaricus-lepiota 1>/dev/null
+  - cargo run --example test-iris 1>/dev/null
+  - cargo run --example test-multithreads 1>/dev/null
+  - cargo run --example test-xgb-binary-logistic 1>/dev/null
+  - cargo run --example test-xgb-binary-logitraw 1>/dev/null
+  - cargo run --example test-xgb-multi-softmax 1>/dev/null
+  - cargo run --example test-xgb-multi-softprob 1>/dev/null
+  - cargo run --example test-xgb-rank-pairwise 1>/dev/null
+  - cargo run --example test-xgb-reg-linear 1>/dev/null
+  - cargo run --example test-xgb-reg-logistic 1>/dev/null
+  - cargo run --example test-batch 1>/dev/null
+
+---
+kind: pipeline
+name: ubuntu1604-nightly-release
+
+steps:
+- name: ubuntu1604-nightly-release
+  image: baiduxlab/useful-docker:ubuntu.1604.nightly
+  commands:
+  - . /root/.profile
+  - cargo test --release
+  - cargo run --release --example test-agaricus-lepiota 1>/dev/null
+  - cargo run --release --example test-iris 1>/dev/null
+  - cargo run --release --example test-multithreads 1>/dev/null
+  - cargo run --release --example test-xgb-binary-logistic 1>/dev/null
+  - cargo run --release --example test-xgb-binary-logitraw 1>/dev/null
+  - cargo run --release --example test-xgb-multi-softmax 1>/dev/null
+  - cargo run --release --example test-xgb-multi-softprob 1>/dev/null
+  - cargo run --release --example test-xgb-rank-pairwise 1>/dev/null
+  - cargo run --release --example test-xgb-reg-linear 1>/dev/null
+  - cargo run --release --example test-xgb-reg-logistic 1>/dev/null
+  - cargo run --release --example test-batch 1>/dev/null
+
+---
+kind: pipeline
+name: ubuntu1604-stable-debug
+
+steps:
+- name: ubuntu1604-stable-debug
+  image: baiduxlab/useful-docker:ubuntu.1604.stable
+  commands:
+  - . /root/.profile
+  - cargo test
+  - cargo run --example test-agaricus-lepiota 1>/dev/null
+  - cargo run --example test-iris 1>/dev/null
+  - cargo run --example test-multithreads 1>/dev/null
+  - cargo run --example test-xgb-binary-logistic 1>/dev/null
+  - cargo run --example test-xgb-binary-logitraw 1>/dev/null
+  - cargo run --example test-xgb-multi-softmax 1>/dev/null
+  - cargo run --example test-xgb-multi-softprob 1>/dev/null
+  - cargo run --example test-xgb-rank-pairwise 1>/dev/null
+  - cargo run --example test-xgb-reg-linear 1>/dev/null
+  - cargo run --example test-xgb-reg-logistic 1>/dev/null
+  - cargo run --example test-batch 1>/dev/null
+
+---
+kind: pipeline
+name: ubuntu1604-stable-release
+
+steps:
+- name: ubuntu1604-stable-release
+  image: baiduxlab/useful-docker:ubuntu.1604.stable
+  commands:
+  - . /root/.profile
+  - cargo test --release
+  - cargo run --release --example test-agaricus-lepiota 1>/dev/null
+  - cargo run --release --example test-iris 1>/dev/null
+  - cargo run --release --example test-multithreads 1>/dev/null
+  - cargo run --release --example test-xgb-binary-logistic 1>/dev/null
+  - cargo run --release --example test-xgb-binary-logitraw 1>/dev/null
+  - cargo run --release --example test-xgb-multi-softmax 1>/dev/null
+  - cargo run --release --example test-xgb-multi-softprob 1>/dev/null
+  - cargo run --release --example test-xgb-rank-pairwise 1>/dev/null
+  - cargo run --release --example test-xgb-reg-linear 1>/dev/null
+  - cargo run --release --example test-xgb-reg-logistic 1>/dev/null
+  - cargo run --release --example test-batch 1>/dev/null
+
+---
+
+kind: pipeline
+name: ubuntu1804-nightly-debug
+
+steps:
+- name: ubuntu1804-nightly-debug
+  image: baiduxlab/useful-docker:ubuntu.1804.nightly
+  commands:
+  - . /root/.profile
+  - cargo test
+  - cargo run --example test-agaricus-lepiota 1>/dev/null
+  - cargo run --example test-iris 1>/dev/null
+  - cargo run --example test-multithreads 1>/dev/null
+  - cargo run --example test-xgb-binary-logistic 1>/dev/null
+  - cargo run --example test-xgb-binary-logitraw 1>/dev/null
+  - cargo run --example test-xgb-multi-softmax 1>/dev/null
+  - cargo run --example test-xgb-multi-softprob 1>/dev/null
+  - cargo run --example test-xgb-rank-pairwise 1>/dev/null
+  - cargo run --example test-xgb-reg-linear 1>/dev/null
+  - cargo run --example test-xgb-reg-logistic 1>/dev/null
+  - cargo run --example test-batch 1>/dev/null
+
+---
+kind: pipeline
+name: ubuntu1804-nightly-release
+
+steps:
+- name: ubuntu1804-nightly-release
+  image: baiduxlab/useful-docker:ubuntu.1804.nightly
+  commands:
+  - . /root/.profile
+  - cargo test --release
+  - cargo run --release --example test-agaricus-lepiota 1>/dev/null
+  - cargo run --release --example test-iris 1>/dev/null
+  - cargo run --release --example test-multithreads 1>/dev/null
+  - cargo run --release --example test-xgb-binary-logistic 1>/dev/null
+  - cargo run --release --example test-xgb-binary-logitraw 1>/dev/null
+  - cargo run --release --example test-xgb-multi-softmax 1>/dev/null
+  - cargo run --release --example test-xgb-multi-softprob 1>/dev/null
+  - cargo run --release --example test-xgb-rank-pairwise 1>/dev/null
+  - cargo run --release --example test-xgb-reg-linear 1>/dev/null
+  - cargo run --release --example test-xgb-reg-logistic 1>/dev/null
+  - cargo run --release --example test-batch 1>/dev/null
+
+---
+kind: pipeline
+name: ubuntu1804-stable-debug
+
+steps:
+- name: ubuntu1804-stable-debug
+  image: baiduxlab/useful-docker:ubuntu.1804.stable
+  commands:
+  - . /root/.profile
+  - cargo test
+  - cargo run --example test-agaricus-lepiota 1>/dev/null
+  - cargo run --example test-iris 1>/dev/null
+  - cargo run --example test-multithreads 1>/dev/null
+  - cargo run --example test-xgb-binary-logistic 1>/dev/null
+  - cargo run --example test-xgb-binary-logitraw 1>/dev/null
+  - cargo run --example test-xgb-multi-softmax 1>/dev/null
+  - cargo run --example test-xgb-multi-softprob 1>/dev/null
+  - cargo run --example test-xgb-rank-pairwise 1>/dev/null
+  - cargo run --example test-xgb-reg-linear 1>/dev/null
+  - cargo run --example test-xgb-reg-logistic 1>/dev/null
+  - cargo run --example test-batch 1>/dev/null
+
+---
+kind: pipeline
+name: ubuntu1804-stable-release
+
+steps:
+- name: ubuntu1804-stable-release
+  image: baiduxlab/useful-docker:ubuntu.1804.stable
+  commands:
+  - . /root/.profile
+  - cargo test --release
+  - cargo run --release --example test-agaricus-lepiota 1>/dev/null
+  - cargo run --release --example test-iris 1>/dev/null
+  - cargo run --release --example test-multithreads 1>/dev/null
+  - cargo run --release --example test-xgb-binary-logistic 1>/dev/null
+  - cargo run --release --example test-xgb-binary-logitraw 1>/dev/null
+  - cargo run --release --example test-xgb-multi-softmax 1>/dev/null
+  - cargo run --release --example test-xgb-multi-softprob 1>/dev/null
+  - cargo run --release --example test-xgb-rank-pairwise 1>/dev/null
+  - cargo run --release --example test-xgb-reg-linear 1>/dev/null
+  - cargo run --release --example test-xgb-reg-logistic 1>/dev/null
+  - cargo run --release --example test-batch 1>/dev/null
+
+---
+
+kind: pipeline
+name: gbdt-sgx-xargo-1604-sw
+
+steps:
+- name: sim-compile
+  image: baiduxlab/sgx-rust:1604-1.0.7
+  commands:
+  - . /opt/sgxsdk/environment
+  - . /root/.cargo/env
+  - cd sgx && SGX_MODE=SW XARGO_SGX=1 make -C gbdt-sgx-test
+
+- name: sim-test
+  image: baiduxlab/sgx-rust:1604-1.0.7
+  commands:
+  - . /opt/sgxsdk/environment
+  - cd sgx/gbdt-sgx-test/bin && ./app | tee result.txt && grep " 0 failed" result.txt
+
+node:
+  instance: sgx
+
+---
+
+kind: pipeline
+name: gbdt-sgx-xargo-1604-hw
+
+steps:
+- name: hw-compile
+  image: baiduxlab/sgx-rust:1604-1.0.7
+  commands:
+  - . /opt/sgxsdk/environment
+  - . /root/.cargo/env
+  - cd sgx && XARGO_SGX=1 make -C gbdt-sgx-test
+
+- name: hw-test
+  image: baiduxlab/sgx-rust:1604-1.0.7
+  privileged: true
+  volumes:
+  - name: isgx
+    path: /dev/isgx
+  - name: aesmd
+    path: /var/run/aesmd/aesm.socket
+  commands:
+  - . /opt/sgxsdk/environment
+  - ls -l /dev/isgx
+  - ls -l /var/run/aesmd/aesm.socket
+  - cd sgx/gbdt-sgx-test/bin && ./app | tee result.txt && grep " 0 failed" result.txt
+
+volumes:
+- name: isgx
+  host:
+    path: /dev/isgx
+- name: aesmd
+  host:
+    path: /var/run/aesmd/aesm.socket
+
+node:
+  instance: sgx
+
+---
+
+kind: pipeline
+name: gbdt-sgx-xargo-1804-sw
+
+steps:
+- name: sim-compile
+  image: baiduxlab/sgx-rust:1804-1.0.7
+  commands:
+  - . /opt/sgxsdk/environment
+  - . /root/.cargo/env
+  - cd sgx && SGX_MODE=SW XARGO_SGX=1 make -C gbdt-sgx-test
+
+- name: sim-test
+  image: baiduxlab/sgx-rust:1804-1.0.7
+  commands:
+  - . /opt/sgxsdk/environment
+  - cd sgx/gbdt-sgx-test/bin && ./app | tee result.txt && grep " 0 failed" result.txt
+
+node:
+  instance: sgx
+
+---
+
+kind: pipeline
+name: gbdt-sgx-xargo-1804-hw
+
+steps:
+- name: hw-compile
+  image: baiduxlab/sgx-rust:1804-1.0.7
+  commands:
+  - . /opt/sgxsdk/environment
+  - . /root/.cargo/env
+  - cd sgx && XARGO_SGX=1 make -C gbdt-sgx-test
+
+- name: hw-test
+  image: baiduxlab/sgx-rust:1804-1.0.7
+  privileged: true
+  volumes:
+  - name: isgx
+    path: /dev/isgx
+  - name: aesmd
+    path: /var/run/aesmd/aesm.socket
+  commands:
+  - . /opt/sgxsdk/environment
+  - ls -l /dev/isgx
+  - ls -l /var/run/aesmd/aesm.socket
+  - cd sgx/gbdt-sgx-test/bin && ./app | tee result.txt && grep " 0 failed" result.txt
+
+volumes:
+- name: isgx
+  host:
+    path: /dev/isgx
+- name: aesmd
+  host:
+    path: /var/run/aesmd/aesm.socket
+
+node:
+  instance: sgx
+
+---
+
+kind: pipeline
+name: gbdt-sgx-1604-sw
+
+steps:
+- name: sim-compile
+  image: baiduxlab/sgx-rust:1604-1.0.7
+  commands:
+  - . /opt/sgxsdk/environment
+  - . /root/.cargo/env
+  - SGX_MODE=SW make -C sgx/gbdt-sgx-test
+
+- name: sim-test
+  image: baiduxlab/sgx-rust:1604-1.0.7
+  commands:
+  - . /opt/sgxsdk/environment
+  - cd sgx/gbdt-sgx-test/bin && ./app | tee result.txt && grep " 0 failed" result.txt
+
+node:
+  instance: sgx
+
+---
+
+kind: pipeline
+name: gbdt-sgx-1604-hw
+
+steps:
+- name: hw-compile
+  image: baiduxlab/sgx-rust:1604-1.0.7
+  commands:
+  - . /opt/sgxsdk/environment
+  - . /root/.cargo/env
+  - make -C sgx/gbdt-sgx-test
+
+- name: hw-test
+  image: baiduxlab/sgx-rust:1604-1.0.7
+  privileged: true
+  volumes:
+  - name: isgx
+    path: /dev/isgx
+  - name: aesmd
+    path: /var/run/aesmd/aesm.socket
+  commands:
+  - . /opt/sgxsdk/environment
+  - ls -l /dev/isgx
+  - ls -l /var/run/aesmd/aesm.socket
+  - cd sgx/gbdt-sgx-test/bin && ./app | tee result.txt && grep " 0 failed" result.txt
+
+volumes:
+- name: isgx
+  host:
+    path: /dev/isgx
+- name: aesmd
+  host:
+    path: /var/run/aesmd/aesm.socket
+
+node:
+  instance: sgx
+
+---
+
+kind: pipeline
+name: gbdt-sgx-1804-sw
+
+steps:
+- name: sim-compile
+  image: baiduxlab/sgx-rust:1804-1.0.7
+  commands:
+  - . /opt/sgxsdk/environment
+  - . /root/.cargo/env
+  - SGX_MODE=SW make -C sgx/gbdt-sgx-test
+
+- name: sim-test
+  image: baiduxlab/sgx-rust:1804-1.0.7
+  commands:
+  - . /opt/sgxsdk/environment
+  - cd sgx/gbdt-sgx-test/bin && ./app | tee result.txt && grep " 0 failed" result.txt
+
+node:
+  instance: sgx
+
+---
+
+kind: pipeline
+name: gbdt-sgx-1804-hw
+
+steps:
+- name: hw-compile
+  image: baiduxlab/sgx-rust:1804-1.0.7
+  commands:
+  - . /opt/sgxsdk/environment
+  - . /root/.cargo/env
+  - make -C sgx/gbdt-sgx-test
+
+- name: hw-test
+  image: baiduxlab/sgx-rust:1804-1.0.7
+  privileged: true
+  volumes:
+  - name: isgx
+    path: /dev/isgx
+  - name: aesmd
+    path: /var/run/aesmd/aesm.socket
+  commands:
+  - . /opt/sgxsdk/environment
+  - ls -l /dev/isgx
+  - ls -l /var/run/aesmd/aesm.socket
+  - cd sgx/gbdt-sgx-test/bin && ./app | tee result.txt && grep " 0 failed" result.txt
+
+volumes:
+- name: isgx
+  host:
+    path: /dev/isgx
+- name: aesmd
+  host:
+    path: /var/run/aesmd/aesm.socket
+
+node:
+  instance: sgx
+
+---
+
+kind: pipeline
+name: coverage
+
+steps:
+- name: coverage
+  image: baiduxlab/useful-docker:ubuntu.1604.nightly
+  commands:
+  - apt-get update && apt-get install -qq libclang-common-3.9-dev llvm-3.9-dev git llvm curl
+  - . /root/.profile
+  - ./ci/build-lcov
+  - ./ci/run-cov
+  - bash -c "bash <(curl -s https://codecov.io/bash) -f final.info"
+  environment:
+    CODECOV_TOKEN:
+      from_secret: CODECOV_TOKEN
