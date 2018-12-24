@@ -31,7 +31,9 @@
 
 pub mod binary_tree;
 pub mod decision_tree;
-
+pub mod config;
+pub mod gradient_boost;
+pub mod fitness;
 
 #[cfg(test)]
 mod tests {
@@ -75,4 +77,50 @@ mod tests {
         let tree = DecisionTree::new();
     }
 
+    #[test]
+    fn config_express() {
+        use super::config::Config;
+        let c = Config::empty_config();
+        println!("{}", c.to_string());
+    }
+
+    #[test]
+    fn loss_type() {
+        use super::config::{LOSS, string2loss, loss2string};
+        assert_eq!(string2loss("SQUARED_ERROR"), LOSS::SQUARED_ERROR);
+        assert_eq!(string2loss("LOG_LIKEHOOD"), LOSS::LOG_LIKEHOOD);
+        assert_eq!(string2loss("LAD"), LOSS::LAD);
+        assert_eq!(string2loss("WHAT_THE_HUG"), LOSS::UNKNOWN_LOSS);
+
+        assert_eq!(loss2string(LOSS::SQUARED_ERROR), "SQUARED_ERROR");
+        assert_eq!(loss2string(LOSS::LOG_LIKEHOOD), "LOG_LIKEHOOD");
+        assert_eq!(loss2string(LOSS::LAD), "LAD");
+        assert_eq!(loss2string(LOSS::UNKNOWN_LOSS), "UNKNOWN_LOSS");
+    }
+
+    #[test]
+    fn fitness() {
+        use super::decision_tree::*;
+        let mut dv: DataVec = Vec::new();
+        dv.push( Data{ feature: Vec::new(), target: 1.0, weight: 0.1,
+            label: 1.0, residual: 0.5, initial_guess: VALUE_TYPE_UNKNOWN,
+        });
+        dv.push( Data{ feature: Vec::new(), target: 1.0, weight: 0.2,
+            label: 0.0, residual: 0.5, initial_guess: VALUE_TYPE_UNKNOWN,
+        });
+        dv.push( Data{ feature: Vec::new(), target: 0.0, weight: 0.3,
+            label: 1.0, residual: 0.5, initial_guess: VALUE_TYPE_UNKNOWN,
+        });
+        dv.push( Data{ feature: Vec::new(), target: 0.0, weight: 0.4,
+            label: 0.0, residual: 0.5, initial_guess: VALUE_TYPE_UNKNOWN,
+        });
+
+        use super::fitness::{same, average, label_average, weighted_label_median, weighted_residual_median, almost_equal};
+        assert_eq!(true, almost_equal(0.1, 0.100000000001));
+        assert_eq!(false, same(&dv, dv.len()));
+        assert!(almost_equal(0.3, average(&dv, dv.len())));
+        assert!(almost_equal(0.4, label_average(&dv, dv.len())));
+        assert!(almost_equal(0.0, weighted_label_median(&dv, dv.len())));
+        assert!(almost_equal(0.5, weighted_residual_median(&dv, dv.len())));
+    }
 }

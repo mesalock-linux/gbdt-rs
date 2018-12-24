@@ -21,3 +21,4 @@ name = "gbdt"
 crate-type = ["rlib", "staticlib"]
 
 [dependencies]
+rand="*"
