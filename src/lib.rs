@@ -72,6 +72,67 @@ mod tests {
     }
 
     #[test]
+    fn decision_tree() {
+        use super::decision_tree::*;
+        let mut tree = DecisionTree::new();
+        tree.set_feature_size(3);
+        tree.set_max_depth(4);
+        tree.set_min_leaf_size(1);
+        tree.set_loss(Loss::SQUARED_ERROR);
+        let data1 = Data {
+            feature: vec![1.0, 2.0, 3.0],
+            target: 2.0,
+            weight: 1.0,
+            label: 1.0,
+            residual: 1.0,
+            initial_guess: 1.0,
+        };
+        let data2 = Data {
+            feature: vec![1.1, 2.1, 3.1],
+            target: 1.0,
+            weight: 1.0,
+            label: 1.0,
+            residual: 1.0,
+            initial_guess: 1.0,
+        };
+        let data3 = Data {
+            feature: vec![2.0, 2.0, 1.0],
+            target: 0.5,
+            weight: 1.0,
+            label: 2.0,
+            residual: 2.0,
+            initial_guess: 2.0,
+        };
+        let data4 = Data {
+            feature: vec![2.0, 2.3, 1.2],
+            target: 3.0,
+            weight: 1.0,
+            label: 0.0,
+            residual: 0.0,
+            initial_guess: 1.0,
+        };
+
+        let mut dv = Vec::new();
+        dv.push(data1.clone());
+        dv.push(data2.clone());
+        dv.push(data3.clone());
+        dv.push(data4.clone());
+
+        tree.fit(&dv);
+
+        tree.print();
+
+        let mut dv = Vec::new();
+        dv.push(data1.clone());
+        dv.push(data2.clone());
+        dv.push(data3.clone());
+        dv.push(data4.clone());
+
+        println!("{:?}", tree.predict(&dv));
+
+    }
+
+    #[test]
     fn build_decision_tree() {
         use super::decision_tree::DecisionTree;
         let tree = DecisionTree::new();

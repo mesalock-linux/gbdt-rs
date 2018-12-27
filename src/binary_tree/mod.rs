@@ -18,7 +18,7 @@ impl <T> BinaryTreeNode<T> {
     }
 }
 
-type TreeIndex = usize;
+pub type TreeIndex = usize;
 
 #[derive(Debug)]
 pub struct BinaryTree<T> {
@@ -55,6 +55,10 @@ impl <T> BinaryTree<T> {
 
     pub fn get_node(&self, index: TreeIndex) -> Option<&BinaryTreeNode<T>> {
         self.tree.get(index)
+    }
+
+    pub fn get_node_mut(&mut self, index: TreeIndex) -> Option<&mut BinaryTreeNode<T>> {
+        self.tree.get_mut(index)
     }
 
     pub fn add_root(&mut self, root: BinaryTreeNode<T>) -> TreeIndex {
