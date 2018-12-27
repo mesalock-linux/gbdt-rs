@@ -1,11 +1,11 @@
 extern crate rand;
 
-use super::super::decision_tree::{DecisionTree};
-use super::super::decision_tree::{ValueType, DataVec, PredVec, VALUE_TYPE_UNKNOWN};
-use super::super::config::{Config, LOSS};
-use super::super::fitness::*;
-use self::rand::thread_rng;
 use self::rand::prelude::SliceRandom;
+use self::rand::thread_rng;
+use super::super::config::{Config, LOSS};
+use super::super::decision_tree::DecisionTree;
+use super::super::decision_tree::{DataVec, PredVec, ValueType, VALUE_TYPE_UNKNOWN};
+use super::super::fitness::*;
 
 pub struct GBDT {
     conf: Config,
@@ -28,15 +28,15 @@ impl GBDT {
         assert!(dv.len() >= len);
 
         if self.conf.enable_initial_guess {
-            return ;
+            return;
         }
 
         self.bias = match self.conf.loss {
             LOSS::SQUARED_ERROR => label_average(dv, len),
             LOSS::LOG_LIKEHOOD => {
-                let v:f64 = label_average(dv, len);
-                ((1.0+v) / (1.0-v)).ln() / 2.0
-            },
+                let v: f64 = label_average(dv, len);
+                ((1.0 + v) / (1.0 - v)).ln() / 2.0
+            }
             LOSS::LAD => weighted_label_median(dv, len),
             LOSS::UNKNOWN_LOSS => return,
         }
@@ -49,7 +49,9 @@ impl GBDT {
         }
         let nr_samples: usize = if self.conf.data_sample_ratio < 1.0 {
             ((train_data.len() as f64) * self.conf.data_sample_ratio) as usize
-        } else { train_data.len() };
+        } else {
+            train_data.len()
+        };
 
         self.init(train_data.len(), &train_data);
 
@@ -62,16 +64,13 @@ impl GBDT {
             }
             if self.conf.loss == LOSS::SQUARED_ERROR {
                 self.square_loss_process(&mut train_data_copy, nr_samples, i);
-            } else
-            if self.conf.loss == LOSS::LOG_LIKEHOOD {
+            } else if self.conf.loss == LOSS::LOG_LIKEHOOD {
                 self.log_loss_process(&mut train_data_copy, nr_samples, i);
-            } else
-            if self.conf.loss == LOSS::LAD {
+            } else if self.conf.loss == LOSS::LAD {
                 self.lad_loss_process(&mut train_data_copy, nr_samples, i);
             }
             self.trees[i].fit_n(&train_data_copy, nr_samples);
         }
-
     }
 
     pub fn predict_n(&self, test_data: &DataVec, iters: usize, n: usize) -> PredVec {
@@ -84,7 +83,7 @@ impl GBDT {
 
         let mut predicted: PredVec = Vec::new();
         for i in 0..n {
-            predicted.push( match self.conf.enable_initial_guess {
+            predicted.push(match self.conf.enable_initial_guess {
                 true => test_data[i].initial_guess,
                 false => self.bias,
             });

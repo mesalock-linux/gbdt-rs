@@ -28,12 +28,11 @@
 //(INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE
 //OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
-
 pub mod binary_tree;
-pub mod decision_tree;
 pub mod config;
-pub mod gradient_boost;
+pub mod decision_tree;
 pub mod fitness;
+pub mod gradient_boost;
 
 #[cfg(test)]
 mod tests {
@@ -42,13 +41,13 @@ mod tests {
         assert_eq!(2 + 2, 4);
     }
 
-     #[test]
+    #[test]
     fn walk_tree() {
         use super::binary_tree::*;
         let mut tree: BinaryTree<f32> = BinaryTree::new();
         let root = BinaryTreeNode::new(10.0);
 
-        let root_index =tree.add_root(root);
+        let root_index = tree.add_root(root);
 
         let n1 = BinaryTreeNode::new(5.0);
         let n2 = BinaryTreeNode::new(6.0);
@@ -59,14 +58,12 @@ mod tests {
         let n3 = BinaryTreeNode::new(7.0);
         let n4 = BinaryTreeNode::new(8.0);
 
-
         tree.add_left_node(n2_index, n3);
         tree.add_right_node(n2_index, n4);
 
         let n5 = BinaryTreeNode::new(9.0);
 
         tree.add_left_node(n1_index, n5);
-
 
         tree.print();
     }
@@ -129,7 +126,6 @@ mod tests {
         dv.push(data4.clone());
 
         println!("{:?}", tree.predict(&dv));
-
     }
 
     #[test]
@@ -147,7 +143,7 @@ mod tests {
 
     #[test]
     fn loss_type() {
-        use super::config::{LOSS, string2loss, loss2string};
+        use super::config::{loss2string, string2loss, LOSS};
         assert_eq!(string2loss("SQUARED_ERROR"), LOSS::SQUARED_ERROR);
         assert_eq!(string2loss("LOG_LIKEHOOD"), LOSS::LOG_LIKEHOOD);
         assert_eq!(string2loss("LAD"), LOSS::LAD);
@@ -163,20 +159,43 @@ mod tests {
     fn fitness() {
         use super::decision_tree::*;
         let mut dv: DataVec = Vec::new();
-        dv.push( Data{ feature: Vec::new(), target: 1.0, weight: 0.1,
-            label: 1.0, residual: 0.5, initial_guess: VALUE_TYPE_UNKNOWN,
+        dv.push(Data {
+            feature: Vec::new(),
+            target: 1.0,
+            weight: 0.1,
+            label: 1.0,
+            residual: 0.5,
+            initial_guess: VALUE_TYPE_UNKNOWN,
         });
-        dv.push( Data{ feature: Vec::new(), target: 1.0, weight: 0.2,
-            label: 0.0, residual: 0.5, initial_guess: VALUE_TYPE_UNKNOWN,
+        dv.push(Data {
+            feature: Vec::new(),
+            target: 1.0,
+            weight: 0.2,
+            label: 0.0,
+            residual: 0.5,
+            initial_guess: VALUE_TYPE_UNKNOWN,
         });
-        dv.push( Data{ feature: Vec::new(), target: 0.0, weight: 0.3,
-            label: 1.0, residual: 0.5, initial_guess: VALUE_TYPE_UNKNOWN,
+        dv.push(Data {
+            feature: Vec::new(),
+            target: 0.0,
+            weight: 0.3,
+            label: 1.0,
+            residual: 0.5,
+            initial_guess: VALUE_TYPE_UNKNOWN,
         });
-        dv.push( Data{ feature: Vec::new(), target: 0.0, weight: 0.4,
-            label: 0.0, residual: 0.5, initial_guess: VALUE_TYPE_UNKNOWN,
+        dv.push(Data {
+            feature: Vec::new(),
+            target: 0.0,
+            weight: 0.4,
+            label: 0.0,
+            residual: 0.5,
+            initial_guess: VALUE_TYPE_UNKNOWN,
         });
 
-        use super::fitness::{same, average, label_average, weighted_label_median, weighted_residual_median, almost_equal};
+        use super::fitness::{
+            almost_equal, average, label_average, same, weighted_label_median,
+            weighted_residual_median,
+        };
         assert_eq!(true, almost_equal(0.1, 0.100000000001));
         assert_eq!(false, same(&dv, dv.len()));
         assert!(almost_equal(0.3, average(&dv, dv.len())));

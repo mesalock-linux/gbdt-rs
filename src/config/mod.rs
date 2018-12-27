@@ -1,7 +1,4 @@
-
-#[derive(Debug)]
-#[derive(PartialEq)]
-#[derive(Clone)]
+#[derive(Debug, PartialEq, Clone)]
 #[allow(non_camel_case_types)]
 pub enum LOSS {
     SQUARED_ERROR,
@@ -63,17 +60,29 @@ impl Config {
     }
     pub fn to_string(self) -> String {
         let mut s = String::from("");
-        s.push_str(&format!("number of features = {}\n", self.number_of_feature));
+        s.push_str(&format!(
+            "number of features = {}\n",
+            self.number_of_feature
+        ));
         s.push_str(&format!("min leaf size = {}\n", self.min_leaf_size));
         s.push_str(&format!("maximum depth = {}\n", self.max_depth));
         s.push_str(&format!("iterations = {}\n", self.iterations));
         s.push_str(&format!("shrinkage = {}\n", self.shrinkage));
-        s.push_str(&format!("feature sample ratio = {}\n", self.feature_sample_ratio));
+        s.push_str(&format!(
+            "feature sample ratio = {}\n",
+            self.feature_sample_ratio
+        ));
         s.push_str(&format!("data sample ratio = {}\n", self.data_sample_ratio));
         s.push_str(&format!("debug enabled = {}\n", self.debug));
         s.push_str(&format!("loss type = {}\n", loss2string(self.loss)));
-        s.push_str(&format!("feature tuning enabled = {}\n", self.enable_feature_tunning));
-        s.push_str(&format!("initial guess enabled = {}\n", self.enable_initial_guess));
+        s.push_str(&format!(
+            "feature tuning enabled = {}\n",
+            self.enable_feature_tunning
+        ));
+        s.push_str(&format!(
+            "initial guess enabled = {}\n",
+            self.enable_initial_guess
+        ));
         s
     }
 }

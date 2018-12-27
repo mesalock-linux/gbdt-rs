@@ -5,23 +5,21 @@ use super::binary_tree::BinaryTreeNode;
 use super::binary_tree::TreeIndex;
 use super::fitness::almost_equal;
 
-use self::rand::thread_rng;
 use self::rand::prelude::SliceRandom;
+use self::rand::thread_rng;
 
 // use continous variables for decision tree
 pub type ValueType = f64;
 
-#[derive(Debug)]
-#[derive(Clone)]
+#[derive(Debug, Clone)]
 pub struct Data {
-    pub feature: Vec<ValueType>,  
+    pub feature: Vec<ValueType>,
     pub target: ValueType,
     pub weight: ValueType,
     pub label: ValueType,
     pub residual: ValueType,
     pub initial_guess: ValueType,
 }
-
 
 pub type DataVec = Vec<Data>;
 pub type PredVec = Vec<ValueType>;
@@ -37,11 +35,10 @@ pub enum Loss {
 }
 
 fn calculate_pred(data: &Vec<&Data>, loss: &Loss) -> ValueType {
-
     match loss {
         Loss::SQUARED_ERROR => average(data),
         Loss::LOG_LIKELIHOOD => logit_optimal_value(data),
-        _ => 0.0
+        _ => 0.0,
     }
 }
 
@@ -68,14 +65,13 @@ fn logit_optimal_value(data: &Vec<&Data>) -> ValueType {
     if (c - 0.0).abs() < 1e-10 {
         0.0
     } else {
-        s/c
+        s / c
     }
-
 }
 
 fn lad_optimal_value(data: &Vec<&Data>) -> ValueType {
     let mut data_copy = data.to_vec();
-    data_copy.sort_by(|a, b| { 
+    data_copy.sort_by(|a, b| {
         let v1: ValueType = a.residual;
         let v2: ValueType = b.residual;
         v1.partial_cmp(&v2).unwrap()
@@ -92,7 +88,7 @@ fn lad_optimal_value(data: &Vec<&Data>) -> ValueType {
         weight += data_copy[i].weight;
         if (weight * 2.0) > all_weight {
             if i >= 1 {
-                weighted_median = (data_copy[i].residual + data_copy[i-1].residual) / 2.0;
+                weighted_median = (data_copy[i].residual + data_copy[i - 1].residual) / 2.0;
             } else {
                 weighted_median = data_copy[i].residual;
             }
@@ -100,11 +96,12 @@ fn lad_optimal_value(data: &Vec<&Data>) -> ValueType {
         }
     }
     return weighted_median;
-
 }
 
 fn same(dv: &Vec<&Data>) -> bool {
-    if dv.len() < 1 { return false; }
+    if dv.len() < 1 {
+        return false;
+    }
 
     let t: ValueType = dv[0].target;
     for i in 1..dv.len() {
@@ -114,7 +111,6 @@ fn same(dv: &Vec<&Data>) -> bool {
     }
     true
 }
-
 
 #[derive(Debug)]
 struct DTNode {
@@ -132,7 +128,6 @@ impl DTNode {
             pred: 0.0,
             is_leaf: false,
         }
-        
     }
 }
 
@@ -145,8 +140,6 @@ pub struct DecisionTree {
     feature_sample_ratio: f64,
 }
 
-
-
 impl DecisionTree {
     pub fn new() -> Self {
         DecisionTree {
@@ -156,7 +149,6 @@ impl DecisionTree {
             min_leaf_size: 1,
             loss: Loss::SQUARED_ERROR,
             feature_sample_ratio: 1.0,
-
         }
     }
 
@@ -164,7 +156,7 @@ impl DecisionTree {
         self.feature_size = size;
     }
 
-    pub fn set_max_depth(&mut self, max_depth:u32) {
+    pub fn set_max_depth(&mut self, max_depth: u32) {
         self.max_depth = max_depth;
     }
 
@@ -179,7 +171,6 @@ impl DecisionTree {
     pub fn set_feature_sample_ratio(&mut self, feature_sample_ratio: f64) {
         self.feature_sample_ratio = feature_sample_ratio;
     }
-
 
     pub fn fit_n(&mut self, train_data: &DataVec, n: usize) {
         let sample_size = if n < train_data.len() {
@@ -211,26 +202,26 @@ impl DecisionTree {
         //let mut gain: Vec<ValueType> = vec![0.0; self.feature_size];
         let root_index = self.tree.add_root(BinaryTreeNode::new(DTNode::new()));
         self.fit_node(root_index, 0, &data);
-
     }
 
     fn fit_node(&mut self, node: TreeIndex, depth: u32, train_data: &Vec<&Data>) {
-
-
         // modify current node
         {
             let node_option = self.tree.get_node_mut(node);
             assert_eq!(node_option.is_some(), true);
             let node_ref = node_option.unwrap();
-            if (depth > self.max_depth) || same(train_data) || (train_data.len() < self.min_leaf_size) {
+            if (depth > self.max_depth)
+                || same(train_data)
+                || (train_data.len() < self.min_leaf_size)
+            {
                 node_ref.value.is_leaf = true;
                 node_ref.value.pred = calculate_pred(train_data, &self.loss);
                 return;
             }
         }
 
-        let (splited_data, feature_index, feature_value) = DecisionTree::split(train_data, self.feature_size, self.feature_sample_ratio);
-
+        let (splited_data, feature_index, feature_value) =
+            DecisionTree::split(train_data, self.feature_size, self.feature_sample_ratio);
 
         {
             let node_option = self.tree.get_node_mut(node);
@@ -240,21 +231,22 @@ impl DecisionTree {
                 node_ref.value.is_leaf = true;
                 node_ref.value.pred = calculate_pred(train_data, &self.loss);
                 return;
-            }
-            else {
+            } else {
                 node_ref.value.feature_index = feature_index;
                 node_ref.value.feature_value = feature_value;
             }
         }
 
         if let Some((left_data, right_data)) = splited_data {
-                let left_index = self.tree.add_left_node(node, BinaryTreeNode::new(DTNode::new()));
-                self.fit_node(left_index, depth+1, &left_data);
-                let right_index = self.tree.add_right_node(node, BinaryTreeNode::new(DTNode::new()));
-                self.fit_node(right_index, depth+1, &right_data);
+            let left_index = self
+                .tree
+                .add_left_node(node, BinaryTreeNode::new(DTNode::new()));
+            self.fit_node(left_index, depth + 1, &left_data);
+            let right_index = self
+                .tree
+                .add_right_node(node, BinaryTreeNode::new(DTNode::new()));
+            self.fit_node(right_index, depth + 1, &right_data);
         }
-
-
     }
 
     pub fn predict_n(&self, test_data: &DataVec, n: usize) -> PredVec {
@@ -286,9 +278,11 @@ impl DecisionTree {
     fn predict_one(&self, node: &BinaryTreeNode<DTNode>, sample: &Data) -> ValueType {
         if node.value.is_leaf {
             node.value.pred
-        }
-        else {
-            assert!(sample.feature.len() > node.value.feature_index, "sample doesn't have the feature");
+        } else {
+            assert!(
+                sample.feature.len() > node.value.feature_index,
+                "sample doesn't have the feature"
+            );
             if sample.feature[node.value.feature_index] < node.value.feature_value {
                 let left = self.tree.get_left_child(node);
                 assert!(left.is_some(), "Left child shouldn't be None");
@@ -301,8 +295,11 @@ impl DecisionTree {
         }
     }
 
-    fn split<'a>(train_data: &'a Vec<&Data>, feature_size: usize, feature_sample_ratio: f64) -> (Option<(Vec<&'a Data>, Vec<&'a Data>)>, usize, ValueType) {
-
+    fn split<'a>(
+        train_data: &'a Vec<&Data>,
+        feature_size: usize,
+        feature_sample_ratio: f64,
+    ) -> (Option<(Vec<&'a Data>, Vec<&'a Data>)>, usize, ValueType) {
         let mut fs = feature_size;
         let mut fv: Vec<usize> = Vec::new();
         for i in 0..fs {
@@ -342,13 +339,10 @@ impl DecisionTree {
                 if let Some(v) = elem.feature.get(index) {
                     if *v < value {
                         left.push(*elem);
-                    }
-                    else {
+                    } else {
                         right.push(*elem);
                     }
-
-                }
-                else {
+                } else {
                     assert!(true, "feature can't be empty");
                 }
             }
@@ -356,19 +350,27 @@ impl DecisionTree {
         } else {
             (None, 0, 0.0)
         }
-            
     }
 
-    fn get_impurity(train_data: &Vec<&Data>, feature_index: usize, value: &mut ValueType, impurity: &mut f64, gain: &mut f64) {
+    fn get_impurity(
+        train_data: &Vec<&Data>,
+        feature_index: usize,
+        value: &mut ValueType,
+        impurity: &mut f64,
+        gain: &mut f64,
+    ) {
         *impurity = VALUE_TYPE_MAX;
         let mut data = train_data.to_vec();
 
         for elem in train_data.iter() {
-            assert!(elem.feature.get(feature_index).is_some(), "feature is unknown");
+            assert!(
+                elem.feature.get(feature_index).is_some(),
+                "feature is unknown"
+            );
         }
-        
+
         let index = feature_index;
-        data.sort_by(|a, b| { 
+        data.sort_by(|a, b| {
             let v1: ValueType = a.feature[index];
             let v2: ValueType = b.feature[index];
             v1.partial_cmp(&v2).unwrap()
@@ -386,11 +388,7 @@ impl DecisionTree {
             c += data[i].weight;
         }
 
-        let fitness00: ValueType = if c > 1.0 {
-            ss - s*s / c
-        } else { 
-            0.0
-        };
+        let fitness00: ValueType = if c > 1.0 { ss - s * s / c } else { 0.0 };
 
         let mut ls: f64 = 0.0;
         let mut lss: f64 = 0.0;
@@ -400,8 +398,8 @@ impl DecisionTree {
         let mut rc: f64 = c;
         let mut fitness1: f64 = 0.0;
         let mut fitness2: f64 = 0.0;
-        
-        for i in 0..(train_data.len()-1) {
+
+        for i in 0..(train_data.len() - 1) {
             s = data[i].target * data[i].weight;
             ss = data[i].target * data[i].target * data[i].weight;
             c = data[i].weight;
@@ -415,40 +413,26 @@ impl DecisionTree {
             rc -= c;
 
             let mut f1: ValueType = data[i].feature[index];
-            let mut f2: ValueType = data[i+1].feature[index];
+            let mut f2: ValueType = data[i + 1].feature[index];
 
             if (f1 - f2).abs() < 1.0e-5 {
                 continue;
             }
 
-            fitness1 = if lc > 1.0 {
-                lss - ls * ls / lc
-            } else {
-                0.0
-            };
+            fitness1 = if lc > 1.0 { lss - ls * ls / lc } else { 0.0 };
 
-            fitness2 = if rc > 1.0 {
-                rss - rs * rs / rc
-            } else {
-                0.0
-            };
+            fitness2 = if rc > 1.0 { rss - rs * rs / rc } else { 0.0 };
 
             let mut fitness: ValueType = fitness0 + fitness1 + fitness2;
 
             if *impurity > fitness {
                 *impurity = fitness;
-                *value = (f1+f2) / 2.0;
+                *value = (f1 + f2) / 2.0;
                 *gain = fitness00 - fitness1 - fitness2;
             }
-
-
-
         }
-
     }
     pub fn print(&self) {
         self.tree.print();
     }
 }
-
-

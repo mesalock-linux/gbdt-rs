@@ -2,12 +2,11 @@
 pub struct BinaryTreeNode<T> {
     pub value: T,
     index: usize,
-    left: usize, // bigger than 0
+    left: usize,  // bigger than 0
     right: usize, // bigger than 0
 }
 
-
-impl <T> BinaryTreeNode<T> {
+impl<T> BinaryTreeNode<T> {
     pub fn new(value: T) -> Self {
         BinaryTreeNode {
             value: value,
@@ -25,12 +24,10 @@ pub struct BinaryTree<T> {
     tree: Vec<BinaryTreeNode<T>>,
 }
 
-impl <T> BinaryTree<T> {
+impl<T> BinaryTree<T> {
     pub fn new() -> Self {
         let tree: Vec<BinaryTreeNode<T>> = Vec::new();
-        BinaryTree {
-            tree: tree,
-        }
+        BinaryTree { tree: tree }
     }
 
     pub fn get_root_index(&self) -> TreeIndex {
@@ -64,7 +61,7 @@ impl <T> BinaryTree<T> {
     pub fn add_root(&mut self, root: BinaryTreeNode<T>) -> TreeIndex {
         self.add_node(0, false, root)
     }
-    
+
     pub fn add_left_node(&mut self, parent: TreeIndex, child: BinaryTreeNode<T>) -> TreeIndex {
         self.add_node(parent, true, child)
     }
@@ -73,10 +70,15 @@ impl <T> BinaryTree<T> {
         self.add_node(parent, false, child)
     }
 
-    fn add_node(&mut self, parent: TreeIndex, is_left: bool, mut child: BinaryTreeNode<T>) -> TreeIndex {
+    fn add_node(
+        &mut self,
+        parent: TreeIndex,
+        is_left: bool,
+        mut child: BinaryTreeNode<T>,
+    ) -> TreeIndex {
         child.index = self.tree.len();
         self.tree.push(child);
-        let position = self.tree.len()-1;
+        let position = self.tree.len() - 1;
 
         if position == 0 {
             return position;
@@ -84,17 +86,17 @@ impl <T> BinaryTree<T> {
         self.tree.get_mut(parent).map(|n| {
             if is_left {
                 n.left = position;
-            }
-            else {
+            } else {
                 n.right = position;
             }
         });
         position
     }
 
-
-    pub fn print(&self) 
-        where T: std::fmt::Debug {
+    pub fn print(&self)
+    where
+        T: std::fmt::Debug,
+    {
         let mut stack: Vec<(usize, Option<&BinaryTreeNode<T>>)> = Vec::new();
         let root = self.get_node(self.get_root_index());
         stack.push((0, root));
@@ -106,9 +108,9 @@ impl <T> BinaryTree<T> {
                         print!("    ");
                     }
                     println!("----{:?}", node.value);
-                    
-                    stack.push((deep+1, self.get_right_child(node)));
-                    stack.push((deep+1, self.get_left_child(node)));
+
+                    stack.push((deep + 1, self.get_right_child(node)));
+                    stack.push((deep + 1, self.get_left_child(node)));
                 }
             }
         }
