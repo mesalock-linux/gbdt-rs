@@ -28,6 +28,8 @@
 //(INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE
 //OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
+extern crate rand;
+
 pub mod binary_tree;
 pub mod config;
 pub mod decision_tree;
@@ -75,7 +77,7 @@ mod tests {
         tree.set_feature_size(3);
         tree.set_max_depth(4);
         tree.set_min_leaf_size(1);
-        tree.set_loss(Loss::SQUARED_ERROR);
+        tree.set_loss(Loss::SquaredError);
         let data1 = Data {
             feature: vec![1.0, 2.0, 3.0],
             target: 2.0,

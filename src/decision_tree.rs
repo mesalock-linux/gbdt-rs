@@ -1,12 +1,10 @@
-extern crate rand;
-
 use super::binary_tree::BinaryTree;
 use super::binary_tree::BinaryTreeNode;
 use super::binary_tree::TreeIndex;
 use super::fitness::almost_equal;
 
-use self::rand::prelude::SliceRandom;
-use self::rand::thread_rng;
+use rand::prelude::SliceRandom;
+use rand::thread_rng;
 
 // use continous variables for decision tree
 pub type ValueType = f64;
@@ -29,15 +27,15 @@ pub const VALUE_TYPE_MIN: f64 = std::f64::MIN;
 pub const VALUE_TYPE_UNKNOWN: f64 = VALUE_TYPE_MIN;
 
 pub enum Loss {
-    SQUARED_ERROR,
-    LOG_LIKELIHOOD,
+    SquaredError,
+    LogLikelyhood,
     LAD,
 }
 
 fn calculate_pred(data: &Vec<&Data>, loss: &Loss) -> ValueType {
     match loss {
-        Loss::SQUARED_ERROR => average(data),
-        Loss::LOG_LIKELIHOOD => logit_optimal_value(data),
+        Loss::SquaredError => average(data),
+        Loss::LogLikelyhood => logit_optimal_value(data),
         _ => 0.0,
     }
 }
@@ -147,7 +145,7 @@ impl DecisionTree {
             feature_size: 1,
             max_depth: 2,
             min_leaf_size: 1,
-            loss: Loss::SQUARED_ERROR,
+            loss: Loss::SquaredError,
             feature_sample_ratio: 1.0,
         }
     }

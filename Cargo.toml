@@ -12,6 +12,14 @@ include = [
     "Readme.md",
     "Cargo.toml",
     "src/lib.rs",
+    "src/config.rs",
+    "src/lib.rs",
+    "src/binary_tree.rs",
+    "src/fitness.rs",
+    "src/decision_tree.rs",
+    "src/gradient_boost",
+    "src/gradient_boost/gradient_boost.rs",
+    "src/gradient_boost/mod.rs",
 ]
 
 [badges]
