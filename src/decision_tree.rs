@@ -99,7 +99,7 @@ fn lad_optimal_value(data: &[&Data]) -> ValueType {
 }
 
 fn same(dv: &[&Data]) -> bool {
-    if dv.is_empty()  {
+    if dv.is_empty() {
         return false;
     }
 
@@ -394,7 +394,10 @@ impl DecisionTree {
             c += i.weight;
         }
 
-        //let fitness00: ValueType = if c > 1.0 { ss - s * s / c } else { 0.0 };
+        // fitness00 is designed to support unknown feature
+        // Supress the warning here by add '_' before it
+        // TODO: remove '_' to support unknown feature
+        let _fitness00: ValueType = if c > 1.0 { ss - s * s / c } else { 0.0 };
 
         let mut ls: f64 = 0.0;
         let mut lss: f64 = 0.0;

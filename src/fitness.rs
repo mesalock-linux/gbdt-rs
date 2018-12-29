@@ -129,12 +129,12 @@ pub fn AUC(dv: &DataVec, predict: &PredVec, len: usize) -> ValueType {
         } else {
             let tie_score = vn;
             let mut kn: usize = 0;
-            while nptr < n_size && almost_equal(negative_scores[nptr],tie_score) {
+            while nptr < n_size && almost_equal(negative_scores[nptr], tie_score) {
                 kn += 1;
                 nptr += 1;
             }
             let mut kp: usize = 0;
-            while pptr < p_size && almost_equal(positive_scores[pptr],tie_score) {
+            while pptr < p_size && almost_equal(positive_scores[pptr], tie_score) {
                 kp += 1;
                 pptr += 1;
             }

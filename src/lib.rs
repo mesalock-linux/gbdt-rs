@@ -28,6 +28,9 @@
 //(INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE
 //OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
+#![allow(clippy::ptr_arg)]
+#![allow(clippy::type_complexity)]
+
 extern crate rand;
 
 pub mod binary_tree;

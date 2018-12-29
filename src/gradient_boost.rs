@@ -1,9 +1,9 @@
-use rand::prelude::SliceRandom;
-use rand::thread_rng;
 use config::{Config, LOSS};
 use decision_tree::DecisionTree;
 use decision_tree::{DataVec, PredVec, ValueType, VALUE_TYPE_UNKNOWN};
 use fitness::*;
+use rand::prelude::SliceRandom;
+use rand::thread_rng;
 
 pub struct GBDT {
     conf: Config,
@@ -81,13 +81,11 @@ impl GBDT {
 
         let mut predicted: PredVec = Vec::new();
         for i in test_data.iter().take(n) {
-            predicted.push(
-                if self.conf.enable_initial_guess {
-                    i.initial_guess
-                } else {
-                    self.bias
-                }
-            );
+            predicted.push(if self.conf.enable_initial_guess {
+                i.initial_guess
+            } else {
+                self.bias
+            });
         }
         for i in 0..(iters) {
             let v: PredVec = self.trees[i].predict_n(test_data, n);

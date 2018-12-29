@@ -6,7 +6,6 @@ pub struct BinaryTreeNode<T> {
     right: usize, // bigger than 0
 }
 
-
 impl<T> BinaryTreeNode<T> {
     pub fn new(value: T) -> Self {
         BinaryTreeNode {
@@ -32,7 +31,6 @@ impl<T> Default for BinaryTree<T> {
 }
 
 impl<T> BinaryTree<T> {
-
     pub fn new() -> Self {
         BinaryTree { tree: Vec::new() }
     }
