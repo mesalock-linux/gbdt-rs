@@ -36,7 +36,7 @@ fn calculate_pred(data: &[&Data], loss: &Loss) -> ValueType {
     match loss {
         Loss::SquaredError => average(data),
         Loss::LogLikelyhood => logit_optimal_value(data),
-        Loss::LAD => logit_optimal_value(data),
+        Loss::LAD => lad_optimal_value(data),
     }
 }
 
@@ -320,7 +320,7 @@ impl DecisionTree {
 
         let mut v: ValueType = 0.0;
         let mut impurity: f64 = 0.0;
-        let mut g: f64 = 0.0;
+        //let mut g: f64 = 0.0;
         let mut best_fitness: ValueType = VALUE_TYPE_MAX;
 
         let mut index: usize = 0;
@@ -394,7 +394,7 @@ impl DecisionTree {
             c += i.weight;
         }
 
-        let fitness00: ValueType = if c > 1.0 { ss - s * s / c } else { 0.0 };
+        //let fitness00: ValueType = if c > 1.0 { ss - s * s / c } else { 0.0 };
 
         let mut ls: f64 = 0.0;
         let mut lss: f64 = 0.0;
