@@ -248,7 +248,7 @@ mod tests {
             }
             assert!(lv.len()==5);
             let d = Data {
-                feature: feature,
+                feature,
                 target: 0.0,
                 weight: 1.0,
                 label: lv[4].parse::<f64>().unwrap(),
@@ -269,7 +269,7 @@ mod tests {
             }
             assert!(lv.len()==5);
             let d = Data {
-                feature: feature,
+                feature,
                 target: 0.0,
                 weight: 1.0,
                 label: lv[4].parse::<f64>().unwrap(),
