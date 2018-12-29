@@ -36,7 +36,7 @@ fn calculate_pred(data: &[&Data], loss: &Loss) -> ValueType {
     match loss {
         Loss::SquaredError => average(data),
         Loss::LogLikelyhood => logit_optimal_value(data),
-        _ => 0.0,
+        Loss::LAD => logit_optimal_value(data),
     }
 }
 
@@ -68,8 +68,6 @@ fn logit_optimal_value(data: &[&Data]) -> ValueType {
     }
 }
 
-// TODO: Double check if this is needed
-//       Remove or pub if applicable
 fn lad_optimal_value(data: &[&Data]) -> ValueType {
     let mut data_copy = data.to_vec();
     data_copy.sort_by(|a, b| {
@@ -327,13 +325,11 @@ impl DecisionTree {
 
         let mut index: usize = 0;
         let mut value: ValueType = 0.0;
-        // TODO: Double check if this is needed
-        //       Remove if possible
         // let mut gain: f64 = 0.0;
 
         let mut find: bool = false;
         for i in fv.iter().take(fs) {
-            DecisionTree::get_impurity(train_data, *i, &mut v, &mut impurity, &mut g);
+            DecisionTree::get_impurity(train_data, *i, &mut v, &mut impurity);
             if best_fitness > impurity {
                 find = true;
                 best_fitness = impurity;
@@ -367,7 +363,7 @@ impl DecisionTree {
         feature_index: usize,
         value: &mut ValueType,
         impurity: &mut f64,
-        gain: &mut f64,
+        //gain: &mut f64,
     ) {
         *impurity = VALUE_TYPE_MAX;
         let mut data = train_data.to_vec();
@@ -436,7 +432,7 @@ impl DecisionTree {
             if *impurity > fitness {
                 *impurity = fitness;
                 *value = (f1 + f2) / 2.0;
-                *gain = fitness00 - fitness1 - fitness2;
+                //*gain = fitness00 - fitness1 - fitness2;
             }
         }
     }
