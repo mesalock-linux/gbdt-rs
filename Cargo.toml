@@ -27,4 +27,4 @@ name = "gbdt"
 crate-type = ["rlib", "staticlib"]
 
 [dependencies]
-rand="*"
+rand="0.6.1"
