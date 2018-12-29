@@ -32,7 +32,7 @@ pub enum Loss {
     LAD,
 }
 
-fn calculate_pred(data: &Vec<&Data>, loss: &Loss) -> ValueType {
+fn calculate_pred(data: &[&Data], loss: &Loss) -> ValueType {
     match loss {
         Loss::SquaredError => average(data),
         Loss::LogLikelyhood => logit_optimal_value(data),
@@ -40,7 +40,7 @@ fn calculate_pred(data: &Vec<&Data>, loss: &Loss) -> ValueType {
     }
 }
 
-fn average(data: &Vec<&Data>) -> ValueType {
+fn average(data: &[&Data]) -> ValueType {
     let mut sum: ValueType = 0.0;
     let mut weight: ValueType = 0.0;
     for elem in data.iter() {
@@ -51,7 +51,7 @@ fn average(data: &Vec<&Data>) -> ValueType {
     sum / weight
 }
 
-fn logit_optimal_value(data: &Vec<&Data>) -> ValueType {
+fn logit_optimal_value(data: &[&Data]) -> ValueType {
     let mut s: ValueType = 0.0;
     let mut c: ValueType = 0.0;
 
@@ -70,7 +70,7 @@ fn logit_optimal_value(data: &Vec<&Data>) -> ValueType {
 
 // TODO: Double check if this is needed
 //       Remove or pub if applicable
-fn lad_optimal_value(data: &Vec<&Data>) -> ValueType {
+fn lad_optimal_value(data: &[&Data]) -> ValueType {
     let mut data_copy = data.to_vec();
     data_copy.sort_by(|a, b| {
         let v1: ValueType = a.residual;
@@ -100,7 +100,7 @@ fn lad_optimal_value(data: &Vec<&Data>) -> ValueType {
     weighted_median
 }
 
-fn same(dv: &Vec<&Data>) -> bool {
+fn same(dv: &[&Data]) -> bool {
     if dv.is_empty()  {
         return false;
     }
@@ -140,6 +140,12 @@ pub struct DecisionTree {
     min_leaf_size: usize,
     loss: Loss,
     feature_sample_ratio: f64,
+}
+
+impl Default for DecisionTree {
+    fn default() -> Self {
+        Self::new()
+    }
 }
 
 impl DecisionTree {
@@ -206,7 +212,7 @@ impl DecisionTree {
         self.fit_node(root_index, 0, &data);
     }
 
-    fn fit_node(&mut self, node: TreeIndex, depth: u32, train_data: &Vec<&Data>) {
+    fn fit_node(&mut self, node: TreeIndex, depth: u32, train_data: &[&Data]) {
         // modify current node
         {
             let node_option = self.tree.get_node_mut(node);
@@ -298,7 +304,7 @@ impl DecisionTree {
     }
 
     fn split<'a>(
-        train_data: &'a Vec<&Data>,
+        train_data: &'a [&Data],
         feature_size: usize,
         feature_sample_ratio: f64,
     ) -> (Option<(Vec<&'a Data>, Vec<&'a Data>)>, usize, ValueType) {
@@ -357,7 +363,7 @@ impl DecisionTree {
     }
 
     fn get_impurity(
-        train_data: &Vec<&Data>,
+        train_data: &[&Data],
         feature_index: usize,
         value: &mut ValueType,
         impurity: &mut f64,

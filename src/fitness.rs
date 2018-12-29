@@ -12,8 +12,8 @@ pub fn same(dv: &DataVec, len: usize) -> bool {
     }
 
     let t: ValueType = dv[0].target;
-    for i in 1..dv.len() {
-        if !(almost_equal(t, dv[i].target)) {
+    for i in dv.iter().skip(1) {
+        if !(almost_equal(t, i.target)) {
             return false;
         }
     }

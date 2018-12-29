@@ -13,7 +13,7 @@ pub struct GBDT {
 }
 
 impl GBDT {
-    pub fn new(conf: Config) -> GBDT {
+    pub fn new(conf: &Config) -> GBDT {
         GBDT {
             conf: conf.clone(),
             trees: Vec::new(),
