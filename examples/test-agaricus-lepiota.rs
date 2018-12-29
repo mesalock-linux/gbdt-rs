@@ -17,7 +17,7 @@ fn main() {
         feature_sample_ratio: 1.0,
         data_sample_ratio: 1.0,
         min_leaf_size: 0,
-        loss: Loss::LogLikelyhood,
+        loss: Loss::SquaredError,
         debug: false,
         feature_cost: Vec::new(),
         enable_feature_tunning: false,
@@ -44,7 +44,7 @@ fn main() {
             feature: feature,
             target: 0.0,
             weight: 1.0,
-            label: lv[4].parse::<f64>().unwrap(),
+            label: lv[22].parse::<f64>().unwrap(),
             residual: 0.0,
             initial_guess: 0.0,
         };
@@ -65,7 +65,7 @@ fn main() {
             feature: feature,
             target: 0.0,
             weight: 1.0,
-            label: lv[4].parse::<f64>().unwrap(),
+            label: lv[22].parse::<f64>().unwrap(),
             residual: 0.0,
             initial_guess: 0.0,
         };
@@ -84,6 +84,7 @@ fn main() {
             true => { correct += 1; },
             false => { wrong += 1; },
         };
+        println!("[{}]  {}  {}", i, test_dv[i].label, predicted[i]);
     }
 
     println!("correct: {}", correct);
