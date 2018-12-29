@@ -22,7 +22,7 @@
 //A PARTICULAR PURPOSE ARE DISCLAIMED. IN NO EVENT SHALL THE COPYRIGHT
 //OWNER OR CONTRIBUTORS BE LIABLE FOR ANY DIRECT, INDIRECT, INCIDENTAL,
 //SPECIAL, EXEMPLARY, OR CONSEQUENTIAL DAMAGES (INCLUDING, BUT NOT
-//LIMITED TO, PROCUREMENT OF SUBSTITUTE GOODS OR SERVICES; LOSS OF USE,
+//LIMITED TO, PROCUREMENT OF SUBSTITUTE GOODS OR SERVICES; Loss OF USE,
 //DATA, OR PROFITS; OR BUSINESS INTERRUPTION) HOWEVER CAUSED AND ON ANY
 //THEORY OF LIABILITY, WHETHER IN CONTRACT, STRICT LIABILITY, OR TORT
 //(INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE
@@ -76,6 +76,7 @@ mod tests {
     #[test]
     fn decision_tree() {
         use decision_tree::*;
+        use config::Loss;
         let mut tree = DecisionTree::new();
         tree.set_feature_size(3);
         tree.set_max_depth(4);
@@ -148,16 +149,14 @@ mod tests {
 
     #[test]
     fn loss_type() {
-        use config::{loss2string, string2loss, LOSS};
-        assert_eq!(string2loss("SquaredError"), LOSS::SquaredError);
-        assert_eq!(string2loss("LogLikelyhood"), LOSS::LogLikelyhood);
-        assert_eq!(string2loss("LAD"), LOSS::LAD);
-        assert_eq!(string2loss("WHAT_THE_HUG"), LOSS::UnknownLoss);
+        use config::{loss2string, string2loss, Loss};
+        assert_eq!(string2loss("SquaredError"), Loss::SquaredError);
+        assert_eq!(string2loss("LogLikelyhood"), Loss::LogLikelyhood);
+        assert_eq!(string2loss("LAD"), Loss::LAD);
 
-        assert_eq!(loss2string(&LOSS::SquaredError), "SquaredError");
-        assert_eq!(loss2string(&LOSS::LogLikelyhood), "LogLikelyhood");
-        assert_eq!(loss2string(&LOSS::LAD), "LAD");
-        assert_eq!(loss2string(&LOSS::UnknownLoss), "UnknownLoss");
+        assert_eq!(loss2string(&Loss::SquaredError), "SquaredError");
+        assert_eq!(loss2string(&Loss::LogLikelyhood), "LogLikelyhood");
+        assert_eq!(loss2string(&Loss::LAD), "LAD");
     }
 
     #[test]
@@ -207,5 +206,86 @@ mod tests {
         assert!(almost_equal(0.4, label_average(&dv, dv.len())));
         assert!(almost_equal(0.0, weighted_label_median(&dv, dv.len())));
         assert!(almost_equal(0.5, weighted_residual_median(&dv, dv.len())));
+    }
+
+    #[test]
+    fn test_iris() {
+        use gradient_boost::*;
+        use config::{Config, Loss};
+        use decision_tree::*;
+        use std::fs::{File};
+        use std::io::{BufReader, BufRead};
+
+        let cfg: Config = Config {
+            number_of_feature: 4,
+            max_depth: 4,
+            iterations: 3,
+            shrinkage: 1.0,
+            feature_sample_ratio: 1.0,
+            data_sample_ratio: 1.0,
+            min_leaf_size: 0,
+            loss: Loss::SquaredError,
+            debug: false,
+            feature_cost: Vec::new(),
+            enable_feature_tunning: false,
+            enable_initial_guess: false,
+        };
+
+        let train_filename = "/usr/src/myapp/dataset/iris/train.txt";
+        let test_filename = "/usr/src/myapp/dataset/iris/train.txt";
+
+        let mut train_dv: DataVec = Vec::new();
+        let mut test_dv: DataVec = Vec::new();
+
+        let f = File::open(train_filename).unwrap();
+        let f = BufReader::new(f);
+        for line in f.lines() {
+            let l = line.unwrap();
+            let lv: Vec<&str> = l.splitn(5, ",").collect();
+            let mut feature: Vec<ValueType> = Vec::new();
+            for i in 0..4 {
+                feature.push(lv[i].parse::<f64>().unwrap());
+            }
+            assert!(lv.len()==5);
+            let d = Data {
+                feature: feature,
+                target: 0.0,
+                weight: 1.0,
+                label: lv[4].parse::<f64>().unwrap(),
+                residual: 0.0,
+                initial_guess: 0.0,
+            };
+            train_dv.push(d);
+        }
+
+        let f = File::open(test_filename).unwrap();
+        let f = BufReader::new(f);
+        for line in f.lines() {
+            let l = line.unwrap();
+            let lv: Vec<&str> = l.splitn(5, ",").collect();
+            let mut feature: Vec<ValueType> = Vec::new();
+            for i in 0..4 {
+                feature.push(lv[i].parse::<f64>().unwrap());
+            }
+            assert!(lv.len()==5);
+            let d = Data {
+                feature: feature,
+                target: 0.0,
+                weight: 1.0,
+                label: lv[4].parse::<f64>().unwrap(),
+                residual: 0.0,
+                initial_guess: 0.0,
+            };
+            test_dv.push(d);
+        }
+
+        let mut gbdt = GBDT::new(&cfg);
+        gbdt.fit(&train_dv);
+        let predicted: PredVec = gbdt.predict(&test_dv);
+
+        assert_eq!(predicted.len(), test_dv.len());
+        for i in 0..predicted.len() {
+            println!("[{}]  {}  {}", i, test_dv[i].label, predicted[i]);
+        }
     }
 }

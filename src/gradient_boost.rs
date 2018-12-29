@@ -1,4 +1,4 @@
-use config::{Config, LOSS};
+use config::{Config, Loss};
 use decision_tree::DecisionTree;
 use decision_tree::{DataVec, PredVec, ValueType, VALUE_TYPE_UNKNOWN};
 use fitness::*;
@@ -30,20 +30,23 @@ impl GBDT {
         }
 
         self.bias = match self.conf.loss {
-            LOSS::SquaredError => label_average(dv, len),
-            LOSS::LogLikelyhood => {
+            Loss::SquaredError => label_average(dv, len),
+            Loss::LogLikelyhood => {
                 let v: f64 = label_average(dv, len);
                 ((1.0 + v) / (1.0 - v)).ln() / 2.0
             }
-            LOSS::LAD => weighted_label_median(dv, len),
-            LOSS::UnknownLoss => return,
+            Loss::LAD => weighted_label_median(dv, len),
         }
     }
 
     pub fn fit(&mut self, train_data: &DataVec) {
         self.trees = Vec::new();
-        for _ in 0..self.conf.iterations {
+        for i in 0..self.conf.iterations {
             self.trees.push(DecisionTree::new());
+            self.trees[i].set_feature_size(self.conf.number_of_feature);
+            self.trees[i].set_max_depth(self.conf.max_depth);
+            self.trees[i].set_min_leaf_size(self.conf.min_leaf_size);
+            self.trees[i].set_loss(self.conf.loss.clone());
         }
         let nr_samples: usize = if self.conf.data_sample_ratio < 1.0 {
             ((train_data.len() as f64) * self.conf.data_sample_ratio) as usize
@@ -60,11 +63,11 @@ impl GBDT {
             if nr_samples < train_data.len() {
                 train_data_copy.shuffle(&mut rng);
             }
-            if self.conf.loss == LOSS::SquaredError {
+            if self.conf.loss == Loss::SquaredError {
                 self.square_loss_process(&mut train_data_copy, nr_samples, i);
-            } else if self.conf.loss == LOSS::LogLikelyhood {
+            } else if self.conf.loss == Loss::LogLikelyhood {
                 self.log_loss_process(&mut train_data_copy, nr_samples, i);
-            } else if self.conf.loss == LOSS::LAD {
+            } else if self.conf.loss == Loss::LAD {
                 self.lad_loss_process(&mut train_data_copy, nr_samples, i);
             }
             self.trees[i].fit_n(&train_data_copy, nr_samples);
@@ -96,8 +99,8 @@ impl GBDT {
         predicted.to_vec()
     }
 
-    pub fn predict(&self, test_data: &DataVec, iters: usize) -> PredVec {
-        self.predict_n(test_data, iters, test_data.len())
+    pub fn predict(&self, test_data: &DataVec) -> PredVec {
+        self.predict_n(test_data, self.conf.iterations, test_data.len())
     }
 
     pub fn square_loss_process(&self, dv: &mut DataVec, samples: usize, iters: usize) {

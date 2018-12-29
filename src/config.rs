@@ -1,9 +1,8 @@
 #[derive(Debug, PartialEq, Clone)]
-pub enum LOSS {
+pub enum Loss {
     SquaredError,
     LogLikelyhood,
     LAD,
-    UnknownLoss,
 }
 
 #[derive(Clone)]
@@ -14,29 +13,28 @@ pub struct Config {
     pub shrinkage: f64,
     pub feature_sample_ratio: f64,
     pub data_sample_ratio: f64,
-    pub min_leaf_size: u32,
-    pub loss: LOSS,
+    pub min_leaf_size: usize,
+    pub loss: Loss,
     pub debug: bool,
     pub feature_cost: Vec<f64>,
     pub enable_feature_tunning: bool,
     pub enable_initial_guess: bool,
 }
 
-pub fn string2loss(s: &str) -> LOSS {
+pub fn string2loss(s: &str) -> Loss {
     match s {
-        "LogLikelyhood" => LOSS::LogLikelyhood,
-        "SquaredError" => LOSS::SquaredError,
-        "LAD" => LOSS::LAD,
-        _ => LOSS::UnknownLoss,
+        "LogLikelyhood" => Loss::LogLikelyhood,
+        "SquaredError" => Loss::SquaredError,
+        "LAD" => Loss::LAD,
+        _ => Loss::SquaredError
     }
 }
 
-pub fn loss2string(l: &LOSS) -> String {
+pub fn loss2string(l: &Loss) -> String {
     match l {
-        LOSS::LogLikelyhood => String::from("LogLikelyhood"),
-        LOSS::SquaredError => String::from("SquaredError"),
-        LOSS::LAD => String::from("LAD"),
-        LOSS::UnknownLoss => String::from("UnknownLoss"),
+        Loss::LogLikelyhood => String::from("LogLikelyhood"),
+        Loss::SquaredError => String::from("SquaredError"),
+        Loss::LAD => String::from("LAD"),
     }
 }
 
@@ -50,7 +48,7 @@ impl Config {
             feature_sample_ratio: 1.0,
             data_sample_ratio: 1.0,
             min_leaf_size: 0,
-            loss: LOSS::SquaredError,
+            loss: Loss::SquaredError,
             debug: false,
             feature_cost: Vec::new(),
             enable_feature_tunning: false,

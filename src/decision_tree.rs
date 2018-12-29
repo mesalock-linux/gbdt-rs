@@ -2,6 +2,7 @@ use binary_tree::BinaryTree;
 use binary_tree::BinaryTreeNode;
 use binary_tree::TreeIndex;
 use fitness::almost_equal;
+use config::Loss;
 
 use rand::prelude::SliceRandom;
 use rand::thread_rng;
@@ -26,11 +27,13 @@ pub const VALUE_TYPE_MAX: f64 = std::f64::MAX;
 pub const VALUE_TYPE_MIN: f64 = std::f64::MIN;
 pub const VALUE_TYPE_UNKNOWN: f64 = VALUE_TYPE_MIN;
 
+/*
 pub enum Loss {
     SquaredError,
     LogLikelyhood,
     LAD,
 }
+*/
 
 fn calculate_pred(data: &[&Data], loss: &Loss) -> ValueType {
     match loss {
