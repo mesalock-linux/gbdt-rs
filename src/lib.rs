@@ -231,8 +231,8 @@ mod tests {
             enable_initial_guess: false,
         };
 
-        let train_filename = "/usr/src/myapp/dataset/iris/train.txt";
-        let test_filename = "/usr/src/myapp/dataset/iris/train.txt";
+        let train_filename = "dataset/iris/train.txt";
+        let test_filename = "dataset/iris/train.txt";
 
         let mut train_dv: DataVec = Vec::new();
         let mut test_dv: DataVec = Vec::new();

@@ -24,8 +24,8 @@ fn main() {
         enable_initial_guess: false,
     };
 
-    let train_file = "/usr/src/myapp/dataset/agaricus-lepiota/train.txt";
-    let test_file = "/usr/src/myapp/dataset/agaricus-lepiota/test.txt";
+    let train_file = "dataset/agaricus-lepiota/train.txt";
+    let test_file = "dataset/agaricus-lepiota/test.txt";
 
     let mut train_dv: DataVec = Vec::new();
     let mut test_dv: DataVec = Vec::new();
