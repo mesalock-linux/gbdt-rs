@@ -1,10 +1,9 @@
 #[derive(Debug, PartialEq, Clone)]
-#[allow(non_camel_case_types)]
 pub enum LOSS {
-    SQUARED_ERROR,
-    LOG_LIKEHOOD,
+    SquaredError,
+    LogLikelyhood,
     LAD,
-    UNKNOWN_LOSS,
+    UnknownLoss,
 }
 
 #[derive(Clone)]
@@ -25,19 +24,19 @@ pub struct Config {
 
 pub fn string2loss(s: &str) -> LOSS {
     match s {
-        "LOG_LIKEHOOD" => LOSS::LOG_LIKEHOOD,
-        "SQUARED_ERROR" => LOSS::SQUARED_ERROR,
+        "LogLikelyhood" => LOSS::LogLikelyhood,
+        "SquaredError" => LOSS::SquaredError,
         "LAD" => LOSS::LAD,
-        _ => LOSS::UNKNOWN_LOSS,
+        _ => LOSS::UnknownLoss,
     }
 }
 
-pub fn loss2string(l: LOSS) -> String {
+pub fn loss2string(l: &LOSS) -> String {
     match l {
-        LOSS::LOG_LIKEHOOD => String::from("LOG_LIKEHOOD"),
-        LOSS::SQUARED_ERROR => String::from("SQUARED_ERROR"),
+        LOSS::LogLikelyhood => String::from("LogLikelyhood"),
+        LOSS::SquaredError => String::from("SquaredError"),
         LOSS::LAD => String::from("LAD"),
-        LOSS::UNKNOWN_LOSS => String::from("UNKNOWN_LOSS"),
+        LOSS::UnknownLoss => String::from("UnknownLoss"),
     }
 }
 
@@ -51,14 +50,14 @@ impl Config {
             feature_sample_ratio: 1.0,
             data_sample_ratio: 1.0,
             min_leaf_size: 0,
-            loss: LOSS::SQUARED_ERROR,
+            loss: LOSS::SquaredError,
             debug: false,
             feature_cost: Vec::new(),
             enable_feature_tunning: false,
             enable_initial_guess: false,
         }
     }
-    pub fn to_string(self) -> String {
+    pub fn to_string(&self) -> String {
         let mut s = String::from("");
         s.push_str(&format!(
             "number of features = {}\n",
@@ -74,7 +73,7 @@ impl Config {
         ));
         s.push_str(&format!("data sample ratio = {}\n", self.data_sample_ratio));
         s.push_str(&format!("debug enabled = {}\n", self.debug));
-        s.push_str(&format!("loss type = {}\n", loss2string(self.loss)));
+        s.push_str(&format!("loss type = {}\n", loss2string(&self.loss)));
         s.push_str(&format!(
             "feature tuning enabled = {}\n",
             self.enable_feature_tunning

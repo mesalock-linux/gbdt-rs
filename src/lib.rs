@@ -45,7 +45,7 @@ mod tests {
 
     #[test]
     fn walk_tree() {
-        use super::binary_tree::*;
+        use binary_tree::*;
         let mut tree: BinaryTree<f32> = BinaryTree::new();
         let root = BinaryTreeNode::new(10.0);
 
@@ -72,7 +72,7 @@ mod tests {
 
     #[test]
     fn decision_tree() {
-        use super::decision_tree::*;
+        use decision_tree::*;
         let mut tree = DecisionTree::new();
         tree.set_feature_size(3);
         tree.set_max_depth(4);
@@ -132,34 +132,34 @@ mod tests {
 
     #[test]
     fn build_decision_tree() {
-        use super::decision_tree::DecisionTree;
-        let tree = DecisionTree::new();
+        use decision_tree::DecisionTree;
+        let _ = DecisionTree::new();
     }
 
     #[test]
     fn config_express() {
-        use super::config::Config;
+        use config::Config;
         let c = Config::empty_config();
         println!("{}", c.to_string());
     }
 
     #[test]
     fn loss_type() {
-        use super::config::{loss2string, string2loss, LOSS};
-        assert_eq!(string2loss("SQUARED_ERROR"), LOSS::SQUARED_ERROR);
-        assert_eq!(string2loss("LOG_LIKEHOOD"), LOSS::LOG_LIKEHOOD);
+        use config::{loss2string, string2loss, LOSS};
+        assert_eq!(string2loss("SquaredError"), LOSS::SquaredError);
+        assert_eq!(string2loss("LogLikelyhood"), LOSS::LogLikelyhood);
         assert_eq!(string2loss("LAD"), LOSS::LAD);
-        assert_eq!(string2loss("WHAT_THE_HUG"), LOSS::UNKNOWN_LOSS);
+        assert_eq!(string2loss("WHAT_THE_HUG"), LOSS::UnknownLoss);
 
-        assert_eq!(loss2string(LOSS::SQUARED_ERROR), "SQUARED_ERROR");
-        assert_eq!(loss2string(LOSS::LOG_LIKEHOOD), "LOG_LIKEHOOD");
-        assert_eq!(loss2string(LOSS::LAD), "LAD");
-        assert_eq!(loss2string(LOSS::UNKNOWN_LOSS), "UNKNOWN_LOSS");
+        assert_eq!(loss2string(&LOSS::SquaredError), "SquaredError");
+        assert_eq!(loss2string(&LOSS::LogLikelyhood), "LogLikelyhood");
+        assert_eq!(loss2string(&LOSS::LAD), "LAD");
+        assert_eq!(loss2string(&LOSS::UnknownLoss), "UnknownLoss");
     }
 
     #[test]
     fn fitness() {
-        use super::decision_tree::*;
+        use decision_tree::*;
         let mut dv: DataVec = Vec::new();
         dv.push(Data {
             feature: Vec::new(),
@@ -194,7 +194,7 @@ mod tests {
             initial_guess: VALUE_TYPE_UNKNOWN,
         });
 
-        use super::fitness::{
+        use fitness::{
             almost_equal, average, label_average, same, weighted_label_median,
             weighted_residual_median,
         };

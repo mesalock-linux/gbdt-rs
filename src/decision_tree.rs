@@ -1,7 +1,7 @@
-use super::binary_tree::BinaryTree;
-use super::binary_tree::BinaryTreeNode;
-use super::binary_tree::TreeIndex;
-use super::fitness::almost_equal;
+use binary_tree::BinaryTree;
+use binary_tree::BinaryTreeNode;
+use binary_tree::TreeIndex;
+use fitness::almost_equal;
 
 use rand::prelude::SliceRandom;
 use rand::thread_rng;
@@ -47,7 +47,8 @@ fn average(data: &Vec<&Data>) -> ValueType {
         sum += elem.target * elem.weight;
         weight += elem.weight;
     }
-    return sum / weight;
+
+    sum / weight
 }
 
 fn logit_optimal_value(data: &Vec<&Data>) -> ValueType {
@@ -67,6 +68,8 @@ fn logit_optimal_value(data: &Vec<&Data>) -> ValueType {
     }
 }
 
+// TODO: Double check if this is needed
+//       Remove or pub if applicable
 fn lad_optimal_value(data: &Vec<&Data>) -> ValueType {
     let mut data_copy = data.to_vec();
     data_copy.sort_by(|a, b| {
@@ -93,17 +96,18 @@ fn lad_optimal_value(data: &Vec<&Data>) -> ValueType {
             break;
         }
     }
-    return weighted_median;
+
+    weighted_median
 }
 
 fn same(dv: &Vec<&Data>) -> bool {
-    if dv.len() < 1 {
+    if dv.is_empty()  {
         return false;
     }
 
     let t: ValueType = dv[0].target;
-    for i in 1..dv.len() {
-        if !(almost_equal(t, dv[i].target)) {
+    for i in dv.iter().skip(1) {
+        if !(almost_equal(t, i.target)) {
             return false;
         }
     }
@@ -257,8 +261,8 @@ impl DecisionTree {
         let root = self.tree.get_node(self.tree.get_root_index());
         assert!(root.is_some(), "Decision tree should have root node");
         let root = root.unwrap();
-        for i in 0..sample_size {
-            ret.push(self.predict_one(root, &test_data[i]));
+        for i in test_data.iter().take(sample_size) {
+            ret.push(self.predict_one(root, &i));
         }
         ret
     }
@@ -317,17 +321,19 @@ impl DecisionTree {
 
         let mut index: usize = 0;
         let mut value: ValueType = 0.0;
-        let mut gain: f64 = 0.0;
+        // TODO: Double check if this is needed
+        //       Remove if possible
+        // let mut gain: f64 = 0.0;
 
         let mut find: bool = false;
-        for i in 0..fs {
-            DecisionTree::get_impurity(train_data, fv[i], &mut v, &mut impurity, &mut g);
+        for i in fv.iter().take(fs) {
+            DecisionTree::get_impurity(train_data, *i, &mut v, &mut impurity, &mut g);
             if best_fitness > impurity {
                 find = true;
                 best_fitness = impurity;
-                index = fv[i];
+                index = *i;
                 value = v;
-                gain = g;
+                //gain = g;
             }
         }
         if find {
@@ -380,10 +386,10 @@ impl DecisionTree {
         let mut ss: f64 = 0.0;
         let mut c: f64 = 0.0;
 
-        for i in 0..train_data.len() {
-            s += data[i].target * data[i].weight;
-            ss += data[i].target * data[i].target * data[i].weight;
-            c += data[i].weight;
+        for i in data.iter().take(train_data.len()) {
+            s += i.target * i.weight;
+            ss += i.target * i.target * i.weight;
+            c += i.weight;
         }
 
         let fitness00: ValueType = if c > 1.0 { ss - s * s / c } else { 0.0 };
@@ -394,8 +400,6 @@ impl DecisionTree {
         let mut rs: f64 = s;
         let mut rss: f64 = ss;
         let mut rc: f64 = c;
-        let mut fitness1: f64 = 0.0;
-        let mut fitness2: f64 = 0.0;
 
         for i in 0..(train_data.len() - 1) {
             s = data[i].target * data[i].weight;
@@ -417,9 +421,9 @@ impl DecisionTree {
                 continue;
             }
 
-            fitness1 = if lc > 1.0 { lss - ls * ls / lc } else { 0.0 };
+            let fitness1 = if lc > 1.0 { lss - ls * ls / lc } else { 0.0 };
 
-            fitness2 = if rc > 1.0 { rss - rs * rs / rc } else { 0.0 };
+            let fitness2 = if rc > 1.0 { rss - rs * rs / rc } else { 0.0 };
 
             let mut fitness: ValueType = fitness0 + fitness1 + fitness2;
 

@@ -1,12 +1,7 @@
-use super::decision_tree::{DataVec, PredVec, ValueType};
+use decision_tree::{DataVec, PredVec, ValueType};
 
 pub fn almost_equal(a: ValueType, b: ValueType) -> bool {
-    let delta = (a - b).abs();
-    if delta < 1.0e-5 {
-        return true;
-    } else {
-        return false;
-    }
+    (a - b).abs() < 1.0e-5
 }
 
 pub fn same(dv: &DataVec, len: usize) -> bool {
@@ -134,12 +129,12 @@ pub fn AUC(dv: &DataVec, predict: &PredVec, len: usize) -> ValueType {
         } else {
             let tie_score = vn;
             let mut kn: usize = 0;
-            while nptr < n_size && negative_scores[nptr] == tie_score {
+            while nptr < n_size && almost_equal(negative_scores[nptr],tie_score) {
                 kn += 1;
                 nptr += 1;
             }
             let mut kp: usize = 0;
-            while pptr < p_size && positive_scores[pptr] == tie_score {
+            while pptr < p_size && almost_equal(positive_scores[pptr],tie_score) {
                 kp += 1;
                 pptr += 1;
             }
@@ -149,7 +144,9 @@ pub fn AUC(dv: &DataVec, predict: &PredVec, len: usize) -> ValueType {
     }
     if pptr < p_size {
         rank_sum += (rank + ((p_size - pptr - 1) as f64) / 2.0) * ((p_size - pptr) as f64);
-        rank += (p_size - pptr) as f64;
+        // TODO: Double check if this is needed.
+        //       Remove if possible.
+        //rank += (p_size - pptr) as f64;
     }
     (rank_sum / (p_size as f64) - ((p_size as f64) + 1.0)) / (n_size as f64)
 }

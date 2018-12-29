@@ -1,11 +1,9 @@
-extern crate rand;
-
-use self::rand::prelude::SliceRandom;
-use self::rand::thread_rng;
-use super::super::config::{Config, LOSS};
-use super::super::decision_tree::DecisionTree;
-use super::super::decision_tree::{DataVec, PredVec, ValueType, VALUE_TYPE_UNKNOWN};
-use super::super::fitness::*;
+use rand::prelude::SliceRandom;
+use rand::thread_rng;
+use config::{Config, LOSS};
+use decision_tree::DecisionTree;
+use decision_tree::{DataVec, PredVec, ValueType, VALUE_TYPE_UNKNOWN};
+use fitness::*;
 
 pub struct GBDT {
     conf: Config,
@@ -32,13 +30,13 @@ impl GBDT {
         }
 
         self.bias = match self.conf.loss {
-            LOSS::SQUARED_ERROR => label_average(dv, len),
-            LOSS::LOG_LIKEHOOD => {
+            LOSS::SquaredError => label_average(dv, len),
+            LOSS::LogLikelyhood => {
                 let v: f64 = label_average(dv, len);
                 ((1.0 + v) / (1.0 - v)).ln() / 2.0
             }
             LOSS::LAD => weighted_label_median(dv, len),
-            LOSS::UNKNOWN_LOSS => return,
+            LOSS::UnknownLoss => return,
         }
     }
 
@@ -62,9 +60,9 @@ impl GBDT {
             if nr_samples < train_data.len() {
                 train_data_copy.shuffle(&mut rng);
             }
-            if self.conf.loss == LOSS::SQUARED_ERROR {
+            if self.conf.loss == LOSS::SquaredError {
                 self.square_loss_process(&mut train_data_copy, nr_samples, i);
-            } else if self.conf.loss == LOSS::LOG_LIKEHOOD {
+            } else if self.conf.loss == LOSS::LogLikelyhood {
                 self.log_loss_process(&mut train_data_copy, nr_samples, i);
             } else if self.conf.loss == LOSS::LAD {
                 self.lad_loss_process(&mut train_data_copy, nr_samples, i);
@@ -77,16 +75,19 @@ impl GBDT {
         assert!(iters <= self.conf.iterations);
         assert!(n <= test_data.len());
 
-        if self.trees.len() <= 0 {
+        if self.trees.is_empty() {
             return vec![VALUE_TYPE_UNKNOWN; test_data.len()];
         }
 
         let mut predicted: PredVec = Vec::new();
-        for i in 0..n {
-            predicted.push(match self.conf.enable_initial_guess {
-                true => test_data[i].initial_guess,
-                false => self.bias,
-            });
+        for i in test_data.iter().take(n) {
+            predicted.push(
+                if self.conf.enable_initial_guess {
+                    i.initial_guess
+                } else {
+                    self.bias
+                }
+            );
         }
         for i in 0..(iters) {
             let v: PredVec = self.trees[i].predict_n(test_data, n);

@@ -1,4 +1,4 @@
-#[derive(Debug)]
+#[derive(Debug, Default)]
 pub struct BinaryTreeNode<T> {
     pub value: T,
     index: usize,
@@ -9,7 +9,7 @@ pub struct BinaryTreeNode<T> {
 impl<T> BinaryTreeNode<T> {
     pub fn new(value: T) -> Self {
         BinaryTreeNode {
-            value: value,
+            value,
             index: 0,
             left: 0,
             right: 0,
@@ -19,15 +19,15 @@ impl<T> BinaryTreeNode<T> {
 
 pub type TreeIndex = usize;
 
-#[derive(Debug)]
+#[derive(Debug, Default)]
 pub struct BinaryTree<T> {
     tree: Vec<BinaryTreeNode<T>>,
 }
 
 impl<T> BinaryTree<T> {
+
     pub fn new() -> Self {
-        let tree: Vec<BinaryTreeNode<T>> = Vec::new();
-        BinaryTree { tree: tree }
+        BinaryTree { tree: Vec::new() }
     }
 
     pub fn get_root_index(&self) -> TreeIndex {
@@ -83,13 +83,13 @@ impl<T> BinaryTree<T> {
         if position == 0 {
             return position;
         }
-        self.tree.get_mut(parent).map(|n| {
+        if let Some(n) = self.tree.get_mut(parent) {
             if is_left {
                 n.left = position;
             } else {
                 n.right = position;
             }
-        });
+        };
         position
     }
 
@@ -100,7 +100,7 @@ impl<T> BinaryTree<T> {
         let mut stack: Vec<(usize, Option<&BinaryTreeNode<T>>)> = Vec::new();
         let root = self.get_node(self.get_root_index());
         stack.push((0, root));
-        while stack.len() > 0 {
+        while !stack.is_empty() {
             let next = stack.pop();
             if let Some((deep, node_opt)) = next {
                 if let Some(node) = node_opt {
