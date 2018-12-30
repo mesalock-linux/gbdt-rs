@@ -92,8 +92,8 @@ impl GBDT {
         }
         for i in 0..(iters) {
             let v: PredVec = self.trees[i].predict_n(test_data, n);
-            for i in 0..v.len() {
-                predicted[i] += self.conf.shrinkage * v[i];
+            for d in 0..v.len() {
+                predicted[d] += self.conf.shrinkage * v[d];
             }
         }
         predicted.to_vec()
@@ -101,6 +101,12 @@ impl GBDT {
 
     pub fn predict(&self, test_data: &DataVec) -> PredVec {
         self.predict_n(test_data, self.conf.iterations, test_data.len())
+    }
+
+    pub fn print_trees(&self) {
+        for i in 0..self.trees.len() {
+            self.trees[i].print();
+        }
     }
 
     pub fn square_loss_process(&self, dv: &mut DataVec, samples: usize, iters: usize) {
