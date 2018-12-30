@@ -1,11 +1,17 @@
-#[derive(Debug, PartialEq, Clone)]
+#[derive(Debug, PartialEq, Clone, Serialize, Deserialize)]
 pub enum Loss {
     SquaredError,
     LogLikelyhood,
     LAD,
 }
 
-#[derive(Clone)]
+impl Default for Loss {
+    fn default() -> Self {
+        Loss::SquaredError
+    }
+}
+
+#[derive(Default, Clone, Serialize, Deserialize)]
 pub struct Config {
     pub number_of_feature: usize,
     pub max_depth: u32,

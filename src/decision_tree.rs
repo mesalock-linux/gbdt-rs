@@ -10,7 +10,7 @@ use rand::thread_rng;
 // use continous variables for decision tree
 pub type ValueType = f64;
 
-#[derive(Debug, Clone)]
+#[derive(Debug, Clone, Serialize, Deserialize)]
 pub struct Data {
     pub feature: Vec<ValueType>,
     pub target: ValueType,
@@ -115,7 +115,7 @@ fn same(dv: &[&Data]) -> bool {
     true
 }
 
-#[derive(Debug)]
+#[derive(Debug, Serialize, Deserialize)]
 struct DTNode {
     feature_index: usize,
     feature_value: ValueType,
@@ -134,6 +134,7 @@ impl DTNode {
     }
 }
 
+#[derive(Debug, Serialize, Deserialize)]
 pub struct DecisionTree {
     tree: BinaryTree<DTNode>,
     feature_size: usize,

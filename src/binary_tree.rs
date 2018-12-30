@@ -1,4 +1,4 @@
-#[derive(Debug, Default)]
+#[derive(Debug, Default, Serialize, Deserialize)]
 pub struct BinaryTreeNode<T> {
     pub value: T,
     index: usize,
@@ -19,7 +19,7 @@ impl<T> BinaryTreeNode<T> {
 
 pub type TreeIndex = usize;
 
-#[derive(Debug)]
+#[derive(Debug, Serialize, Deserialize)]
 pub struct BinaryTree<T> {
     tree: Vec<BinaryTreeNode<T>>,
 }

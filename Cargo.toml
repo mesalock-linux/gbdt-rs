@@ -28,3 +28,5 @@ crate-type = ["rlib", "staticlib"]
 
 [dependencies]
 rand="0.6.1"
+serde = "1"
+serde_derive = "1"

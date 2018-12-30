@@ -5,6 +5,7 @@ use fitness::*;
 use rand::prelude::SliceRandom;
 use rand::thread_rng;
 
+#[derive(Default, Serialize, Deserialize)]
 pub struct GBDT {
     conf: Config,
     trees: Vec<DecisionTree>,
