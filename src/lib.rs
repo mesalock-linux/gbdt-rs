@@ -75,8 +75,8 @@ mod tests {
 
     #[test]
     fn decision_tree() {
-        use decision_tree::*;
         use config::Loss;
+        use decision_tree::*;
         let mut tree = DecisionTree::new();
         tree.set_feature_size(3);
         tree.set_max_depth(4);
@@ -210,11 +210,11 @@ mod tests {
 
     #[test]
     fn test_iris() {
-        use gradient_boost::*;
         use config::{Config, Loss};
         use decision_tree::*;
-        use std::fs::{File};
-        use std::io::{BufReader, BufRead};
+        use gradient_boost::*;
+        use std::fs::File;
+        use std::io::{BufRead, BufReader};
 
         let cfg: Config = Config {
             number_of_feature: 4,
@@ -246,7 +246,7 @@ mod tests {
             for i in 0..4 {
                 feature.push(lv[i].parse::<f64>().unwrap());
             }
-            assert!(lv.len()==5);
+            assert!(lv.len() == 5);
             let d = Data {
                 feature,
                 target: 0.0,
@@ -267,7 +267,7 @@ mod tests {
             for i in 0..4 {
                 feature.push(lv[i].parse::<f64>().unwrap());
             }
-            assert!(lv.len()==5);
+            assert!(lv.len() == 5);
             let d = Data {
                 feature,
                 target: 0.0,

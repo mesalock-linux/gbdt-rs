@@ -1,8 +1,8 @@
 use binary_tree::BinaryTree;
 use binary_tree::BinaryTreeNode;
 use binary_tree::TreeIndex;
-use fitness::almost_equal;
 use config::Loss;
+use fitness::almost_equal;
 
 use rand::prelude::SliceRandom;
 use rand::thread_rng;
@@ -182,32 +182,18 @@ impl DecisionTree {
     }
 
     pub fn fit_n(&mut self, train_data: &DataVec, n: usize) {
-        let sample_size = if n < train_data.len() {
-            n
-        } else {
-            train_data.len()
-        };
-
-        let mut data: Vec<&Data> = Vec::new();
-        for i in 0..sample_size {
-            let ele = train_data.get(i);
-            if let Some(sample) = ele {
-                data.push(sample);
-            }
-        }
+        let data: Vec<&Data> = (0..std::cmp::min(n, train_data.len()))
+            .filter_map(|x| train_data.get(x))
+            .collect();
         //let mut gain: Vec<ValueType> = vec![0.0; self.feature_size];
         let root_index = self.tree.add_root(BinaryTreeNode::new(DTNode::new()));
         self.fit_node(root_index, 0, &data);
     }
 
     pub fn fit(&mut self, train_data: &DataVec) {
-        let mut data: Vec<&Data> = Vec::new();
-        for i in 0..train_data.len() {
-            let ele = train_data.get(i);
-            if let Some(sample) = ele {
-                data.push(sample);
-            }
-        }
+        let data: Vec<&Data> = (0..train_data.len())
+            .filter_map(|x| train_data.get(x))
+            .collect();
         //let mut gain: Vec<ValueType> = vec![0.0; self.feature_size];
         let root_index = self.tree.add_root(BinaryTreeNode::new(DTNode::new()));
         self.fit_node(root_index, 0, &data);
@@ -216,9 +202,10 @@ impl DecisionTree {
     fn fit_node(&mut self, node: TreeIndex, depth: u32, train_data: &[&Data]) {
         // modify current node
         {
-            let node_option = self.tree.get_node_mut(node);
-            assert_eq!(node_option.is_some(), true);
-            let node_ref = node_option.unwrap();
+            let node_ref = self
+                .tree
+                .get_node_mut(node)
+                .expect("node should not be empty!");
             if (depth > self.max_depth)
                 || same(train_data)
                 || (train_data.len() < self.min_leaf_size)
@@ -233,9 +220,10 @@ impl DecisionTree {
             DecisionTree::split(train_data, self.feature_size, self.feature_sample_ratio);
 
         {
-            let node_option = self.tree.get_node_mut(node);
-            assert_eq!(node_option.is_some(), true);
-            let node_ref = node_option.unwrap();
+            let node_ref = self
+                .tree
+                .get_node_mut(node)
+                .expect("node should not be empty");
             if splited_data.is_none() {
                 node_ref.value.is_leaf = true;
                 node_ref.value.pred = calculate_pred(train_data, &self.loss);
@@ -259,29 +247,27 @@ impl DecisionTree {
     }
 
     pub fn predict_n(&self, test_data: &DataVec, n: usize) -> PredVec {
-        let sample_size = if n < test_data.len() {
-            n
-        } else {
-            test_data.len()
-        };
-        let mut ret: PredVec = Vec::new();
-        let root = self.tree.get_node(self.tree.get_root_index());
-        assert!(root.is_some(), "Decision tree should have root node");
-        let root = root.unwrap();
-        for i in test_data.iter().take(sample_size) {
-            ret.push(self.predict_one(root, &i));
-        }
-        ret
+        let root = self
+            .tree
+            .get_node(self.tree.get_root_index())
+            .expect("Decision tree should have root node");
+
+        test_data
+            .iter()
+            .take(std::cmp::min(n, test_data.len()))
+            .map(|x| self.predict_one(root, x))
+            .collect()
     }
     pub fn predict(&self, test_data: &DataVec) -> PredVec {
-        let mut ret: PredVec = Vec::new();
-        let root = self.tree.get_node(self.tree.get_root_index());
-        assert!(root.is_some(), "Decision tree should have root node");
-        let root = root.unwrap();
-        for elem in test_data.iter() {
-            ret.push(self.predict_one(root, elem));
-        }
-        ret
+        let root = self
+            .tree
+            .get_node(self.tree.get_root_index())
+            .expect("Decision tree should have root node");
+
+        test_data
+            .iter()
+            .map(|x| self.predict_one(root, x))
+            .collect()
     }
 
     fn predict_one(&self, node: &BinaryTreeNode<DTNode>, sample: &Data) -> ValueType {
@@ -293,13 +279,17 @@ impl DecisionTree {
                 "sample doesn't have the feature"
             );
             if sample.feature[node.value.feature_index] < node.value.feature_value {
-                let left = self.tree.get_left_child(node);
-                assert!(left.is_some(), "Left child shouldn't be None");
-                self.predict_one(left.unwrap(), sample)
+                let left = self
+                    .tree
+                    .get_left_child(node)
+                    .expect("Left child should not be None");
+                self.predict_one(left, sample)
             } else {
-                let right = self.tree.get_right_child(node);
-                assert!(right.is_some(), "Right child shouldn't be None");
-                self.predict_one(right.unwrap(), sample)
+                let right = self
+                    .tree
+                    .get_right_child(node)
+                    .expect("Right child should not be None");
+                self.predict_one(right, sample)
             }
         }
     }
@@ -310,10 +300,7 @@ impl DecisionTree {
         feature_sample_ratio: f64,
     ) -> (Option<(Vec<&'a Data>, Vec<&'a Data>)>, usize, ValueType) {
         let mut fs = feature_size;
-        let mut fv: Vec<usize> = Vec::new();
-        for i in 0..fs {
-            fv.push(i);
-        }
+        let mut fv: Vec<usize> = (0..).take(fs).collect();
 
         let mut rng = thread_rng();
         if feature_sample_ratio < 1.0 {

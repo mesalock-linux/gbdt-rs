@@ -81,8 +81,8 @@ pub fn AUC(dv: &DataVec, predict: &PredVec, len: usize) -> ValueType {
 
     let mut confusion_table: Vec<i32> = vec![0; 4];
     let threshold: ValueType = 0.5;
-    let mut positive_scores: Vec<ValueType> = Vec::new();
-    let mut negative_scores: Vec<ValueType> = Vec::new();
+    let mut positive_scores: Vec<ValueType> = Vec::with_capacity(dv.len());
+    let mut negative_scores: Vec<ValueType> = Vec::with_capacity(dv.len());
 
     // insert into confusion table
     for i in 0..dv.len() {

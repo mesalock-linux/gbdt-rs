@@ -1,12 +1,12 @@
 extern crate gbdt;
 
-use gbdt::decision_tree::{DataVec, PredVec, Data, ValueType};
 use gbdt::config::{Config, Loss};
-use gbdt::gradient_boost::GBDT;
+use gbdt::decision_tree::{Data, DataVec, PredVec, ValueType};
 use gbdt::fitness::almost_equal;
+use gbdt::gradient_boost::GBDT;
 
-use std::fs::{File};
-use std::io::{BufReader, BufRead};
+use std::fs::File;
+use std::io::{BufRead, BufReader};
 
 fn main() {
     let cfg = Config {
@@ -35,7 +35,7 @@ fn main() {
     for line in f.lines() {
         let l = line.unwrap();
         let lv: Vec<&str> = l.splitn(23, ",").collect();
-        assert!(lv.len()==23);
+        assert!(lv.len() == 23);
         let mut feature: Vec<ValueType> = Vec::new();
         for i in 0..22 {
             feature.push(lv[i].parse::<ValueType>().unwrap());
@@ -56,7 +56,7 @@ fn main() {
     for line in f.lines() {
         let l = line.unwrap();
         let lv: Vec<&str> = l.splitn(23, ",").collect();
-        assert!(lv.len()==23);
+        assert!(lv.len() == 23);
         let mut feature: Vec<ValueType> = Vec::new();
         for i in 0..22 {
             feature.push(lv[i].parse::<ValueType>().unwrap());
@@ -80,14 +80,14 @@ fn main() {
     let mut correct = 0;
     let mut wrong = 0;
     for i in 0..predicted.len() {
-        match almost_equal(test_dv[i].label, predicted[i]) {
-            true => { correct += 1; },
-            false => { wrong += 1; },
+        if almost_equal(test_dv[i].label, predicted[i]) {
+            correct += 1;
+        } else {
+            wrong += 1;
         };
         println!("[{}]  {}  {}", i, test_dv[i].label, predicted[i]);
     }
 
     println!("correct: {}", correct);
     println!("wrong:   {}", wrong);
-
 }

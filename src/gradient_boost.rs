@@ -40,7 +40,7 @@ impl GBDT {
     }
 
     pub fn fit(&mut self, train_data: &DataVec) {
-        self.trees = Vec::new();
+        self.trees = Vec::with_capacity(self.conf.iterations);
         for i in 0..self.conf.iterations {
             self.trees.push(DecisionTree::new());
             self.trees[i].set_feature_size(self.conf.number_of_feature);
@@ -82,7 +82,7 @@ impl GBDT {
             return vec![VALUE_TYPE_UNKNOWN; test_data.len()];
         }
 
-        let mut predicted: PredVec = Vec::new();
+        let mut predicted: PredVec = Vec::with_capacity(n);
         for i in test_data.iter().take(n) {
             predicted.push(if self.conf.enable_initial_guess {
                 i.initial_guess

@@ -26,7 +26,7 @@ pub fn string2loss(s: &str) -> Loss {
         "LogLikelyhood" => Loss::LogLikelyhood,
         "SquaredError" => Loss::SquaredError,
         "LAD" => Loss::LAD,
-        _ => Loss::SquaredError
+        _ => Loss::SquaredError,
     }
 }
 
