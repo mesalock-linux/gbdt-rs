@@ -1,16 +1,24 @@
-#[derive(Debug, PartialEq, Clone)]
+use decision_tree::ValueType;
+
+#[derive(Debug, PartialEq, Clone, Serialize, Deserialize)]
 pub enum Loss {
     SquaredError,
     LogLikelyhood,
     LAD,
 }
 
-#[derive(Clone)]
+impl Default for Loss {
+    fn default() -> Self {
+        Loss::SquaredError
+    }
+}
+
+#[derive(Default, Clone, Serialize, Deserialize)]
 pub struct Config {
     pub number_of_feature: usize,
     pub max_depth: u32,
     pub iterations: usize,
-    pub shrinkage: f64,
+    pub shrinkage: ValueType,
     pub feature_sample_ratio: f64,
     pub data_sample_ratio: f64,
     pub min_leaf_size: usize,

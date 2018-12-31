@@ -7,10 +7,21 @@ use fitness::almost_equal;
 use rand::prelude::SliceRandom;
 use rand::thread_rng;
 
-// use continous variables for decision tree
-pub type ValueType = f64;
+// For now we only support std::$t using this macro.
+// We will generalize ValueType in future.
+macro_rules! def_value_type {
+    ($t: tt) => {
+        pub type ValueType = $t;
+        pub const VALUE_TYPE_MAX: ValueType = std::$t::MAX;
+        pub const VALUE_TYPE_MIN: ValueType = std::$t::MIN;
+        pub const VALUE_TYPE_UNKNOWN: ValueType = VALUE_TYPE_MIN;
+    };
+}
 
-#[derive(Debug, Clone)]
+// use continous variables for decision tree
+def_value_type!(f64);
+
+#[derive(Debug, Clone, Serialize, Deserialize)]
 pub struct Data {
     pub feature: Vec<ValueType>,
     pub target: ValueType,
@@ -22,10 +33,6 @@ pub struct Data {
 
 pub type DataVec = Vec<Data>;
 pub type PredVec = Vec<ValueType>;
-
-pub const VALUE_TYPE_MAX: f64 = std::f64::MAX;
-pub const VALUE_TYPE_MIN: f64 = std::f64::MIN;
-pub const VALUE_TYPE_UNKNOWN: f64 = VALUE_TYPE_MIN;
 
 /*
 pub enum Loss {
@@ -79,7 +86,7 @@ fn lad_optimal_value(data: &[&Data]) -> ValueType {
         v1.partial_cmp(&v2).unwrap()
     });
 
-    let mut all_weight: f64 = 0.0;
+    let mut all_weight: ValueType = 0.0;
     for elem in data_copy.iter() {
         all_weight += elem.weight;
     }
@@ -115,7 +122,7 @@ fn same(dv: &[&Data]) -> bool {
     true
 }
 
-#[derive(Debug)]
+#[derive(Debug, Serialize, Deserialize)]
 struct DTNode {
     feature_index: usize,
     feature_value: ValueType,
@@ -134,6 +141,7 @@ impl DTNode {
     }
 }
 
+#[derive(Debug, Serialize, Deserialize)]
 pub struct DecisionTree {
     tree: BinaryTree<DTNode>,
     feature_size: usize,
@@ -309,7 +317,7 @@ impl DecisionTree {
         }
 
         let mut v: ValueType = 0.0;
-        let mut impurity: f64 = 0.0;
+        let mut impurity: ValueType = 0.0;
         //let mut g: f64 = 0.0;
         let mut best_fitness: ValueType = VALUE_TYPE_MAX;
 
@@ -352,7 +360,7 @@ impl DecisionTree {
         train_data: &[&Data],
         feature_index: usize,
         value: &mut ValueType,
-        impurity: &mut f64,
+        impurity: &mut ValueType,
         //gain: &mut f64,
     ) {
         *impurity = VALUE_TYPE_MAX;
@@ -372,11 +380,11 @@ impl DecisionTree {
             v1.partial_cmp(&v2).unwrap()
         });
 
-        let fitness0: f64 = 0.0;
+        let fitness0: ValueType = 0.0;
 
-        let mut s: f64 = 0.0;
-        let mut ss: f64 = 0.0;
-        let mut c: f64 = 0.0;
+        let mut s: ValueType = 0.0;
+        let mut ss: ValueType = 0.0;
+        let mut c: ValueType = 0.0;
 
         for i in data.iter().take(train_data.len()) {
             s += i.target * i.weight;
@@ -389,12 +397,12 @@ impl DecisionTree {
         // TODO: remove '_' to support unknown feature
         let _fitness00: ValueType = if c > 1.0 { ss - s * s / c } else { 0.0 };
 
-        let mut ls: f64 = 0.0;
-        let mut lss: f64 = 0.0;
-        let mut lc: f64 = 0.0;
-        let mut rs: f64 = s;
-        let mut rss: f64 = ss;
-        let mut rc: f64 = c;
+        let mut ls: ValueType = 0.0;
+        let mut lss: ValueType = 0.0;
+        let mut lc: ValueType = 0.0;
+        let mut rs: ValueType = s;
+        let mut rss: ValueType = ss;
+        let mut rc: ValueType = c;
 
         for i in 0..(train_data.len() - 1) {
             s = data[i].target * data[i].weight;
@@ -412,7 +420,7 @@ impl DecisionTree {
             let mut f1: ValueType = data[i].feature[index];
             let mut f2: ValueType = data[i + 1].feature[index];
 
-            if (f1 - f2).abs() < 1.0e-5 {
+            if almost_equal(f1, f2) {
                 continue;
             }
 

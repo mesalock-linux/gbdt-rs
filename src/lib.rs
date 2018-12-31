@@ -32,6 +32,9 @@
 #![allow(clippy::type_complexity)]
 
 extern crate rand;
+extern crate serde;
+#[macro_use]
+extern crate serde_derive;
 
 pub mod binary_tree;
 pub mod config;
@@ -244,14 +247,14 @@ mod tests {
             let lv: Vec<&str> = l.splitn(5, ",").collect();
             let mut feature: Vec<ValueType> = Vec::new();
             for i in 0..4 {
-                feature.push(lv[i].parse::<f64>().unwrap());
+                feature.push(lv[i].parse::<ValueType>().unwrap());
             }
             assert!(lv.len() == 5);
             let d = Data {
                 feature,
                 target: 0.0,
                 weight: 1.0,
-                label: lv[4].parse::<f64>().unwrap(),
+                label: lv[4].parse::<ValueType>().unwrap(),
                 residual: 0.0,
                 initial_guess: 0.0,
             };
@@ -265,14 +268,14 @@ mod tests {
             let lv: Vec<&str> = l.splitn(5, ",").collect();
             let mut feature: Vec<ValueType> = Vec::new();
             for i in 0..4 {
-                feature.push(lv[i].parse::<f64>().unwrap());
+                feature.push(lv[i].parse::<ValueType>().unwrap());
             }
             assert!(lv.len() == 5);
             let d = Data {
                 feature,
                 target: 0.0,
                 weight: 1.0,
-                label: lv[4].parse::<f64>().unwrap(),
+                label: lv[4].parse::<ValueType>().unwrap(),
                 residual: 0.0,
                 initial_guess: 0.0,
             };
