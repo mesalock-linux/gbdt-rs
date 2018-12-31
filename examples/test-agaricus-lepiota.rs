@@ -44,7 +44,7 @@ fn main() {
             feature: feature,
             target: 0.0,
             weight: 1.0,
-            label: lv[22].parse::<f64>().unwrap(),
+            label: lv[22].parse::<ValueType>().unwrap(),
             residual: 0.0,
             initial_guess: 0.0,
         };
@@ -65,7 +65,7 @@ fn main() {
             feature: feature,
             target: 0.0,
             weight: 1.0,
-            label: lv[22].parse::<f64>().unwrap(),
+            label: lv[22].parse::<ValueType>().unwrap(),
             residual: 0.0,
             initial_guess: 0.0,
         };

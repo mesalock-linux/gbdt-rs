@@ -138,16 +138,17 @@ pub fn AUC(dv: &DataVec, predict: &PredVec, len: usize) -> ValueType {
                 kp += 1;
                 pptr += 1;
             }
-            rank_sum += rank + ((kp + kn - 1) as f64) / 2.0;
-            rank += (kp + kn) as f64;
+            rank_sum += rank + ((kp + kn - 1) as ValueType) / 2.0;
+            rank += (kp + kn) as ValueType;
         }
     }
     if pptr < p_size {
-        rank_sum += (rank + ((p_size - pptr - 1) as f64) / 2.0) * ((p_size - pptr) as f64);
+        rank_sum +=
+            (rank + ((p_size - pptr - 1) as ValueType) / 2.0) * ((p_size - pptr) as ValueType);
         // TODO: double check if this is needed
         //rank += (p_size - pptr) as f64;
     }
-    (rank_sum / (p_size as f64) - ((p_size as f64) + 1.0)) / (n_size as f64)
+    (rank_sum / (p_size as ValueType) - ((p_size as ValueType) + 1.0)) / (n_size as ValueType)
 }
 
 pub fn average(dv: &DataVec, len: usize) -> ValueType {

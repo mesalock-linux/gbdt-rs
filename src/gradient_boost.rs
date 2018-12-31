@@ -33,7 +33,7 @@ impl GBDT {
         self.bias = match self.conf.loss {
             Loss::SquaredError => label_average(dv, len),
             Loss::LogLikelyhood => {
-                let v: f64 = label_average(dv, len);
+                let v: ValueType = label_average(dv, len);
                 ((1.0 + v) / (1.0 - v)).ln() / 2.0
             }
             Loss::LAD => weighted_label_median(dv, len),
