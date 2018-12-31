@@ -13,6 +13,10 @@ for attr in range(l):
     for _ in range(len(d)):
         d[_][attr] = dic[d[_][attr]]
 
+
+for each in d:
+    if each[-1] == 0:
+        each[-1] = -1
 with open("vectorized.txt", "w") as f:
     for each in d:
         f.write(
