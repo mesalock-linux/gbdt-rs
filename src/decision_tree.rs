@@ -413,7 +413,7 @@ impl DecisionTree {
             let mut f1: ValueType = data[i].feature[index];
             let mut f2: ValueType = data[i + 1].feature[index];
 
-            if (f1 - f2).abs() < 1.0e-5 {
+            if almost_equal(f1, f2) {
                 continue;
             }
 
