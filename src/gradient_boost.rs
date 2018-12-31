@@ -96,11 +96,25 @@ impl GBDT {
                 predicted[d] += self.conf.shrinkage * v[d];
             }
         }
-        predicted.to_vec()
+        predicted
     }
 
     pub fn predict(&self, test_data: &DataVec) -> PredVec {
-        self.predict_n(test_data, self.conf.iterations, test_data.len())
+        let predicted = self.predict_n(test_data, self.conf.iterations, test_data.len());
+        
+        if self.conf.loss == Loss::LogLikelyhood {
+            let mut logpv: PredVec = Vec::with_capacity(predicted.len());
+            for i in 0..predicted.len() {
+                logpv.push( match (1.0 / (1.0 + (-2.0 * predicted[i]).exp())) >= 0.5 {
+                    true => { 1.0 },
+                    false => { -1.0 },
+                } );
+            }
+            logpv
+        }
+        else {
+            predicted
+        }
     }
 
     pub fn print_trees(&self) {
