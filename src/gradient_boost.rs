@@ -1,7 +1,7 @@
-use config::{Config, Loss};
-use decision_tree::DecisionTree;
-use decision_tree::{DataVec, PredVec, ValueType, VALUE_TYPE_UNKNOWN};
-use fitness::*;
+use crate::config::{Config, Loss};
+use crate::decision_tree::DecisionTree;
+use crate::decision_tree::{DataVec, PredVec, ValueType, VALUE_TYPE_UNKNOWN};
+use crate::fitness::*;
 use rand::prelude::SliceRandom;
 use rand::thread_rng;
 

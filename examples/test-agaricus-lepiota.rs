@@ -24,6 +24,7 @@ fn main() {
         enable_initial_guess: false,
     };
 
+    // To get the test data, please clone the project from github
     let train_file = "dataset/agaricus-lepiota/train.txt";
     let test_file = "dataset/agaricus-lepiota/test.txt";
 

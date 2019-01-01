@@ -6,6 +6,7 @@ homepage = "https://github.com/mesalock-linux/gbdt-rs"
 repository = "https://github.com/mesalock-linux/gbdt-rs"
 license = "BSD-3-Clause"
 description = "A implementation of Gradient Boosting Regression Tree in Rust programming language"
+edition = "2018"
 
 include = [
     "LICENSE",

@@ -1,4 +1,4 @@
-use decision_tree::{DataVec, PredVec, ValueType};
+use crate::decision_tree::{DataVec, PredVec, ValueType};
 
 pub fn almost_equal(a: ValueType, b: ValueType) -> bool {
     (a - b).abs() < 1.0e-5

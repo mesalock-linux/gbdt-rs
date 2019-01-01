@@ -44,14 +44,10 @@ pub mod gradient_boost;
 
 #[cfg(test)]
 mod tests {
-    #[test]
-    fn it_works() {
-        assert_eq!(2 + 2, 4);
-    }
 
     #[test]
     fn walk_tree() {
-        use binary_tree::*;
+        use crate::binary_tree::*;
         let mut tree: BinaryTree<f32> = BinaryTree::new();
         let root = BinaryTreeNode::new(10.0);
 
@@ -78,8 +74,8 @@ mod tests {
 
     #[test]
     fn decision_tree() {
-        use config::Loss;
-        use decision_tree::*;
+        use crate::config::Loss;
+        use crate::decision_tree::*;
         let mut tree = DecisionTree::new();
         tree.set_feature_size(3);
         tree.set_max_depth(2);
@@ -139,20 +135,20 @@ mod tests {
 
     #[test]
     fn build_decision_tree() {
-        use decision_tree::DecisionTree;
+        use crate::decision_tree::DecisionTree;
         let _ = DecisionTree::new();
     }
 
     #[test]
     fn config_express() {
-        use config::Config;
+        use crate::config::Config;
         let c = Config::empty_config();
         println!("{}", c.to_string());
     }
 
     #[test]
     fn loss_type() {
-        use config::{loss2string, string2loss, Loss};
+        use crate::config::{loss2string, string2loss, Loss};
         assert_eq!(string2loss("SquaredError"), Loss::SquaredError);
         assert_eq!(string2loss("LogLikelyhood"), Loss::LogLikelyhood);
         assert_eq!(string2loss("LAD"), Loss::LAD);
@@ -164,7 +160,7 @@ mod tests {
 
     #[test]
     fn fitness() {
-        use decision_tree::*;
+        use crate::decision_tree::*;
         let mut dv: DataVec = Vec::new();
         dv.push(Data {
             feature: Vec::new(),
@@ -199,7 +195,7 @@ mod tests {
             initial_guess: VALUE_TYPE_UNKNOWN,
         });
 
-        use fitness::{
+        use crate::fitness::{
             almost_equal, average, label_average, same, weighted_label_median,
             weighted_residual_median,
         };
@@ -213,9 +209,9 @@ mod tests {
 
     #[test]
     fn test_iris() {
-        use config::{Config, Loss};
-        use decision_tree::*;
-        use gradient_boost::*;
+        use crate::config::{Config, Loss};
+        use crate::decision_tree::*;
+        use crate::gradient_boost::*;
         use std::fs::File;
         use std::io::{BufRead, BufReader};
 

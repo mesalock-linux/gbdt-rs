@@ -96,11 +96,11 @@
 //! // [2.0, 0.75, 0.75, 3.0]
 //! ```
 
-use binary_tree::BinaryTree;
-use binary_tree::BinaryTreeNode;
-use binary_tree::TreeIndex;
-use config::Loss;
-use fitness::almost_equal;
+use crate::binary_tree::BinaryTree;
+use crate::binary_tree::BinaryTreeNode;
+use crate::binary_tree::TreeIndex;
+use crate::config::Loss;
+use crate::fitness::almost_equal;
 
 use rand::prelude::SliceRandom;
 use rand::thread_rng;
@@ -868,8 +868,8 @@ impl DecisionTree {
             rss -= ss;
             rc -= c;
 
-            let mut f1: ValueType = data[i].feature[index];
-            let mut f2: ValueType = data[i + 1].feature[index];
+            let f1: ValueType = data[i].feature[index];
+            let f2: ValueType = data[i + 1].feature[index];
 
             if almost_equal(f1, f2) {
                 continue;
@@ -879,7 +879,7 @@ impl DecisionTree {
 
             let fitness2 = if rc > 1.0 { rss - rs * rs / rc } else { 0.0 };
 
-            let mut fitness: ValueType = fitness0 + fitness1 + fitness2;
+            let fitness: ValueType = fitness0 + fitness1 + fitness2;
 
             if *impurity > fitness {
                 *impurity = fitness;

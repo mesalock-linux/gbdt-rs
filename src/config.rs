@@ -1,4 +1,4 @@
-use decision_tree::ValueType;
+use crate::decision_tree::ValueType;
 
 #[derive(Debug, PartialEq, Clone, Serialize, Deserialize)]
 pub enum Loss {
