@@ -119,17 +119,26 @@ macro_rules! def_value_type {
 // use continous variables for decision tree
 def_value_type!(f64);
 
+/// A training sample or a test sample
 #[derive(Debug, Clone, Serialize, Deserialize)]
 pub struct Data {
+    /// the vector of features
     pub feature: Vec<ValueType>,
+    /// the target value of the sample. Used in training.
     pub target: ValueType,
+    /// sample weight. Used in training.
     pub weight: ValueType,
+    /// sample's label. Used in training
     pub label: ValueType,
+    /// used by LAD loss.
     pub residual: ValueType,
+    /// used by gradient boost.
     pub initial_guess: ValueType,
 }
 
+/// The vector of the samples
 pub type DataVec = Vec<Data>;
+/// The vector of the predicted values.
 pub type PredVec = Vec<ValueType>;
 
 /*
@@ -140,6 +149,7 @@ pub enum Loss {
 }
 */
 
+/// Calculate the prediction for each leaf node.
 fn calculate_pred(data: &[&Data], loss: &Loss) -> ValueType {
     match loss {
         Loss::SquaredError => average(data),
@@ -148,6 +158,7 @@ fn calculate_pred(data: &[&Data], loss: &Loss) -> ValueType {
     }
 }
 
+/// The leaf prediction value for SquaredError loss.
 fn average(data: &[&Data]) -> ValueType {
     let mut sum: ValueType = 0.0;
     let mut weight: ValueType = 0.0;
@@ -159,6 +170,7 @@ fn average(data: &[&Data]) -> ValueType {
     sum / weight
 }
 
+/// The leaf prediction value for LogLikelyhood loss.
 fn logit_optimal_value(data: &[&Data]) -> ValueType {
     let mut s: ValueType = 0.0;
     let mut c: ValueType = 0.0;
@@ -176,6 +188,7 @@ fn logit_optimal_value(data: &[&Data]) -> ValueType {
     }
 }
 
+/// The leaf prediction value for LAD loss.
 fn lad_optimal_value(data: &[&Data]) -> ValueType {
     let mut data_copy = data.to_vec();
     data_copy.sort_by(|a, b| {
@@ -206,6 +219,7 @@ fn lad_optimal_value(data: &[&Data]) -> ValueType {
     weighted_median
 }
 
+/// Return whether the data vector have same target values.
 fn same(dv: &[&Data]) -> bool {
     if dv.is_empty() {
         return false;
@@ -220,15 +234,23 @@ fn same(dv: &[&Data]) -> bool {
     true
 }
 
+
+/// The internal node of the decision tree. It's stored in the `value` of the gbdt::binary_tree::BinaryTreeNode
+///
 #[derive(Debug, Serialize, Deserialize)]
 struct DTNode {
+    /// the feature used to split the node
     feature_index: usize,
+    /// the feature value used to split the node
     feature_value: ValueType,
+    /// the prediction of the leaf node
     pred: ValueType,
+    /// whether the node is a leaf node
     is_leaf: bool,
 }
 
 impl DTNode {
+    /// Return an empty DTNode
     pub fn new() -> Self {
         DTNode {
             feature_index: 0,
@@ -239,13 +261,21 @@ impl DTNode {
     }
 }
 
+/// The decision tree.
 #[derive(Debug, Serialize, Deserialize)]
 pub struct DecisionTree {
+    /// the tree
     tree: BinaryTree<DTNode>,
+    /// the size of feautures. Training data and test data should have same feature size.
     feature_size: usize,
+    /// the max depth of the decision tree. The root node is considered to be in the layer 0.
     max_depth: u32,
+    /// the minimum number of samples required to be at a leaf node during training.
     min_leaf_size: usize,
+    /// the loss function type.
     loss: Loss,
+    /// portion of features to be splited. When spliting a node, a subset of the features 
+    /// (feature_size * feature_sample_ratio) will be randomly selected to calculate impurity.
     feature_sample_ratio: f64,
 }
 
@@ -256,6 +286,15 @@ impl Default for DecisionTree {
 }
 
 impl DecisionTree {
+    /// Return a new decision tree with default values (feature_size = 1, max_depth = 2,
+    /// min_leaf_size = 1, loss = Loss::SquaredError, feature_sample_ratio = 1.0)
+    ///
+    /// # Example
+    /// ```
+    /// use gbdt::config::Loss;
+    /// use gbdt::decision_tree::{Data, DecisionTree};
+    /// let mut tree = DecisionTree::new();
+    /// ```
     pub fn new() -> Self {
         DecisionTree {
             tree: BinaryTree::new(),
@@ -267,26 +306,115 @@ impl DecisionTree {
         }
     }
 
+    /// Set the size of feautures. Training data and test data should have same feature size.
+    ///
+    /// # Example
+    /// ```
+    /// use gbdt::config::Loss;
+    /// use gbdt::decision_tree::{Data, DecisionTree};
+    /// let mut tree = DecisionTree::new();
+    /// tree.set_feature_size(3);
+    /// ```
     pub fn set_feature_size(&mut self, size: usize) {
         self.feature_size = size;
     }
 
+    /// Set the max depth of the decision tree. The root node is considered to be in the layer 0.
+    /// # Example
+    /// ```
+    /// use gbdt::config::Loss;
+    /// use gbdt::decision_tree::{Data, DecisionTree};
+    /// let mut tree = DecisionTree::new();
+    /// tree.set_max_depth(2);
+    /// ```
     pub fn set_max_depth(&mut self, max_depth: u32) {
         self.max_depth = max_depth;
     }
 
+    /// Set the minimum number of samples required to be at a leaf node during training.
+    /// # Example
+    /// ```
+    /// use gbdt::config::Loss;
+    /// use gbdt::decision_tree::{Data, DecisionTree};
+    /// let mut tree = DecisionTree::new();
+    /// tree.set_min_leaf_size(1);
+    /// ```
     pub fn set_min_leaf_size(&mut self, min_leaf_size: usize) {
         self.min_leaf_size = min_leaf_size;
     }
 
+    /// Set the loss function type.
+    /// # Example
+    /// ```
+    /// use gbdt::config::Loss;
+    /// use gbdt::decision_tree::{Data, DecisionTree};
+    /// let mut tree = DecisionTree::new();
+    /// tree.set_loss(Loss::SquaredError);
+    /// ```
     pub fn set_loss(&mut self, loss: Loss) {
         self.loss = loss;
     }
 
+    /// Set the portion of features to be splited. When spliting a node, a subset of the features 
+    /// (feature_size * feature_sample_ratio) will be randomly selected to calculate impurity.
+    /// # Example
+    /// ```
+    /// use gbdt::config::Loss;
+    /// use gbdt::decision_tree::{Data, DecisionTree};
+    /// let mut tree = DecisionTree::new();
+    /// tree.set_feature_sample_ratio(0.9);
+    /// ```
     pub fn set_feature_sample_ratio(&mut self, feature_sample_ratio: f64) {
         self.feature_sample_ratio = feature_sample_ratio;
     }
 
+    /// Use the first `n` samples in the `train_data` to train a decision tree
+    ///
+    /// # Example
+    /// ```
+    /// use gbdt::config::Loss;
+    /// use gbdt::decision_tree::{Data, DecisionTree};
+    /// // set up training data
+    /// let data1 = Data {
+    ///     feature: vec![1.0, 2.0, 3.0],
+    ///     target: 2.0,
+    ///     weight: 1.0,
+    ///     label: 1.0,
+    ///     residual: 1.0,
+    ///     initial_guess: 1.0,
+    /// };
+    /// let data2 = Data {
+    ///     feature: vec![1.1, 2.1, 3.1],
+    ///     target: 1.0,
+    ///     weight: 1.0,
+    ///     label: 1.0,
+    ///     residual: 1.0,
+    ///     initial_guess: 1.0,
+    /// };
+    /// let data3 = Data {
+    ///     feature: vec![2.0, 2.0, 1.0],
+    ///     target: 0.5,
+    ///     weight: 1.0,
+    ///     label: 2.0,
+    ///     residual: 2.0,
+    ///     initial_guess: 2.0,
+    /// };
+    ///
+    /// let mut dv = Vec::new();
+    /// dv.push(data1.clone());
+    /// dv.push(data2.clone());
+    /// dv.push(data3.clone());
+    ///
+    ///
+    /// // train a decision tree
+    /// let mut tree = DecisionTree::new();
+    /// tree.set_feature_size(3);
+    /// tree.set_max_depth(2);
+    /// tree.set_min_leaf_size(1);
+    /// tree.set_loss(Loss::SquaredError);
+    /// tree.fit_n(&dv, 2);
+    ///
+    /// ```
     pub fn fit_n(&mut self, train_data: &DataVec, n: usize) {
         let data: Vec<&Data> = (0..std::cmp::min(n, train_data.len()))
             .filter_map(|x| train_data.get(x))
@@ -296,6 +424,53 @@ impl DecisionTree {
         self.fit_node(root_index, 0, &data);
     }
 
+    /// Use the samples in `train_data` to train the decision tree.
+    ///
+    /// # Example
+    /// ```
+    /// use gbdt::config::Loss;
+    /// use gbdt::decision_tree::{Data, DecisionTree};
+    /// // set up training data
+    /// let data1 = Data {
+    ///     feature: vec![1.0, 2.0, 3.0],
+    ///     target: 2.0,
+    ///     weight: 1.0,
+    ///     label: 1.0,
+    ///     residual: 1.0,
+    ///     initial_guess: 1.0,
+    /// };
+    /// let data2 = Data {
+    ///     feature: vec![1.1, 2.1, 3.1],
+    ///     target: 1.0,
+    ///     weight: 1.0,
+    ///     label: 1.0,
+    ///     residual: 1.0,
+    ///     initial_guess: 1.0,
+    /// };
+    /// let data3 = Data {
+    ///     feature: vec![2.0, 2.0, 1.0],
+    ///     target: 0.5,
+    ///     weight: 1.0,
+    ///     label: 2.0,
+    ///     residual: 2.0,
+    ///     initial_guess: 2.0,
+    /// };
+    ///
+    /// let mut dv = Vec::new();
+    /// dv.push(data1.clone());
+    /// dv.push(data2.clone());
+    /// dv.push(data3.clone());
+    ///
+    ///
+    /// // train a decision tree
+    /// let mut tree = DecisionTree::new();
+    /// tree.set_feature_size(3);
+    /// tree.set_max_depth(2);
+    /// tree.set_min_leaf_size(1);
+    /// tree.set_loss(Loss::SquaredError);
+    /// tree.fit(&dv);
+    ///
+    /// ```
     pub fn fit(&mut self, train_data: &DataVec) {
         let data: Vec<&Data> = (0..train_data.len())
             .filter_map(|x| train_data.get(x))
@@ -305,8 +480,11 @@ impl DecisionTree {
         self.fit_node(root_index, 0, &data);
     }
 
+
+    /// Recursively build the tree nodes. It choose a feature and a value to split the node and the data.
+    /// And then use the splited data to build the child nodes. 
     fn fit_node(&mut self, node: TreeIndex, depth: u32, train_data: &[&Data]) {
-        // modify current node
+        // If the node doesn't need to be splited.
         {
             let node_ref = self
                 .tree
@@ -322,6 +500,7 @@ impl DecisionTree {
             }
         }
 
+        // Try to find a feature and a value to split the node.
         let (splited_data, feature_index, feature_value) =
             DecisionTree::split(train_data, self.feature_size, self.feature_sample_ratio);
 
@@ -340,6 +519,7 @@ impl DecisionTree {
             }
         }
 
+        // Use the splited data to build child nodes.
         if let Some((left_data, right_data)) = splited_data {
             let left_index = self
                 .tree
@@ -352,31 +532,192 @@ impl DecisionTree {
         }
     }
 
+    /// Inference the values of the first `n` samples in the `test_data`. Return a vector of
+    /// predicted values.
+    ///
+    /// # Example
+    /// ```
+    /// use gbdt::config::Loss;
+    /// use gbdt::decision_tree::{Data, DecisionTree};
+    /// // set up training data
+    /// let data1 = Data {
+    ///     feature: vec![1.0, 2.0, 3.0],
+    ///     target: 2.0,
+    ///     weight: 1.0,
+    ///     label: 1.0,
+    ///     residual: 1.0,
+    ///     initial_guess: 1.0,
+    /// };
+    /// let data2 = Data {
+    ///     feature: vec![1.1, 2.1, 3.1],
+    ///     target: 1.0,
+    ///     weight: 1.0,
+    ///     label: 1.0,
+    ///     residual: 1.0,
+    ///     initial_guess: 1.0,
+    /// };
+    /// let data3 = Data {
+    ///     feature: vec![2.0, 2.0, 1.0],
+    ///     target: 0.5,
+    ///     weight: 1.0,
+    ///     label: 2.0,
+    ///     residual: 2.0,
+    ///     initial_guess: 2.0,
+    /// };
+    /// let data4 = Data {
+    ///     feature: vec![2.0, 2.3, 1.2],
+    ///     target: 3.0,
+    /// weight: 1.0,
+    /// label: 0.0,
+    /// residual: 0.0,
+    /// initial_guess: 1.0,
+    /// };
+    ///
+    /// let mut dv = Vec::new();
+    /// dv.push(data1.clone());
+    /// dv.push(data2.clone());
+    /// dv.push(data3.clone());
+    /// dv.push(data4.clone());
+    ///
+    ///
+    /// // train a decision tree
+    /// let mut tree = DecisionTree::new();
+    /// tree.set_feature_size(3);
+    /// tree.set_max_depth(2);
+    /// tree.set_min_leaf_size(1);
+    /// tree.set_loss(Loss::SquaredError);
+    /// tree.fit(&dv);
+    ///
+    ///
+    /// // set up the test data
+    /// let mut dv = Vec::new();
+    /// dv.push(data1.clone());
+    /// dv.push(data2.clone());
+    /// dv.push(data3.clone());
+    /// dv.push(data4.clone());
+    ///
+    ///
+    /// // inference the test data with the decision tree
+    /// println!("{:?}", tree.predict_n(&dv, 3));
+    ///
+    ///
+    /// // output:
+    /// // [2.0, 0.75, 0.75]
+    /// ```
+    ///
+    /// # Panic
+    /// If the function is called before the decision tree is trained, it will panic.
+    ///
+    /// If the test data have a smaller feature size than the tree's feature size, it will panic.
     pub fn predict_n(&self, test_data: &DataVec, n: usize) -> PredVec {
         let root = self
             .tree
             .get_node(self.tree.get_root_index())
             .expect("Decision tree should have root node");
 
+        // Inference the samples one by one.
         test_data
             .iter()
             .take(std::cmp::min(n, test_data.len()))
             .map(|x| self.predict_one(root, x))
             .collect()
     }
+
+    
+    /// Inference the values of samples in the `test_data`. Return a vector of the predicted
+    /// values.
+    ///
+    /// # Example
+    /// ```
+    /// use gbdt::config::Loss;
+    /// use gbdt::decision_tree::{Data, DecisionTree};
+    /// // set up training data
+    /// let data1 = Data {
+    ///     feature: vec![1.0, 2.0, 3.0],
+    ///     target: 2.0,
+    ///     weight: 1.0,
+    ///     label: 1.0,
+    ///     residual: 1.0,
+    ///     initial_guess: 1.0,
+    /// };
+    /// let data2 = Data {
+    ///     feature: vec![1.1, 2.1, 3.1],
+    ///     target: 1.0,
+    ///     weight: 1.0,
+    ///     label: 1.0,
+    ///     residual: 1.0,
+    ///     initial_guess: 1.0,
+    /// };
+    /// let data3 = Data {
+    ///     feature: vec![2.0, 2.0, 1.0],
+    ///     target: 0.5,
+    ///     weight: 1.0,
+    ///     label: 2.0,
+    ///     residual: 2.0,
+    ///     initial_guess: 2.0,
+    /// };
+    /// let data4 = Data {
+    ///     feature: vec![2.0, 2.3, 1.2],
+    ///     target: 3.0,
+    /// weight: 1.0,
+    /// label: 0.0,
+    /// residual: 0.0,
+    /// initial_guess: 1.0,
+    /// };
+    ///
+    /// let mut dv = Vec::new();
+    /// dv.push(data1.clone());
+    /// dv.push(data2.clone());
+    /// dv.push(data3.clone());
+    /// dv.push(data4.clone());
+    ///
+    ///
+    /// // train a decision tree
+    /// let mut tree = DecisionTree::new();
+    /// tree.set_feature_size(3);
+    /// tree.set_max_depth(2);
+    /// tree.set_min_leaf_size(1);
+    /// tree.set_loss(Loss::SquaredError);
+    /// tree.fit(&dv);
+    ///
+    ///
+    /// // set up the test data
+    /// let mut dv = Vec::new();
+    /// dv.push(data1.clone());
+    /// dv.push(data2.clone());
+    /// dv.push(data3.clone());
+    /// dv.push(data4.clone());
+    ///
+    ///
+    /// // inference the test data with the decision tree
+    /// println!("{:?}", tree.predict(&dv));
+    ///
+    ///
+    /// // output:
+    /// // [2.0, 0.75, 0.75, 3.0]
+    /// ```
+    /// # Panic
+    /// If the function is called before the decision tree is trained, it will panic.
+    ///
+    /// If the test data have a smaller feature size than the tree's feature size, it will panic.
     pub fn predict(&self, test_data: &DataVec) -> PredVec {
         let root = self
             .tree
             .get_node(self.tree.get_root_index())
             .expect("Decision tree should have root node");
 
+        // Inference the data one by one
         test_data
             .iter()
             .map(|x| self.predict_one(root, x))
             .collect()
     }
 
+    /// Inference a `sample` from current `node`
+    /// If the current node is a leaf node, return the node's prediction. Otherwise, choose a child
+    /// node according to the feature and feature value of the node. Then call this function recursively.
     fn predict_one(&self, node: &BinaryTreeNode<DTNode>, sample: &Data) -> ValueType {
+        // return the node's prediction
         if node.value.is_leaf {
             node.value.pred
         } else {
@@ -384,6 +725,7 @@ impl DecisionTree {
                 sample.feature.len() > node.value.feature_index,
                 "sample doesn't have the feature"
             );
+            // choose a child node, call this function again
             if sample.feature[node.value.feature_index] < node.value.feature_value {
                 let left = self
                     .tree
@@ -399,7 +741,17 @@ impl DecisionTree {
             }
         }
     }
+    
 
+    /// Split the data by calculating the impurity.
+    /// Step 1: Choose candidate features. If `feature_sample_ratio` < 1.0, randomly selected
+    /// (feature_sample_ratio * feature_size) features. Otherwise, choose all features.
+    ///
+    /// Step 2: Calculate each feature's impurity and the corresponding value to split the data.
+    ///
+    /// Step 3: Find the feature that has the smallest impurity.
+    ///
+    /// Step 4: Use the feature and the feature value to split the data.
     fn split<'a>(
         train_data: &'a [&Data],
         feature_size: usize,
@@ -454,6 +806,7 @@ impl DecisionTree {
         }
     }
 
+    /// Calculate the impurity.
     fn get_impurity(
         train_data: &[&Data],
         feature_index: usize,
@@ -535,6 +888,62 @@ impl DecisionTree {
             }
         }
     }
+
+    /// Print the decision tree. For debug use.
+    /// 
+    /// # Example
+    /// ```
+    /// use gbdt::config::Loss;
+    /// use gbdt::decision_tree::{Data, DecisionTree};
+    /// // set up training data
+    /// let data1 = Data {
+    ///     feature: vec![1.0, 2.0, 3.0],
+    ///     target: 2.0,
+    ///     weight: 1.0,
+    ///     label: 1.0,
+    ///     residual: 1.0,
+    ///     initial_guess: 1.0,
+    /// };
+    /// let data2 = Data {
+    ///     feature: vec![1.1, 2.1, 3.1],
+    ///     target: 1.0,
+    ///     weight: 1.0,
+    ///     label: 1.0,
+    ///     residual: 1.0,
+    ///     initial_guess: 1.0,
+    /// };
+    /// let data3 = Data {
+    ///     feature: vec![2.0, 2.0, 1.0],
+    ///     target: 0.5,
+    ///     weight: 1.0,
+    ///     label: 2.0,
+    ///     residual: 2.0,
+    ///     initial_guess: 2.0,
+    /// };
+    ///
+    /// let mut dv = Vec::new();
+    /// dv.push(data1.clone());
+    /// dv.push(data2.clone());
+    /// dv.push(data3.clone());
+    ///
+    ///
+    /// // train a decision tree
+    /// let mut tree = DecisionTree::new();
+    /// tree.set_feature_size(3);
+    /// tree.set_max_depth(2);
+    /// tree.set_min_leaf_size(1);
+    /// tree.set_loss(Loss::SquaredError);
+    /// tree.fit_n(&dv, 2);
+    ///
+    ///
+    /// tree.print();
+    ///
+    /// // output:
+    ///
+    /// //  ----DTNode { feature_index: 0, feature_value: 1.05, pred: 0.0, is_leaf: false }
+    /// //      ----DTNode { feature_index: 0, feature_value: 0.0, pred: 2.0, is_leaf: true }
+    /// //      ----DTNode { feature_index: 0, feature_value: 0.0, pred: 1.0, is_leaf: true }
+    /// ```
     pub fn print(&self) {
         self.tree.print();
     }
