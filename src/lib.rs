@@ -82,7 +82,7 @@ mod tests {
         use decision_tree::*;
         let mut tree = DecisionTree::new();
         tree.set_feature_size(3);
-        tree.set_max_depth(4);
+        tree.set_max_depth(2);
         tree.set_min_leaf_size(1);
         tree.set_loss(Loss::SquaredError);
         let data1 = Data {

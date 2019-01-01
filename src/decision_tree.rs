@@ -1,3 +1,101 @@
+//! This module implements a decision tree from the simple binary tree [gbdt::binary_tree]. 
+//! 
+//! In the training process, the nodes are splited according `impurity`.
+//!
+//! The decision tree accepts features represented by f64. Unknown features are not supported yet.
+//!
+//! Following hyperparameters are supported:
+//! 
+//! 1. feature_size: the size of feautures. Training data and test data should have same
+//!    feature_size. (default = 1)
+//!
+//! 2. max_depth: the max depth of the decision tree. The root node is considered to be in the layer
+//!    0. (default = 2)
+//!
+//! 3. min_leaf_size: the minimum number of samples required to be at a leaf node during training.
+//!    (default = 1)
+//!
+//! 4. loss: the loss function type. SquaredError, LogLikelyhood and LAD are supported. See
+//!    [config::Loss]. (default = SquareError).
+//!
+//! 5. feature_sample_ratio: portion of features to be splited. When spliting a node, a subset of
+//!    the features (feature_size * feature_sample_ratio) will be randomly selected to calculate
+//!    impurity. (default = 1.0)
+//!
+//! [gbdt::binary_tree]: ../binary_tree/index.html
+//!
+//! [config::Loss]: ../config/enum.Loss.html
+//!
+//! # Example
+//! ```
+//! use gbdt::config::Loss;
+//! use gbdt::decision_tree::{Data, DecisionTree};
+//! // set up training data
+//! let data1 = Data {
+//!     feature: vec![1.0, 2.0, 3.0],
+//!     target: 2.0,
+//!     weight: 1.0,
+//!     label: 1.0,
+//!     residual: 1.0,
+//!     initial_guess: 1.0,
+//! };
+//! let data2 = Data {
+//!     feature: vec![1.1, 2.1, 3.1],
+//!     target: 1.0,
+//!     weight: 1.0,
+//!     label: 1.0,
+//!     residual: 1.0,
+//!     initial_guess: 1.0,
+//! };
+//! let data3 = Data {
+//!     feature: vec![2.0, 2.0, 1.0],
+//!     target: 0.5,
+//!     weight: 1.0,
+//!     label: 2.0,
+//!     residual: 2.0,
+//!     initial_guess: 2.0,
+//! };
+//! let data4 = Data {
+//!     feature: vec![2.0, 2.3, 1.2],
+//!     target: 3.0,
+//! weight: 1.0,
+//! label: 0.0,
+//! residual: 0.0,
+//! initial_guess: 1.0,
+//! };
+//!
+//! let mut dv = Vec::new();
+//! dv.push(data1.clone());
+//! dv.push(data2.clone());
+//! dv.push(data3.clone());
+//! dv.push(data4.clone());
+//!
+//!
+//! // train a decision tree
+//! let mut tree = DecisionTree::new();
+//! tree.set_feature_size(3);
+//! tree.set_max_depth(2);
+//! tree.set_min_leaf_size(1);
+//! tree.set_loss(Loss::SquaredError);
+//! tree.fit(&dv);
+//!
+//!
+//! // set up the test data
+//! let mut dv = Vec::new();
+//! dv.push(data1.clone());
+//! dv.push(data2.clone());
+//! dv.push(data3.clone());
+//! dv.push(data4.clone());
+//!
+//!
+//! // inference the test data with the decision tree
+//! println!("{:?}", tree.predict(&dv));
+//!
+//!
+//! // output:
+//! // [2.0, 0.75, 0.75, 3.0]
+//! ```
+
 use binary_tree::BinaryTree;
 use binary_tree::BinaryTreeNode;
 use binary_tree::TreeIndex;
@@ -214,9 +312,9 @@ impl DecisionTree {
                 .tree
                 .get_node_mut(node)
                 .expect("node should not be empty!");
-            if (depth > self.max_depth)
+            if (depth >= self.max_depth)
                 || same(train_data)
-                || (train_data.len() < self.min_leaf_size)
+                || (train_data.len() <= self.min_leaf_size)
             {
                 node_ref.value.is_leaf = true;
                 node_ref.value.pred = calculate_pred(train_data, &self.loss);
@@ -441,3 +539,4 @@ impl DecisionTree {
         self.tree.print();
     }
 }
+
