@@ -1,6 +1,6 @@
 extern crate gbdt;
 
-use gbdt::config::{Config, Loss};
+use gbdt::config::Config;
 use gbdt::decision_tree::{Data, DataVec, PredVec, ValueType};
 use gbdt::fitness::almost_equal_thrs;
 use gbdt::gradient_boost::GBDT;
@@ -9,20 +9,12 @@ use std::fs::File;
 use std::io::{BufRead, BufReader};
 
 fn main() {
-    let cfg = Config {
-        number_of_feature: 4,
-        max_depth: 3,
-        iterations: 3,
-        shrinkage: 1.0,
-        feature_sample_ratio: 1.0,
-        data_sample_ratio: 1.0,
-        min_leaf_size: 0,
-        loss: Loss::SquaredError,
-        debug: false,
-        feature_cost: Vec::new(),
-        enable_feature_tunning: false,
-        enable_initial_guess: false,
-    };
+
+    let mut cfg = Config::new();
+    cfg.set_feature_size(4);
+    cfg.set_max_depth(3);
+    cfg.set_iterations(3);
+    cfg.set_loss("SquaredError");
 
     // To get the test data, please clone the project from github
     let train_file = "dataset/iris/train.txt";

@@ -26,7 +26,7 @@ impl GBDT {
     pub fn init(&mut self, len: usize, dv: &DataVec) {
         assert!(dv.len() >= len);
 
-        if self.conf.enable_initial_guess {
+        if self.conf.initial_guess_enabled {
             return;
         }
 
@@ -44,7 +44,7 @@ impl GBDT {
         self.trees = Vec::with_capacity(self.conf.iterations);
         for i in 0..self.conf.iterations {
             self.trees.push(DecisionTree::new());
-            self.trees[i].set_feature_size(self.conf.number_of_feature);
+            self.trees[i].set_feature_size(self.conf.feature_size);
             self.trees[i].set_max_depth(self.conf.max_depth);
             self.trees[i].set_min_leaf_size(self.conf.min_leaf_size);
             self.trees[i].set_loss(self.conf.loss.clone());
@@ -83,7 +83,7 @@ impl GBDT {
             return vec![VALUE_TYPE_UNKNOWN; test_data.len()];
         }
 
-        let mut predicted: PredVec = if !self.conf.enable_initial_guess {
+        let mut predicted: PredVec = if !self.conf.initial_guess_enabled {
             vec![self.bias; n]
         } else {
             test_data.iter().take(n).map(|x| x.initial_guess).collect()

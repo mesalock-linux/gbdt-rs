@@ -142,7 +142,7 @@ mod tests {
     #[test]
     fn config_express() {
         use crate::config::Config;
-        let c = Config::empty_config();
+        let c = Config::new();
         println!("{}", c.to_string());
     }
 
