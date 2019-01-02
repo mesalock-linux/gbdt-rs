@@ -10,9 +10,9 @@ use std::io::{BufRead, BufReader};
 
 fn main() {
     let cfg = Config {
-        number_of_feature: 22,
-        max_depth: 5,
-        iterations: 5,
+        number_of_feature: 4,
+        max_depth: 3,
+        iterations: 3,
         shrinkage: 1.0,
         feature_sample_ratio: 1.0,
         data_sample_ratio: 1.0,
@@ -25,8 +25,8 @@ fn main() {
     };
 
     // To get the test data, please clone the project from github
-    let train_file = "dataset/agaricus-lepiota/train.txt";
-    let test_file = "dataset/agaricus-lepiota/test.txt";
+    let train_file = "dataset/iris/train.txt";
+    let test_file = "dataset/iris/test.txt";
 
     let mut train_dv: DataVec = Vec::new();
     let mut test_dv: DataVec = Vec::new();
@@ -35,17 +35,17 @@ fn main() {
     let f = BufReader::new(f);
     for line in f.lines() {
         let l = line.unwrap();
-        let lv: Vec<&str> = l.splitn(23, ",").collect();
-        assert!(lv.len() == 23);
+        let lv: Vec<&str> = l.splitn(5, ",").collect();
+        assert!(lv.len() == 5);
         let mut feature: Vec<ValueType> = Vec::new();
-        for i in 0..22 {
+        for i in 0..4 {
             feature.push(lv[i].parse::<ValueType>().unwrap());
         }
         let d = Data {
             feature: feature,
             target: 0.0,
             weight: 1.0,
-            label: lv[22].parse::<ValueType>().unwrap(),
+            label: lv[4].parse::<ValueType>().unwrap(),
             residual: 0.0,
             initial_guess: 0.0,
         };
@@ -56,17 +56,17 @@ fn main() {
     let f = BufReader::new(f);
     for line in f.lines() {
         let l = line.unwrap();
-        let lv: Vec<&str> = l.splitn(23, ",").collect();
-        assert!(lv.len() == 23);
+        let lv: Vec<&str> = l.splitn(5, ",").collect();
+        assert!(lv.len() == 5);
         let mut feature: Vec<ValueType> = Vec::new();
-        for i in 0..22 {
+        for i in 0..4 {
             feature.push(lv[i].parse::<ValueType>().unwrap());
         }
         let d = Data {
             feature: feature,
             target: 0.0,
             weight: 1.0,
-            label: lv[22].parse::<ValueType>().unwrap(),
+            label: lv[4].parse::<ValueType>().unwrap(),
             residual: 0.0,
             initial_guess: 0.0,
         };
@@ -81,7 +81,7 @@ fn main() {
     let mut correct = 0;
     let mut wrong = 0;
     for i in 0..predicted.len() {
-        if almost_equal_thrs(test_dv[i].label, predicted[i], 0.02) {
+        if almost_equal_thrs(test_dv[i].label, predicted[i], 0.2) {
             correct += 1;
         } else {
             wrong += 1;

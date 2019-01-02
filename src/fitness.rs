@@ -1,7 +1,11 @@
 use crate::decision_tree::{DataVec, PredVec, ValueType};
 
+pub fn almost_equal_thrs(a: ValueType, b: ValueType, thrs: f64) -> bool {
+    ((a - b).abs() as f64) < thrs
+}
+
 pub fn almost_equal(a: ValueType, b: ValueType) -> bool {
-    (a - b).abs() < 1.0e-5
+    ((a - b).abs() as f64) < 1.0e-5
 }
 
 pub fn same(dv: &DataVec, len: usize) -> bool {
