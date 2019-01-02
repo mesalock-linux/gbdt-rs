@@ -105,7 +105,7 @@ impl GBDT {
             predicted
                 .iter()
                 .map(|x| {
-                    if (1.0 / (1.0 + (-2.0 * x.exp()))) >= 0.5 {
+                    if (1.0 / (1.0 + ((-2.0 * x).exp()))) >= 0.5 {
                         1.0
                     } else {
                         -1.0
