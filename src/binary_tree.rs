@@ -1,12 +1,11 @@
-//! This module implements a simple binary tree. 
+//! This module implements a simple binary tree.
 //!
 //! The tree supports inserting and retriving elements.
-//! Deleteing an element is not supported. 
+//! Deleteing an element is not supported.
 //!
 //! [std::vec::Vec](https://doc.rust-lang.org/std/vec/struct.Vec.html) is used to implement the binary tree.
 
-
-/// Node of the binary tree. 
+/// Node of the binary tree.
 #[derive(Debug, Default, Serialize, Deserialize)]
 pub struct BinaryTreeNode<T> {
     /// Store information in a node.
@@ -15,10 +14,10 @@ pub struct BinaryTreeNode<T> {
     /// the index of the std::vec::Vec that implements the tree.
     ///
     /// [std::vec::Vec](https://doc.rust-lang.org/std/vec/struct.Vec.html)
-    index: usize,      
+    index: usize,
 
     /// The index of the left child node. 0 means no left child.
-    left: usize,  // bigger than 0
+    left: usize, // bigger than 0
 
     /// The index of the right child node. 0 means of right child.
     right: usize, // bigger than 0
@@ -81,7 +80,6 @@ impl<T> BinaryTree<T> {
     pub fn add_root(&mut self, root: BinaryTreeNode<T>) -> TreeIndex {
         self.add_node(0, false, root)
     }
-    
 
     /// Return the index of the root node.
     /// Call this API after inserting root node.
@@ -176,7 +174,6 @@ impl<T> BinaryTree<T> {
         self.tree.get_mut(index)
     }
 
-
     /// Add a node as the left child of a given `parent` node. Return the index of the added node.
     /// # Example
     ///
@@ -219,7 +216,7 @@ impl<T> BinaryTree<T> {
     ///
     /// ``is_left`` means whether the node should be added as left child (true) or right child
     /// (false)
-    /// 
+    ///
     /// ``child`` is the node to be added.
     fn add_node(
         &mut self,
@@ -242,16 +239,15 @@ impl<T> BinaryTree<T> {
             }
         };
         position
-    } 
+    }
 
-
-    /// For debug use. This API will print the whole tree. 
+    /// For debug use. This API will print the whole tree.
     /// # Example
     /// ```
     /// use gbdt::binary_tree::{BinaryTree, BinaryTreeNode};
     /// let mut tree: BinaryTree<f32> = BinaryTree::new();
     /// let root = BinaryTreeNode::new(10.0);
-    /// 
+    ///
     /// let root_index = tree.add_root(root);
     ///
     /// let n1 = BinaryTreeNode::new(5.0);

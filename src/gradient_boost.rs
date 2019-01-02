@@ -83,15 +83,13 @@ impl GBDT {
             return vec![VALUE_TYPE_UNKNOWN; test_data.len()];
         }
 
-        let mut predicted: PredVec = Vec::with_capacity(n);
-        for i in test_data.iter().take(n) {
-            predicted.push(if self.conf.enable_initial_guess {
-                i.initial_guess
-            } else {
-                self.bias
-            });
-        }
-        for i in 0..(iters) {
+        let mut predicted: PredVec = if !self.conf.enable_initial_guess {
+            vec![self.bias; n]
+        } else {
+            test_data.iter().take(n).map(|x| x.initial_guess).collect()
+        };
+
+        for i in 0..iters {
             let v: PredVec = self.trees[i].predict_n(test_data, n);
             for d in 0..v.len() {
                 predicted[d] += self.conf.shrinkage * v[d];
@@ -102,18 +100,19 @@ impl GBDT {
 
     pub fn predict(&self, test_data: &DataVec) -> PredVec {
         let predicted = self.predict_n(test_data, self.conf.iterations, test_data.len());
-        
+
         if self.conf.loss == Loss::LogLikelyhood {
-            let mut logpv: PredVec = Vec::with_capacity(predicted.len());
-            for i in 0..predicted.len() {
-                logpv.push( match (1.0 / (1.0 + (-2.0 * predicted[i]).exp())) >= 0.5 {
-                    true => { 1.0 },
-                    false => { -1.0 },
-                } );
-            }
-            logpv
-        }
-        else {
+            predicted
+                .iter()
+                .map(|x| {
+                    if (1.0 / (1.0 + (-2.0 * x.exp()))) >= 0.5 {
+                        1.0
+                    } else {
+                        -1.0
+                    }
+                })
+                .collect()
+        } else {
             predicted
         }
     }

@@ -1,11 +1,11 @@
-//! This module implements a decision tree from the simple binary tree [gbdt::binary_tree]. 
-//! 
+//! This module implements a decision tree from the simple binary tree [gbdt::binary_tree].
+//!
 //! In the training process, the nodes are splited according `impurity`.
 //!
 //! The decision tree accepts features represented by f64. Unknown features are not supported yet.
 //!
 //! Following hyperparameters are supported:
-//! 
+//!
 //! 1. feature_size: the size of feautures. Training data and test data should have same
 //!    feature_size. (default = 1)
 //!
@@ -234,7 +234,6 @@ fn same(dv: &[&Data]) -> bool {
     true
 }
 
-
 /// The internal node of the decision tree. It's stored in the `value` of the gbdt::binary_tree::BinaryTreeNode
 ///
 #[derive(Debug, Serialize, Deserialize)]
@@ -274,7 +273,7 @@ pub struct DecisionTree {
     min_leaf_size: usize,
     /// the loss function type.
     loss: Loss,
-    /// portion of features to be splited. When spliting a node, a subset of the features 
+    /// portion of features to be splited. When spliting a node, a subset of the features
     /// (feature_size * feature_sample_ratio) will be randomly selected to calculate impurity.
     feature_sample_ratio: f64,
 }
@@ -355,7 +354,7 @@ impl DecisionTree {
         self.loss = loss;
     }
 
-    /// Set the portion of features to be splited. When spliting a node, a subset of the features 
+    /// Set the portion of features to be splited. When spliting a node, a subset of the features
     /// (feature_size * feature_sample_ratio) will be randomly selected to calculate impurity.
     /// # Example
     /// ```
@@ -480,9 +479,8 @@ impl DecisionTree {
         self.fit_node(root_index, 0, &data);
     }
 
-
     /// Recursively build the tree nodes. It choose a feature and a value to split the node and the data.
-    /// And then use the splited data to build the child nodes. 
+    /// And then use the splited data to build the child nodes.
     fn fit_node(&mut self, node: TreeIndex, depth: u32, train_data: &[&Data]) {
         // If the node doesn't need to be splited.
         {
@@ -623,7 +621,6 @@ impl DecisionTree {
             .collect()
     }
 
-    
     /// Inference the values of samples in the `test_data`. Return a vector of the predicted
     /// values.
     ///
@@ -741,7 +738,6 @@ impl DecisionTree {
             }
         }
     }
-    
 
     /// Split the data by calculating the impurity.
     /// Step 1: Choose candidate features. If `feature_sample_ratio` < 1.0, randomly selected
@@ -890,7 +886,7 @@ impl DecisionTree {
     }
 
     /// Print the decision tree. For debug use.
-    /// 
+    ///
     /// # Example
     /// ```
     /// use gbdt::config::Loss;
@@ -948,4 +944,3 @@ impl DecisionTree {
         self.tree.print();
     }
 }
-
