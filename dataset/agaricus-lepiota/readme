@@ -1,1 +1,9 @@
 http://www.grappa.univ-lille3.fr/~torre/Recherche/Experiments/Datasets/#agaricus-lepiota
+
+**vecrorize.py**
+
+Convert source data to vector.
+
+**split.py**
+
+Randomly split data to train set and test set.
