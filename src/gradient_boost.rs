@@ -135,14 +135,34 @@ impl GBDT {
         }
     }
 
+    /// Return true if the data in the given data vector are all valid. In other case
+    /// returns false.
+    /// 
+    /// We simply check whether the length of feature vector in each data
+    /// equals to the specified feature size in config.
+    pub fn check_valid_data(&self, dv: &DataVec) -> bool {
+        for d in dv {
+            if d.feature.len() != self.conf.feature_size {
+                return false
+            }
+        }
+        true
+    }
+
     /// If initial_guess_enabled is set false in gbdt config, this function will calculate
     /// bias for initial guess based on train data. Different methods will be used according
     /// to different loss type. This is a private method and should not be called manually.
     /// 
     /// # Panic
     /// If  specified length is greater than the length of data vector, it will panic.
+    /// 
+    /// If there is invalid data that will confuse the training process, it will panic.
     fn init(&mut self, len: usize, dv: &DataVec) {
         assert!(dv.len() >= len);
+
+        if !self.check_valid_data(&dv) {
+            panic!("There are invalid data in data vector, check your data please.");
+        }
 
         if self.conf.initial_guess_enabled {
             return;
