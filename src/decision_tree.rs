@@ -488,12 +488,14 @@ impl DecisionTree {
                 .tree
                 .get_node_mut(node)
                 .expect("node should not be empty!");
+            // calculate to support unknown features
+            node_ref.value.pred = calculate_pred(train_data, &self.loss);
             if (depth >= self.max_depth)
                 || same(train_data)
                 || (train_data.len() <= self.min_leaf_size)
             {
                 node_ref.value.is_leaf = true;
-                node_ref.value.pred = calculate_pred(train_data, &self.loss);
+                //node_ref.value.pred = calculate_pred(train_data, &self.loss);
                 return;
             }
         }
@@ -518,7 +520,7 @@ impl DecisionTree {
         }
 
         // Use the splited data to build child nodes.
-        if let Some((left_data, right_data)) = splited_data {
+        if let Some((left_data, right_data, _unknown_data)) = splited_data {
             let left_index = self
                 .tree
                 .add_left_node(node, BinaryTreeNode::new(DTNode::new()));
@@ -722,8 +724,10 @@ impl DecisionTree {
                 sample.feature.len() > node.value.feature_index,
                 "sample doesn't have the feature"
             );
-            // choose a child node, call this function again
-            if sample.feature[node.value.feature_index] < node.value.feature_value {
+            // return node.value.pred if the feature is unknown
+            if sample.feature[node.value.feature_index] == VALUE_TYPE_UNKNOWN {
+                node.value.pred
+            } else if sample.feature[node.value.feature_index] < node.value.feature_value {
                 let left = self
                     .tree
                     .get_left_child(node)
@@ -752,7 +756,11 @@ impl DecisionTree {
         train_data: &'a [&Data],
         feature_size: usize,
         feature_sample_ratio: f64,
-    ) -> (Option<(Vec<&'a Data>, Vec<&'a Data>)>, usize, ValueType) {
+    ) -> (
+        Option<(Vec<&'a Data>, Vec<&'a Data>, Vec<&'a Data>)>,
+        usize,
+        ValueType,
+    ) {
         let mut fs = feature_size;
         let mut fv: Vec<usize> = (0..).take(fs).collect();
 
@@ -785,9 +793,12 @@ impl DecisionTree {
         if find {
             let mut left: Vec<&Data> = Vec::new();
             let mut right: Vec<&Data> = Vec::new();
+            let mut unknown: Vec<&Data> = Vec::new();
             for elem in train_data.iter() {
                 if let Some(v) = elem.feature.get(index) {
-                    if *v < value {
+                    if *v == VALUE_TYPE_UNKNOWN {
+                        unknown.push(*elem);
+                    } else if *v < value {
                         left.push(*elem);
                     } else {
                         right.push(*elem);
@@ -796,7 +807,7 @@ impl DecisionTree {
                     assert!(true, "feature can't be empty");
                 }
             }
-            (Some((left, right)), index, value)
+            (Some((left, right, unknown)), index, value)
         } else {
             (None, 0, 0.0)
         }
@@ -809,8 +820,9 @@ impl DecisionTree {
         value: &mut ValueType,
         impurity: &mut ValueType,
         //gain: &mut f64,
-    ) {
+    ) -> bool {
         *impurity = VALUE_TYPE_MAX;
+        *value = VALUE_TYPE_UNKNOWN;
         let mut data = train_data.to_vec();
 
         for elem in train_data.iter() {
@@ -827,22 +839,41 @@ impl DecisionTree {
             v1.partial_cmp(&v2).unwrap()
         });
 
-        let fitness0: ValueType = 0.0;
-
+        let mut unknown: usize = 0;
         let mut s: ValueType = 0.0;
         let mut ss: ValueType = 0.0;
         let mut c: ValueType = 0.0;
+        for i in data.iter() {
+            if i.feature[index] == VALUE_TYPE_UNKNOWN {
+                s += i.target * i.weight;
+                ss += i.target * i.target * i.weight;
+                c += i.weight;
+                unknown += 1;
+            } else {
+                break;
+            }
+        }
+        if unknown == data.len() {
+            return false;
+        }
 
-        for i in data.iter().take(train_data.len()) {
+        let mut fitness0 = if c > 1.0 { ss - s * s / c } else { 0.0 };
+
+        if fitness0 < 0.0 {
+            fitness0 = 0.0;
+        }
+
+        s = 0.0;
+        ss = 0.0;
+        c = 0.0;
+
+        for i in data.iter().skip(unknown) {
             s += i.target * i.weight;
             ss += i.target * i.target * i.weight;
             c += i.weight;
         }
 
-        // fitness00 is designed to support unknown feature
-        // Supress the warning here by add '_' before it
-        // TODO: remove '_' to support unknown feature
-        let _fitness00: ValueType = if c > 1.0 { ss - s * s / c } else { 0.0 };
+        let _fitness00 = if c > 1.0 { ss - s * s / c } else { 0.0 };
 
         let mut ls: ValueType = 0.0;
         let mut lss: ValueType = 0.0;
@@ -851,7 +882,7 @@ impl DecisionTree {
         let mut rss: ValueType = ss;
         let mut rc: ValueType = c;
 
-        for i in 0..(train_data.len() - 1) {
+        for i in unknown..(train_data.len() - 1) {
             s = data[i].target * data[i].weight;
             ss = data[i].target * data[i].target * data[i].weight;
             c = data[i].weight;
@@ -871,9 +902,15 @@ impl DecisionTree {
                 continue;
             }
 
-            let fitness1 = if lc > 1.0 { lss - ls * ls / lc } else { 0.0 };
+            let mut fitness1 = if lc > 1.0 { lss - ls * ls / lc } else { 0.0 };
+            if fitness1 < 0.0 {
+                fitness1 = 0.0;
+            }
 
-            let fitness2 = if rc > 1.0 { rss - rs * rs / rc } else { 0.0 };
+            let mut fitness2 = if rc > 1.0 { rss - rs * rs / rc } else { 0.0 };
+            if fitness2 < 0.0 {
+                fitness2 = 0.0;
+            }
 
             let fitness: ValueType = fitness0 + fitness1 + fitness2;
 
@@ -883,6 +920,8 @@ impl DecisionTree {
                 //*gain = fitness00 - fitness1 - fitness2;
             }
         }
+
+        *impurity != VALUE_TYPE_MAX
     }
 
     /// Print the decision tree. For debug use.
