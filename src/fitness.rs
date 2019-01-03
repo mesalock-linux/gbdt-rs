@@ -27,6 +27,9 @@ pub fn almost_equal(a: ValueType, b: ValueType) -> bool {
 }
 
 /// Return whether the first n data in data vector have same target values.
+/// 
+/// # Panic
+/// If the specified length is greater than the length of data vector, it will panic.
 pub fn same(dv: &DataVec, len: usize) -> bool {
     assert!(dv.len() >= len);
 
@@ -74,6 +77,11 @@ pub fn lad_loss_gradient(y: ValueType, f: ValueType) -> ValueType {
 
 /// RMSE (Root-Mean-Square deviation) calculation for first n element in data vector.
 /// See [wikipedia](https://en.wikipedia.org/wiki/Root-mean-square_deviation) for detailed algorithm.
+/// 
+/// # Panic
+/// If the specified length is greater than the length of data vector, it will panic.
+/// 
+/// If the length of data vector and predicted vector is not same, it will panic.
 #[allow(non_snake_case)]
 pub fn RMSE(dv: &DataVec, predict: &PredVec, len: usize) -> ValueType {
     assert_eq!(dv.len(), predict.len());
@@ -91,6 +99,11 @@ pub fn RMSE(dv: &DataVec, predict: &PredVec, len: usize) -> ValueType {
 
 /// MAE (Mean Absolute Error) calculation for first n element in data vector.
 /// See [wikipedia](https://en.wikipedia.org/wiki/Mean_absolute_error) for detail for detailed algorithm.
+/// 
+/// # Panic
+/// If the specified length is greater than the length of data vector, it will panic.
+/// 
+/// If the length of data vector and predicted vector is not same, it will panic.
 #[allow(non_snake_case)]
 pub fn MAE(dv: &DataVec, predict: &PredVec, len: usize) -> ValueType {
     assert_eq!(dv.len(), predict.len());
@@ -108,6 +121,11 @@ pub fn MAE(dv: &DataVec, predict: &PredVec, len: usize) -> ValueType {
 
 /// AUC (Area Under the Curve) calculation for first n element in data vector.
 /// See [wikipedia](https://en.wikipedia.org/wiki/Receiver_operating_characteristic#Area_under_the_curve) for detailed algorithm.
+/// 
+/// # Panic
+/// If the specified length is greater than the length of data vector, it will panic.
+/// 
+/// If the length of data vector and predicted vector is not same, it will panic.
 #[allow(non_snake_case)]
 pub fn AUC(dv: &DataVec, predict: &PredVec, len: usize) -> ValueType {
     assert_eq!(dv.len(), predict.len());
@@ -227,6 +245,9 @@ pub fn AUC(dv: &DataVec, predict: &PredVec, len: usize) -> ValueType {
 /// });
 /// assert!(almost_equal(0.3, average(&dv, dv.len())));
 /// ```
+/// 
+/// # Panic
+/// If the specified length is greater than the length of data vector, it will panic.
 pub fn average(dv: &DataVec, len: usize) -> ValueType {
     assert!(dv.len() >= len);
 
@@ -284,6 +305,9 @@ pub fn average(dv: &DataVec, len: usize) -> ValueType {
 /// });
 /// assert!(almost_equal(0.4, label_average(&dv, dv.len())));
 /// ```
+/// 
+/// # Panic
+/// If the specified length is greater than the length of data vector, it will panic.
 pub fn label_average(dv: &DataVec, len: usize) -> ValueType {
     assert!(dv.len() >= len);
     let mut s: ValueType = 0.0;
@@ -336,6 +360,9 @@ pub fn label_average(dv: &DataVec, len: usize) -> ValueType {
 /// });
 /// assert!(almost_equal(0.0, weighted_label_median(&dv, dv.len())));
 /// ```
+/// 
+/// # Panic
+/// If the specified length is greater than the length of data vector, it will panic.
 pub fn weighted_label_median(dv: &DataVec, len: usize) -> ValueType {
     assert!(dv.len() >= len);
     let mut dv_copy = dv.to_vec();
@@ -403,6 +430,9 @@ pub fn weighted_label_median(dv: &DataVec, len: usize) -> ValueType {
 /// });
 /// assert!(almost_equal(0.5, weighted_residual_median(&dv, dv.len())));
 /// ```
+/// 
+/// # Panic
+/// If the specified length is greater than the length of data vector, it will panic.
 pub fn weighted_residual_median(dv: &DataVec, len: usize) -> ValueType {
     assert!(dv.len() >= len);
     let mut dv_copy = dv.to_vec();
