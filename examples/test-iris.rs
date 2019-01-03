@@ -9,7 +9,6 @@ use std::fs::File;
 use std::io::{BufRead, BufReader};
 
 fn main() {
-
     let mut cfg = Config::new();
     cfg.set_feature_size(4);
     cfg.set_max_depth(3);

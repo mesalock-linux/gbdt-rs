@@ -3,7 +3,7 @@
 use crate::decision_tree::{DataVec, PredVec, ValueType};
 
 /// Comparing two number with a costomized floating error threshold.
-/// 
+///
 /// # Example
 /// ```rust
 /// use gbdt::fitness::almost_equal_thrs;
@@ -13,9 +13,8 @@ pub fn almost_equal_thrs(a: ValueType, b: ValueType, thrs: f64) -> bool {
     ((a - b).abs() as f64) < thrs
 }
 
-
 /// Comparing two number with default floating error threshold.
-/// 
+///
 /// # Example
 /// ```rust
 /// use gbdt::fitness::almost_equal;
@@ -27,7 +26,7 @@ pub fn almost_equal(a: ValueType, b: ValueType) -> bool {
 }
 
 /// Return whether the first n data in data vector have same target values.
-/// 
+///
 /// # Panic
 /// If the specified length is greater than the length of data vector, it will panic.
 pub fn same(dv: &DataVec, len: usize) -> bool {
@@ -77,10 +76,10 @@ pub fn lad_loss_gradient(y: ValueType, f: ValueType) -> ValueType {
 
 /// RMSE (Root-Mean-Square deviation) calculation for first n element in data vector.
 /// See [wikipedia](https://en.wikipedia.org/wiki/Root-mean-square_deviation) for detailed algorithm.
-/// 
+///
 /// # Panic
 /// If the specified length is greater than the length of data vector, it will panic.
-/// 
+///
 /// If the length of data vector and predicted vector is not same, it will panic.
 #[allow(non_snake_case)]
 pub fn RMSE(dv: &DataVec, predict: &PredVec, len: usize) -> ValueType {
@@ -99,10 +98,10 @@ pub fn RMSE(dv: &DataVec, predict: &PredVec, len: usize) -> ValueType {
 
 /// MAE (Mean Absolute Error) calculation for first n element in data vector.
 /// See [wikipedia](https://en.wikipedia.org/wiki/Mean_absolute_error) for detail for detailed algorithm.
-/// 
+///
 /// # Panic
 /// If the specified length is greater than the length of data vector, it will panic.
-/// 
+///
 /// If the length of data vector and predicted vector is not same, it will panic.
 #[allow(non_snake_case)]
 pub fn MAE(dv: &DataVec, predict: &PredVec, len: usize) -> ValueType {
@@ -121,10 +120,10 @@ pub fn MAE(dv: &DataVec, predict: &PredVec, len: usize) -> ValueType {
 
 /// AUC (Area Under the Curve) calculation for first n element in data vector.
 /// See [wikipedia](https://en.wikipedia.org/wiki/Receiver_operating_characteristic#Area_under_the_curve) for detailed algorithm.
-/// 
+///
 /// # Panic
 /// If the specified length is greater than the length of data vector, it will panic.
-/// 
+///
 /// If the length of data vector and predicted vector is not same, it will panic.
 #[allow(non_snake_case)]
 pub fn AUC(dv: &DataVec, predict: &PredVec, len: usize) -> ValueType {
@@ -203,9 +202,8 @@ pub fn AUC(dv: &DataVec, predict: &PredVec, len: usize) -> ValueType {
     (rank_sum / (p_size as ValueType) - ((p_size as ValueType) + 1.0)) / (n_size as ValueType)
 }
 
-
 /// Return the weighted target average for first n data in data vector.
-/// 
+///
 /// # Example
 /// ```rust
 /// use gbdt::decision_tree::{DataVec, Data, VALUE_TYPE_UNKNOWN};
@@ -245,7 +243,7 @@ pub fn AUC(dv: &DataVec, predict: &PredVec, len: usize) -> ValueType {
 /// });
 /// assert!(almost_equal(0.3, average(&dv, dv.len())));
 /// ```
-/// 
+///
 /// # Panic
 /// If the specified length is greater than the length of data vector, it will panic.
 pub fn average(dv: &DataVec, len: usize) -> ValueType {
@@ -265,7 +263,7 @@ pub fn average(dv: &DataVec, len: usize) -> ValueType {
 }
 
 /// Return the weighted label average for first n data in data vector.
-/// 
+///
 /// # Example
 /// ```rust
 /// use gbdt::decision_tree::{DataVec, Data, VALUE_TYPE_UNKNOWN};
@@ -305,7 +303,7 @@ pub fn average(dv: &DataVec, len: usize) -> ValueType {
 /// });
 /// assert!(almost_equal(0.4, label_average(&dv, dv.len())));
 /// ```
-/// 
+///
 /// # Panic
 /// If the specified length is greater than the length of data vector, it will panic.
 pub fn label_average(dv: &DataVec, len: usize) -> ValueType {
@@ -320,7 +318,7 @@ pub fn label_average(dv: &DataVec, len: usize) -> ValueType {
 }
 
 /// Return the weighted label median for first n data in data vector.
-/// 
+///
 /// # Example
 /// ```rust
 /// use gbdt::decision_tree::{DataVec, Data, VALUE_TYPE_UNKNOWN};
@@ -360,7 +358,7 @@ pub fn label_average(dv: &DataVec, len: usize) -> ValueType {
 /// });
 /// assert!(almost_equal(0.0, weighted_label_median(&dv, dv.len())));
 /// ```
-/// 
+///
 /// # Panic
 /// If the specified length is greater than the length of data vector, it will panic.
 pub fn weighted_label_median(dv: &DataVec, len: usize) -> ValueType {
@@ -390,7 +388,7 @@ pub fn weighted_label_median(dv: &DataVec, len: usize) -> ValueType {
 }
 
 /// Return the weighted residual median for first n data in data vector.
-/// 
+///
 /// # Example
 /// ```rust
 /// use gbdt::decision_tree::{DataVec, Data, VALUE_TYPE_UNKNOWN};
@@ -430,7 +428,7 @@ pub fn weighted_label_median(dv: &DataVec, len: usize) -> ValueType {
 /// });
 /// assert!(almost_equal(0.5, weighted_residual_median(&dv, dv.len())));
 /// ```
-/// 
+///
 /// # Panic
 /// If the specified length is greater than the length of data vector, it will panic.
 pub fn weighted_residual_median(dv: &DataVec, len: usize) -> ValueType {

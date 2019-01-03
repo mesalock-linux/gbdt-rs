@@ -1,43 +1,43 @@
 //! This module is implements the config for gradient boosting.
-//! 
+//!
 //! Following hyperparameters are supported:
-//! 
+//!
 //! 1. feature_size: the size of features. Training data and test data should have
 //!    the same feature size. (default = 1)
-//! 
+//!
 //! 2. max_depth: the max depth of a single decision tree. The root node is considered
 //!    to be in the layer 0. (default = 2)
-//! 
+//!
 //! 3. iterations: the iterations to train, which is also the number of trees in the
 //!    gradient boosting algorithm. (default = 2)
-//! 
+//!
 //! 4. shrinkage: the learning rate parameter of the gradient boosting algorithm.
 //!    (default = 1.0)
-//! 
+//!
 //! 5. feature_sample_raio: portion of features to be splited. When spliting a node, a subset of
 //!    the features (feature_size * feature_sample_ratio) will be randomly selected to calculate
 //!    impurity. (default = 1.0)
-//! 
+//!
 //! 6. data_sample_ratio: portion of data used to train in a single iteration. Data will
 //!    be randomly selected for the training. (default = 1.0)
-//! 
+//!
 //! 7. min_leaf_size: the minimum number of samples required to be at a leaf node during training.
 //!    (default = 1)
-//! 
+//!
 //! 8. loss: the loss function type. SquaredError, LogLikelyhood and LAD are supported. See
 //!    [Loss](enum.Loss.html). (default = SquareError)
-//! 
+//!
 //! 9. debug: whether the debug information should be outputed. (default = false)
-//! 
+//!
 //! 10. feature_cost: the parameter to tune the model. Used if feature_tunning_enabled is set true.
 //!     (default = Vec::new())
-//! 
+//!
 //! 11. feature_tunning_enabled: whether feature tuning is enabled. When set true,
 //!     `feature_costs' is used to tune the model. (default = false)
-//! 
+//!
 //! 12. initial_guess_enabled: whether initial guess for test data is enabled. (default = false)
-//! 
-//! 
+//!
+//!
 //! # Example
 //! ```rust
 //! use gbdt::config::Config;
@@ -47,7 +47,7 @@
 //! cfg.set_iterations(3);
 //! cfg.set_loss("LAD");
 //! println!("{}", cfg.to_string());
-//! 
+//!
 //! // output
 //! // number of features = 4
 //! // min leaf size = 1
@@ -62,21 +62,19 @@
 //! // initial guess enabled = false
 //! ```
 
-
 use crate::decision_tree::ValueType;
 
 /// This enum defines the loss type.
-/// 
+///
 /// We support three loss types:
-/// 
+///
 /// 1. SquaredError
 /// 2. LogLikelyhood
 /// 3. LAD
-/// 
+///
 /// Note that `LogLikelyhood` only support two class classification.
 #[derive(Debug, PartialEq, Clone, Serialize, Deserialize)]
 pub enum Loss {
-
     /// Squared Error loss type.
     SquaredError,
 
@@ -97,7 +95,6 @@ impl Default for Loss {
 /// The config for the gradient boosting algorithm.
 #[derive(Default, Clone, Serialize, Deserialize)]
 pub struct Config {
-
     /// The size of features. Training data and test data should have the same feature size. (default = 1)
     pub feature_size: usize,
 
@@ -135,7 +132,6 @@ pub struct Config {
     pub initial_guess_enabled: bool,
 }
 
-
 /// Converting [std::string::String](https://doc.rust-lang.org/std/string/struct.String.html) to [Loss](enum.Loss.html).
 pub fn string2loss(s: &str) -> Loss {
     match s {
@@ -157,7 +153,7 @@ pub fn loss2string(l: &Loss) -> String {
 
 impl Config {
     /// Return a new config with default settings.
-    /// 
+    ///
     /// # Example
     /// ```rust
     /// use gbdt::config::Config;
@@ -181,7 +177,7 @@ impl Config {
     }
 
     /// Set feature size.
-    /// 
+    ///
     /// # Example
     /// ```rust
     /// use gbdt::config::Config;
@@ -193,7 +189,7 @@ impl Config {
     }
 
     /// Set max depth of the tree.
-    /// 
+    ///
     /// # Example
     /// ```rust
     /// use gbdt::config::Config;
@@ -205,7 +201,7 @@ impl Config {
     }
 
     /// Set iterations of the algorithm.
-    /// 
+    ///
     /// # Example
     /// ```rust
     /// use gbdt::config::Config;
@@ -217,7 +213,7 @@ impl Config {
     }
 
     /// Set feature sample ratio.
-    /// 
+    ///
     /// # Example
     /// ```rust
     /// use gbdt::config::Config;
@@ -229,7 +225,7 @@ impl Config {
     }
 
     /// Set data sample ratio.
-    /// 
+    ///
     /// # Example
     /// ```rust
     /// use gbdt::config::Config;
@@ -241,7 +237,7 @@ impl Config {
     }
 
     /// Set minimal leaf size.
-    /// 
+    ///
     /// # Example
     /// ```rust
     /// use gbdt::config::Config;
@@ -253,7 +249,7 @@ impl Config {
     }
 
     /// Set loss type.
-    /// 
+    ///
     /// # Example
     /// ```rust
     /// use gbdt::config::Config;
@@ -265,7 +261,7 @@ impl Config {
     }
 
     /// Set debug mode.
-    /// 
+    ///
     /// # Example
     /// ```rust
     /// use gbdt::config::Config;
@@ -277,7 +273,7 @@ impl Config {
     }
 
     /// Set whther feature tunning is enabled.
-    /// 
+    ///
     /// # Example
     /// ```rust
     /// use gbdt::config::Config;
@@ -289,7 +285,7 @@ impl Config {
     }
 
     /// Set whther initial guess of test data is enabled.
-    /// 
+    ///
     /// # Example
     /// ```rust
     /// use gbdt::config::Config;
@@ -301,7 +297,7 @@ impl Config {
     }
 
     /// Dump the config to string for presentation.
-    /// 
+    ///
     /// # Example
     /// ```rust
     /// use gbdt::config::Config;
@@ -310,10 +306,7 @@ impl Config {
     /// ```
     pub fn to_string(&self) -> String {
         let mut s = String::from("");
-        s.push_str(&format!(
-            "number of features = {}\n",
-            self.feature_size
-        ));
+        s.push_str(&format!("number of features = {}\n", self.feature_size));
         s.push_str(&format!("min leaf size = {}\n", self.min_leaf_size));
         s.push_str(&format!("maximum depth = {}\n", self.max_depth));
         s.push_str(&format!("iterations = {}\n", self.iterations));
