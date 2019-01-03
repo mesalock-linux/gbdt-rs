@@ -25,7 +25,7 @@
 //!    (default = 1)
 //! 
 //! 8. loss: the loss function type. SquaredError, LogLikelyhood and LAD are supported. See
-//!    [Loss]. (default = SquareError)
+//!    [Loss](enum.Loss.html). (default = SquareError)
 //! 
 //! 9. debug: whether the debug information should be outputed. (default = false)
 //! 
@@ -76,8 +76,14 @@ use crate::decision_tree::ValueType;
 /// Note that `LogLikelyhood` only support two class classification.
 #[derive(Debug, PartialEq, Clone, Serialize, Deserialize)]
 pub enum Loss {
+
+    /// Squared Error loss type.
     SquaredError,
+
+    /// Negative binomial log-likehood loss type.
     LogLikelyhood,
+
+    /// LAD loss type
     LAD,
 }
 

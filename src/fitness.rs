@@ -1,13 +1,32 @@
+//! This module implements some math functions used for gradient boosting process.
+
 use crate::decision_tree::{DataVec, PredVec, ValueType};
 
+/// Comparing two number with a costomized floating error threshold.
+/// 
+/// # Example
+/// ```rust
+/// use gbdt::fitness::almost_equal_thrs;
+/// assert_eq!(true, almost_equal_thrs(1.0, 0.998, 0.01));
+/// ```
 pub fn almost_equal_thrs(a: ValueType, b: ValueType, thrs: f64) -> bool {
     ((a - b).abs() as f64) < thrs
 }
 
+
+/// Comparing two number with default floating error threshold.
+/// 
+/// # Example
+/// ```rust
+/// use gbdt::fitness::almost_equal;
+/// assert_eq!(false, almost_equal(1.0, 0.998));
+/// assert_eq!(true, almost_equal(1.0, 0.999998));
+/// ```
 pub fn almost_equal(a: ValueType, b: ValueType) -> bool {
     ((a - b).abs() as f64) < 1.0e-5
 }
 
+/// Return whether the first n data in data vector have same target values.
 pub fn same(dv: &DataVec, len: usize) -> bool {
     assert!(dv.len() >= len);
 
@@ -24,22 +43,27 @@ pub fn same(dv: &DataVec, len: usize) -> bool {
     true
 }
 
+/// Logistic value function.
 pub fn logit(f: ValueType) -> ValueType {
     1.0 / (1.0 + (-2.0 * f).exp())
 }
 
+/// Negative binomial log-likelyhood loss function.
 pub fn logit_loss(y: ValueType, f: ValueType) -> ValueType {
     2.0 * (1.0 + (-2.0 * y * f)).ln()
 }
 
+/// Log-likelyhood gradient calculation.
 pub fn logit_loss_gradient(y: ValueType, f: ValueType) -> ValueType {
     2.0 * y / (1.0 + (2.0 * y * f).exp())
 }
 
+/// LAD loss function.
 pub fn lad_loss(y: ValueType, f: ValueType) -> ValueType {
     (y - f).abs()
 }
 
+/// LAD gradient calculation.
 pub fn lad_loss_gradient(y: ValueType, f: ValueType) -> ValueType {
     if y - f > 0.0 {
         1.0
@@ -48,6 +72,8 @@ pub fn lad_loss_gradient(y: ValueType, f: ValueType) -> ValueType {
     }
 }
 
+/// RMSE (Root-Mean-Square deviation) calculation for first n element in data vector.
+/// See [wikipedia](https://en.wikipedia.org/wiki/Root-mean-square_deviation) for detailed algorithm.
 #[allow(non_snake_case)]
 pub fn RMSE(dv: &DataVec, predict: &PredVec, len: usize) -> ValueType {
     assert_eq!(dv.len(), predict.len());
@@ -63,6 +89,8 @@ pub fn RMSE(dv: &DataVec, predict: &PredVec, len: usize) -> ValueType {
     s / c
 }
 
+/// MAE (Mean Absolute Error) calculation for first n element in data vector.
+/// See [wikipedia](https://en.wikipedia.org/wiki/Mean_absolute_error) for detail for detailed algorithm.
 #[allow(non_snake_case)]
 pub fn MAE(dv: &DataVec, predict: &PredVec, len: usize) -> ValueType {
     assert_eq!(dv.len(), predict.len());
@@ -78,6 +106,8 @@ pub fn MAE(dv: &DataVec, predict: &PredVec, len: usize) -> ValueType {
     s / c
 }
 
+/// AUC (Area Under the Curve) calculation for first n element in data vector.
+/// See [wikipedia](https://en.wikipedia.org/wiki/Receiver_operating_characteristic#Area_under_the_curve) for detailed algorithm.
 #[allow(non_snake_case)]
 pub fn AUC(dv: &DataVec, predict: &PredVec, len: usize) -> ValueType {
     assert_eq!(dv.len(), predict.len());
@@ -155,6 +185,48 @@ pub fn AUC(dv: &DataVec, predict: &PredVec, len: usize) -> ValueType {
     (rank_sum / (p_size as ValueType) - ((p_size as ValueType) + 1.0)) / (n_size as ValueType)
 }
 
+
+/// Return the weighted target average for first n data in data vector.
+/// 
+/// # Example
+/// ```rust
+/// use gbdt::decision_tree::{DataVec, Data, VALUE_TYPE_UNKNOWN};
+/// use gbdt::fitness::{average, almost_equal};
+/// let mut dv: DataVec = Vec::new();
+/// dv.push(Data {
+///     feature: Vec::new(),
+///     target: 1.0,
+///     weight: 0.1,
+///     label: 1.0,
+///     residual: 0.5,
+///     initial_guess: VALUE_TYPE_UNKNOWN,
+/// });
+/// dv.push(Data {
+///     feature: Vec::new(),
+///     target: 1.0,
+///     weight: 0.2,
+///     label: 0.0,
+///     residual: 0.5,
+///     initial_guess: VALUE_TYPE_UNKNOWN,
+/// });
+/// dv.push(Data {
+///     feature: Vec::new(),
+///     target: 0.0,
+///     weight: 0.3,
+///     label: 1.0,
+///     residual: 0.5,
+///     initial_guess: VALUE_TYPE_UNKNOWN,
+/// });
+/// dv.push(Data {
+///     feature: Vec::new(),
+///     target: 0.0,
+///     weight: 0.4,
+///     label: 0.0,
+///     residual: 0.5,
+///     initial_guess: VALUE_TYPE_UNKNOWN,
+/// });
+/// assert!(almost_equal(0.3, average(&dv, dv.len())));
+/// ```
 pub fn average(dv: &DataVec, len: usize) -> ValueType {
     assert!(dv.len() >= len);
 
@@ -171,6 +243,47 @@ pub fn average(dv: &DataVec, len: usize) -> ValueType {
     s / c
 }
 
+/// Return the weighted label average for first n data in data vector.
+/// 
+/// # Example
+/// ```rust
+/// use gbdt::decision_tree::{DataVec, Data, VALUE_TYPE_UNKNOWN};
+/// use gbdt::fitness::{label_average, almost_equal};
+/// let mut dv: DataVec = Vec::new();
+/// dv.push(Data {
+///     feature: Vec::new(),
+///     target: 1.0,
+///     weight: 0.1,
+///     label: 1.0,
+///     residual: 0.5,
+///     initial_guess: VALUE_TYPE_UNKNOWN,
+/// });
+/// dv.push(Data {
+///     feature: Vec::new(),
+///     target: 1.0,
+///     weight: 0.2,
+///     label: 0.0,
+///     residual: 0.5,
+///     initial_guess: VALUE_TYPE_UNKNOWN,
+/// });
+/// dv.push(Data {
+///     feature: Vec::new(),
+///     target: 0.0,
+///     weight: 0.3,
+///     label: 1.0,
+///     residual: 0.5,
+///     initial_guess: VALUE_TYPE_UNKNOWN,
+/// });
+/// dv.push(Data {
+///     feature: Vec::new(),
+///     target: 0.0,
+///     weight: 0.4,
+///     label: 0.0,
+///     residual: 0.5,
+///     initial_guess: VALUE_TYPE_UNKNOWN,
+/// });
+/// assert!(almost_equal(0.4, label_average(&dv, dv.len())));
+/// ```
 pub fn label_average(dv: &DataVec, len: usize) -> ValueType {
     assert!(dv.len() >= len);
     let mut s: ValueType = 0.0;
@@ -182,6 +295,47 @@ pub fn label_average(dv: &DataVec, len: usize) -> ValueType {
     s / c
 }
 
+/// Return the weighted label median for first n data in data vector.
+/// 
+/// # Example
+/// ```rust
+/// use gbdt::decision_tree::{DataVec, Data, VALUE_TYPE_UNKNOWN};
+/// use gbdt::fitness::{weighted_label_median, almost_equal};
+/// let mut dv: DataVec = Vec::new();
+/// dv.push(Data {
+///     feature: Vec::new(),
+///     target: 1.0,
+///     weight: 0.1,
+///     label: 1.0,
+///     residual: 0.5,
+///     initial_guess: VALUE_TYPE_UNKNOWN,
+/// });
+/// dv.push(Data {
+///     feature: Vec::new(),
+///     target: 1.0,
+///     weight: 0.2,
+///     label: 0.0,
+///     residual: 0.5,
+///     initial_guess: VALUE_TYPE_UNKNOWN,
+/// });
+/// dv.push(Data {
+///     feature: Vec::new(),
+///     target: 0.0,
+///     weight: 0.3,
+///     label: 1.0,
+///     residual: 0.5,
+///     initial_guess: VALUE_TYPE_UNKNOWN,
+/// });
+/// dv.push(Data {
+///     feature: Vec::new(),
+///     target: 0.0,
+///     weight: 0.4,
+///     label: 0.0,
+///     residual: 0.5,
+///     initial_guess: VALUE_TYPE_UNKNOWN,
+/// });
+/// assert!(almost_equal(0.0, weighted_label_median(&dv, dv.len())));
+/// ```
 pub fn weighted_label_median(dv: &DataVec, len: usize) -> ValueType {
     assert!(dv.len() >= len);
     let mut dv_copy = dv.to_vec();
@@ -208,6 +362,47 @@ pub fn weighted_label_median(dv: &DataVec, len: usize) -> ValueType {
     weighted_median
 }
 
+/// Return the weighted residual median for first n data in data vector.
+/// 
+/// # Example
+/// ```rust
+/// use gbdt::decision_tree::{DataVec, Data, VALUE_TYPE_UNKNOWN};
+/// use gbdt::fitness::{weighted_residual_median, almost_equal};
+/// let mut dv: DataVec = Vec::new();
+/// dv.push(Data {
+///     feature: Vec::new(),
+///     target: 1.0,
+///     weight: 0.1,
+///     label: 1.0,
+///     residual: 0.5,
+///     initial_guess: VALUE_TYPE_UNKNOWN,
+/// });
+/// dv.push(Data {
+///     feature: Vec::new(),
+///     target: 1.0,
+///     weight: 0.2,
+///     label: 0.0,
+///     residual: 0.5,
+///     initial_guess: VALUE_TYPE_UNKNOWN,
+/// });
+/// dv.push(Data {
+///     feature: Vec::new(),
+///     target: 0.0,
+///     weight: 0.3,
+///     label: 1.0,
+///     residual: 0.5,
+///     initial_guess: VALUE_TYPE_UNKNOWN,
+/// });
+/// dv.push(Data {
+///     feature: Vec::new(),
+///     target: 0.0,
+///     weight: 0.4,
+///     label: 0.0,
+///     residual: 0.5,
+///     initial_guess: VALUE_TYPE_UNKNOWN,
+/// });
+/// assert!(almost_equal(0.5, weighted_residual_median(&dv, dv.len())));
+/// ```
 pub fn weighted_residual_median(dv: &DataVec, len: usize) -> ValueType {
     assert!(dv.len() >= len);
     let mut dv_copy = dv.to_vec();
