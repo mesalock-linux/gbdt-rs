@@ -19,6 +19,7 @@ include = [
     "src/decision_tree.rs",
     "src/gradient_boost.rs",
     "examples/test-agaricus-lepiota.rs",
+    "examples/test-iris.rs",
 ]
 
 [badges]
