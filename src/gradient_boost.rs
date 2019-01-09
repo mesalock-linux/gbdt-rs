@@ -90,7 +90,8 @@ use crate::decision_tree::DecisionTree;
 use crate::decision_tree::{DataVec, PredVec, ValueType, VALUE_TYPE_UNKNOWN};
 use crate::fitness::*;
 use rand::prelude::SliceRandom;
-use rand::thread_rng;
+use rand::rngs::StdRng;
+use rand::SeedableRng;
 
 /// The gradient boosting decision tree.
 #[derive(Default, Serialize, Deserialize)]
@@ -260,20 +261,40 @@ impl GBDT {
 
         let mut train_data_copy = train_data.to_vec();
 
-        let mut rng = thread_rng();
+        //let mut rng = thread_rng();
+        let seed = rand_seed();
+        let mut rng: StdRng = SeedableRng::from_seed(seed.clone());
+        let mut rng_clone: StdRng = SeedableRng::from_seed(seed.clone());
+        let mut predicted_cache: PredVec = self.predict_n(&train_data_copy, 0, train_data.len());
+        if nr_samples < train_data.len() {
+            train_data_copy.shuffle(&mut rng);
+            predicted_cache.shuffle(&mut rng_clone);
+        }
         for i in 0..self.conf.iterations {
-            if nr_samples < train_data.len() {
-                train_data_copy.shuffle(&mut rng);
-            }
             if self.conf.loss == Loss::SquaredError {
-                self.square_loss_process(&mut train_data_copy, nr_samples, i);
+                self.square_loss_process(&mut train_data_copy, nr_samples, &predicted_cache);
             } else if self.conf.loss == Loss::LogLikelyhood {
-                self.log_loss_process(&mut train_data_copy, nr_samples, i);
+                self.log_loss_process(&mut train_data_copy, nr_samples, &predicted_cache);
             } else if self.conf.loss == Loss::LAD {
-                self.lad_loss_process(&mut train_data_copy, nr_samples, i);
+                self.lad_loss_process(&mut train_data_copy, nr_samples, &predicted_cache);
             }
             self.trees[i].fit_n(&train_data_copy, nr_samples);
+            let predicted_tmp = self.predict_nth(&train_data_copy, i, train_data_copy.len());
+            for j in 0..predicted_cache.len() {
+                predicted_cache[j] += predicted_tmp[j] * self.conf.shrinkage;
+            }
+            if nr_samples < train_data.len() {
+                train_data_copy.shuffle(&mut rng);
+                predicted_cache.shuffle(&mut rng_clone);
+            }
         }
+    }
+
+    #[inline(always)]
+    pub fn predict_nth(&self, test_data: &DataVec, iter: usize, n: usize) -> PredVec {
+        assert!(test_data.len() >= n);
+        assert!(iter < self.trees.len());
+        self.trees[iter].predict_n(&test_data, n)
     }
 
     /// Predicting the first `n` data in data vector with the first `iters` trees.
@@ -370,7 +391,7 @@ impl GBDT {
         };
 
         for i in 0..iters {
-            let v: PredVec = self.trees[i].predict_n(test_data, n);
+            let v: PredVec = self.predict_nth(&test_data, i, n);
             for d in 0..v.len() {
                 predicted[d] += self.conf.shrinkage * v[d];
             }
@@ -550,8 +571,8 @@ impl GBDT {
     /// This is the process to calculate the residual as the target in next iteration
     /// using squared error loss function. This is a private method that should not be
     /// called manually.
-    fn square_loss_process(&self, dv: &mut DataVec, samples: usize, iters: usize) {
-        let predicted: PredVec = self.predict_n(&dv, iters, samples);
+    fn square_loss_process(&self, dv: &mut DataVec, samples: usize, predicted: &PredVec) {
+        // let predicted: PredVec = self.predict_n(&dv, iters, samples);
         for i in 0..samples {
             dv[i].target = dv[i].label - predicted[i];
         }
@@ -563,8 +584,8 @@ impl GBDT {
     /// This is the process to calculate the residual as the target in next iteration
     /// using negative binomial log-likehood loss function. This is a private method that should not be
     /// called manually.
-    fn log_loss_process(&self, dv: &mut DataVec, samples: usize, iters: usize) {
-        let predicted: PredVec = self.predict_n(&dv, iters, samples);
+    fn log_loss_process(&self, dv: &mut DataVec, samples: usize, predicted: &PredVec) {
+        // let predicted: PredVec = self.predict_n(&dv, iters, samples);
         for i in 0..samples {
             dv[i].target = logit_loss_gradient(dv[i].label, predicted[i]);
         }
@@ -573,8 +594,8 @@ impl GBDT {
     /// This is the process to calculate the residual as the target in next iteration
     /// using LAD loss function. This is a private method that should not be
     /// called manually.
-    fn lad_loss_process(&self, dv: &mut DataVec, samples: usize, iters: usize) {
-        let predicted: PredVec = self.predict_n(&dv, iters, samples);
+    fn lad_loss_process(&self, dv: &mut DataVec, samples: usize, predicted: &PredVec) {
+        // let predicted: PredVec = self.predict_n(&dv, iters, samples);
         for i in 0..samples {
             dv[i].residual = dv[i].label - predicted[i];
             dv[i].target = if dv[i].residual >= 0.0 { 1.0 } else { -1.0 };

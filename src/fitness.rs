@@ -9,6 +9,7 @@ use crate::decision_tree::{DataVec, PredVec, ValueType};
 /// use gbdt::fitness::almost_equal_thrs;
 /// assert_eq!(true, almost_equal_thrs(1.0, 0.998, 0.01));
 /// ```
+#[inline(always)]
 pub fn almost_equal_thrs(a: ValueType, b: ValueType, thrs: f64) -> bool {
     ((a - b).abs() as f64) < thrs
 }
@@ -455,4 +456,14 @@ pub fn weighted_residual_median(dv: &DataVec, len: usize) -> ValueType {
         }
     }
     weighted_median
+}
+
+pub fn rand_seed() -> [u8; 32] {
+    use rand::{thread_rng, RngCore};
+    let mut rng = thread_rng();
+    let mut ret = [0 as u8; 32];
+    for i in 0..32 {
+        ret[i] = (rng.next_u32() & 0xff) as u8;
+    }
+    ret
 }
