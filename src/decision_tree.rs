@@ -117,8 +117,172 @@ macro_rules! def_value_type {
 }
 
 // use continous variables for decision tree
-def_value_type!(f64);
+def_value_type!(f32);
 
+
+struct ImpurityCache {
+    sum_s: ValueType,
+    sum_ss: ValueType,
+    sum_c: ValueType,
+    cached: bool,
+    bool_vec: Vec<bool>,
+    sample_size: usize,
+}
+
+impl ImpurityCache {
+    fn new(sample_size: usize, train_data: &[usize]) -> Self {
+        let mut bool_vec: Vec<bool> = vec![false; sample_size];
+        for index in train_data.iter() {
+            bool_vec[*index] = true;
+        }
+        ImpurityCache {
+            sum_s: VALUE_TYPE_UNKNOWN,
+            sum_ss: VALUE_TYPE_UNKNOWN,
+            sum_c: VALUE_TYPE_UNKNOWN,
+            cached: false,
+            bool_vec,
+            sample_size, 
+        }
+    }
+}
+struct CacheValue {
+    s: ValueType,
+    ss: ValueType,
+    c: ValueType,
+}
+pub struct TrainingCache {
+    ordered_features: Vec<Vec<(usize, ValueType)>>,
+    ordered_residual: Vec<(usize, ValueType)>,
+    cache_value: Vec<CacheValue>, //s, ss, c
+    //ss: Vec<ValueType>,
+    //s: Vec<ValueType>,
+    //c: Vec<ValueType>,
+    //target: Vec<ValueType>,
+    logit_c: Vec<ValueType>,
+    sample_size: usize,
+    feature_size: usize,
+    preds: Vec<ValueType>,
+}
+
+impl TrainingCache {
+    pub fn get_cache(feature_size: usize, data: &DataVec) -> Self {
+        let sample_size = data.len();
+        let mut ordered_features = Vec::with_capacity(feature_size);
+        for index in 0..feature_size {
+            let mut nv: Vec<(usize, ValueType)> = Vec::with_capacity(data.len());
+            /*
+            nv.sort_unstable_by(|a, b| {
+                let v1 = a.1;
+                let v2 = b.1;
+                v1.partial_cmp(&v2).unwrap()
+            });
+            */
+            ordered_features.push(nv);
+        }
+        for (i, item) in data.iter().enumerate() {
+            for index in 0..feature_size {
+                ordered_features[index].push((i, item.feature[index]));
+            }
+        }
+        for index in 0..feature_size {
+            ordered_features[index].sort_unstable_by(|a, b| {
+                let v1 = a.1;
+                let v2 = b.1;
+                v1.partial_cmp(&v2).unwrap()
+            });        
+        }
+        let ordered_residual: Vec<(usize, ValueType)> = Vec::new();
+        let mut cache_value = Vec::with_capacity(data.len());
+        for elem in data {
+            let item = CacheValue {
+                s: 0.0,
+                ss: 0.0,
+                c: elem.weight,
+            };
+            cache_value.push(item);
+        }
+        //let mut target = Vec::with_capacity(data.len());
+        let logit_c = vec![0.0; data.len()];
+
+        let preds = vec![VALUE_TYPE_UNKNOWN; sample_size];
+        TrainingCache {
+            ordered_features,
+            ordered_residual,
+            cache_value,
+            //target,
+            logit_c,
+            sample_size,
+            feature_size,
+            preds,
+        }
+
+    }
+    pub fn get_preds(&self) -> Vec<ValueType> {
+        self.preds.to_vec()
+    }
+
+
+    pub fn init_one_iteration(&mut self, whole_data: &[Data], train_data: &[usize], loss: &Loss) {
+        for (index, data) in whole_data.iter().enumerate() {
+            let target = data.target;
+            let weight = data.weight;
+            let s = target * weight;
+            self.cache_value[index].s = s;
+            self.cache_value[index].ss = target * s;
+            if let Loss::LogLikelyhood = loss {
+                let y = target.abs();
+                let c = y * (2.0 - y) * weight;
+                self.logit_c[index] = c;
+            }
+        }
+        if let Loss::LAD = loss {
+            self.cache_residual(whole_data);
+        }
+    }
+
+    pub fn cache_residual(&mut self, whole_data: &[Data]) {
+        self.ordered_residual = Vec::with_capacity(whole_data.len());
+        for (index, elem) in whole_data.iter().enumerate() {
+            self.ordered_residual.push((index, elem.residual));
+        }
+        self.ordered_residual.sort_unstable_by(|a, b| {
+            let v1: ValueType = a.1;
+            let v2: ValueType = b.1;
+            v1.partial_cmp(&v2).unwrap()
+        });
+    }
+
+    pub fn sort_with_bool_vec(&self, feature_index: usize, is_residual: bool, to_sort: &[bool], to_sort_size: usize) -> Vec<(usize, ValueType)> {
+        let whole_data_sorted_index = if is_residual {
+            &self.ordered_residual
+        } else {
+            &self.ordered_features[feature_index]
+        };
+        let mut ret = Vec::with_capacity(to_sort_size);
+        for item in whole_data_sorted_index.iter() {
+            let (index, value) = *item;
+            if to_sort[index] {
+                ret.push((index, value));
+            }
+        }
+        ret
+
+    }
+    pub fn sort_with_cache(&self, feature_index: usize, is_residual: bool, to_sort: &[usize]) -> Vec<(usize, ValueType)> {
+        let whole_data_sorted_index = if is_residual {
+            &self.ordered_residual
+        } else {
+            &self.ordered_features[feature_index]
+        };
+        let mut index_exists: Vec<bool> = vec![false; whole_data_sorted_index.len()];
+        for index in to_sort.iter() {
+            index_exists[*index] = true;
+        }
+        self.sort_with_bool_vec(feature_index, is_residual, &index_exists, to_sort.len())
+    }
+
+
+}
 /// A training sample or a test sample
 #[derive(Debug, Clone, Serialize, Deserialize)]
 pub struct Data {
@@ -150,38 +314,38 @@ pub enum Loss {
 */
 
 /// Calculate the prediction for each leaf node.
-fn calculate_pred(data: &[&Data], loss: &Loss) -> ValueType {
+fn calculate_pred(data: &[usize], loss: &Loss, cache: &TrainingCache) -> ValueType {
     match loss {
-        Loss::SquaredError => average(data),
-        Loss::LogLikelyhood => logit_optimal_value(data),
-        Loss::LAD => lad_optimal_value(data),
+        Loss::SquaredError => average(data, cache),
+        Loss::LogLikelyhood => logit_optimal_value(data, cache),
+        Loss::LAD => lad_optimal_value(data, cache),
     }
 }
 
 /// The leaf prediction value for SquaredError loss.
-fn average(data: &[&Data]) -> ValueType {
+fn average(data: &[usize], cache: &TrainingCache) -> ValueType {
     let mut sum: ValueType = 0.0;
     let mut weight: ValueType = 0.0;
-    for elem in data.iter() {
-        sum += elem.target * elem.weight;
-        weight += elem.weight;
-    }
 
+    for index in data.iter() {
+        let cv: &CacheValue = &cache.cache_value[*index];
+        sum += cv.s; 
+        weight += cv.c; 
+    }
     sum / weight
 }
 
 /// The leaf prediction value for LogLikelyhood loss.
-fn logit_optimal_value(data: &[&Data]) -> ValueType {
+fn logit_optimal_value(data:&[usize], cache: &TrainingCache) -> ValueType {
     let mut s: ValueType = 0.0;
     let mut c: ValueType = 0.0;
 
-    for elem in data.iter() {
-        s += elem.target * elem.weight;
-        let y = elem.target.abs();
-        c += y * (2.0 - y) * elem.weight;
+    for index in data.iter() {
+        s += cache.cache_value[*index].s;
+        c += cache.logit_c[*index];
     }
 
-    if (c - 0.0).abs() < 1e-10 {
+    if c.abs() < 1e-10 {
         0.0
     } else {
         s / c
@@ -189,45 +353,37 @@ fn logit_optimal_value(data: &[&Data]) -> ValueType {
 }
 
 /// The leaf prediction value for LAD loss.
-fn lad_optimal_value(data: &[&Data]) -> ValueType {
-    let mut data_copy = data.to_vec();
-    data_copy.sort_by(|a, b| {
-        let v1: ValueType = a.residual;
-        let v2: ValueType = b.residual;
-        v1.partial_cmp(&v2).unwrap()
-    });
+fn lad_optimal_value(data: &[usize], cache: &TrainingCache) -> ValueType {
+    let sorted_data = cache.sort_with_cache(0, true, data);
 
-    let mut all_weight: ValueType = 0.0;
-    for elem in data_copy.iter() {
-        all_weight += elem.weight;
-    }
+    let all_weight = sorted_data.iter().fold(0.0, |acc, x| acc + cache.cache_value[x.0].c);
 
     let mut weighted_median: ValueType = 0.0;
     let mut weight = 0.0;
-    for i in 0..data_copy.len() {
-        weight += data_copy[i].weight;
+    for (i, pair) in sorted_data.iter().enumerate() {
+        weight += cache.cache_value[pair.0].c;
         if (weight * 2.0) > all_weight {
             if i >= 1 {
-                weighted_median = (data_copy[i].residual + data_copy[i - 1].residual) / 2.0;
+                weighted_median = (pair.1 + sorted_data[i-1].1) / 2.0;
             } else {
-                weighted_median = data_copy[i].residual;
+                weighted_median = pair.1;
             }
+            
             break;
         }
     }
-
     weighted_median
 }
 
 /// Return whether the data vector have same target values.
-fn same(dv: &[&Data]) -> bool {
-    if dv.is_empty() {
+fn same(dv: &[Data], iv: &[usize]) -> bool {
+    if iv.is_empty() {
         return false;
     }
 
-    let t: ValueType = dv[0].target;
-    for i in dv.iter().skip(1) {
-        if !(almost_equal(t, i.target)) {
+    let t: ValueType = dv[iv[0]].target;
+    for i in iv.iter().skip(1) {
+        if !(almost_equal(t, dv[*i].target)) {
             return false;
         }
     }
@@ -414,13 +570,11 @@ impl DecisionTree {
     /// tree.fit_n(&dv, 2);
     ///
     /// ```
-    pub fn fit_n(&mut self, train_data: &DataVec, n: usize) {
-        let data: Vec<&Data> = (0..std::cmp::min(n, train_data.len()))
-            .filter_map(|x| train_data.get(x))
-            .collect();
-        //let mut gain: Vec<ValueType> = vec![0.0; self.feature_size];
+    pub fn fit_n(&mut self, train_data: &DataVec, subset: &[usize], cache: &mut TrainingCache) {
+        cache.init_one_iteration(train_data, subset, &self.loss);
+
         let root_index = self.tree.add_root(BinaryTreeNode::new(DTNode::new()));
-        self.fit_node(root_index, 0, &data);
+        self.fit_node(root_index, 0, subset, cache);
     }
 
     /// Use the samples in `train_data` to train the decision tree.
@@ -470,18 +624,22 @@ impl DecisionTree {
     /// tree.fit(&dv);
     ///
     /// ```
-    pub fn fit(&mut self, train_data: &DataVec) {
-        let data: Vec<&Data> = (0..train_data.len())
-            .filter_map(|x| train_data.get(x))
-            .collect();
+    pub fn fit(&mut self, train_data: &DataVec, cache: &mut TrainingCache) {
         //let mut gain: Vec<ValueType> = vec![0.0; self.feature_size];
+
+        let data_collection: Vec<usize> = (0..train_data.len()).collect();
+        cache.init_one_iteration(train_data, &data_collection, &self.loss);
+
         let root_index = self.tree.add_root(BinaryTreeNode::new(DTNode::new()));
-        self.fit_node(root_index, 0, &data);
+        self.fit_node(root_index, 0, &data_collection, cache);
     }
 
     /// Recursively build the tree nodes. It choose a feature and a value to split the node and the data.
     /// And then use the splited data to build the child nodes.
-    fn fit_node(&mut self, node: TreeIndex, depth: u32, train_data: &[&Data]) {
+    fn fit_node(&mut self, node: TreeIndex, depth: u32, 
+                //whole_data: &[Data], 
+                train_data: &[usize], cache: &mut TrainingCache) {
+
         // If the node doesn't need to be splited.
         {
             let node_ref = self
@@ -489,20 +647,24 @@ impl DecisionTree {
                 .get_node_mut(node)
                 .expect("node should not be empty!");
             // calculate to support unknown features
-            node_ref.value.pred = calculate_pred(train_data, &self.loss);
+            node_ref.value.pred = calculate_pred(train_data, &self.loss, cache);
             if (depth >= self.max_depth)
-                || same(train_data)
+            //    || same(train_data)
                 || (train_data.len() <= self.min_leaf_size)
             {
                 node_ref.value.is_leaf = true;
                 //node_ref.value.pred = calculate_pred(train_data, &self.loss);
+                for index in train_data.iter() {
+                    cache.preds[*index] = node_ref.value.pred;
+                }
                 return;
             }
         }
 
+
         // Try to find a feature and a value to split the node.
         let (splited_data, feature_index, feature_value) =
-            DecisionTree::split(train_data, self.feature_size, self.feature_sample_ratio);
+            DecisionTree::split(train_data, self.feature_size, self.feature_sample_ratio, cache);
 
         {
             let node_ref = self
@@ -511,7 +673,11 @@ impl DecisionTree {
                 .expect("node should not be empty");
             if splited_data.is_none() {
                 node_ref.value.is_leaf = true;
-                node_ref.value.pred = calculate_pred(train_data, &self.loss);
+                //node_ref.value.pred = calculate_pred(train_data, &self.loss);
+                node_ref.value.pred = calculate_pred(train_data, &self.loss, cache);
+                for index in train_data.iter() {
+                    cache.preds[*index] = node_ref.value.pred;
+                }
                 return;
             } else {
                 node_ref.value.feature_index = feature_index;
@@ -521,14 +687,15 @@ impl DecisionTree {
 
         // Use the splited data to build child nodes.
         if let Some((left_data, right_data, _unknown_data)) = splited_data {
+
             let left_index = self
                 .tree
                 .add_left_node(node, BinaryTreeNode::new(DTNode::new()));
-            self.fit_node(left_index, depth + 1, &left_data);
+            self.fit_node(left_index, depth + 1, &left_data, cache);
             let right_index = self
                 .tree
                 .add_right_node(node, BinaryTreeNode::new(DTNode::new()));
-            self.fit_node(right_index, depth + 1, &right_data);
+            self.fit_node(right_index, depth + 1, &right_data, cache);
         }
     }
 
@@ -752,12 +919,14 @@ impl DecisionTree {
     /// Step 3: Find the feature that has the smallest impurity.
     ///
     /// Step 4: Use the feature and the feature value to split the data.
-    fn split<'a>(
-        train_data: &'a [&Data],
+    fn split(
+        //whole_data: &[Data],
+        train_data: &[usize],
         feature_size: usize,
         feature_sample_ratio: f64,
+        cache: &TrainingCache,
     ) -> (
-        Option<(Vec<&'a Data>, Vec<&'a Data>, Vec<&'a Data>)>,
+        Option<(Vec<usize>, Vec<usize>, Vec<usize>)>,
         usize,
         ValueType,
     ) {
@@ -779,32 +948,33 @@ impl DecisionTree {
         let mut value: ValueType = 0.0;
         // let mut gain: f64 = 0.0;
 
+        let mut impurity_cache = ImpurityCache::new(cache.sample_size, train_data);
+
         let mut find: bool = false;
+        let mut data_to_split: Vec<(usize, ValueType)> = Vec::new();
         for i in fv.iter().take(fs) {
-            DecisionTree::get_impurity(train_data, *i, &mut v, &mut impurity);
+            let sorted_data = DecisionTree::get_impurity(train_data, *i, &mut v, &mut impurity, cache, &mut impurity_cache);
             if best_fitness > impurity {
                 find = true;
                 best_fitness = impurity;
                 index = *i;
                 value = v;
+                data_to_split = sorted_data;
                 //gain = g;
             }
         }
         if find {
-            let mut left: Vec<&Data> = Vec::new();
-            let mut right: Vec<&Data> = Vec::new();
-            let mut unknown: Vec<&Data> = Vec::new();
-            for elem in train_data.iter() {
-                if let Some(v) = elem.feature.get(index) {
-                    if *v == VALUE_TYPE_UNKNOWN {
-                        unknown.push(*elem);
-                    } else if *v < value {
-                        left.push(*elem);
-                    } else {
-                        right.push(*elem);
-                    }
+            let mut left: Vec<usize> = Vec::new();
+            let mut right: Vec<usize> = Vec::new();
+            let mut unknown: Vec<usize> = Vec::new();
+            for pair in data_to_split.iter() {
+                let (index, feature_value) = *pair;
+                if feature_value == VALUE_TYPE_UNKNOWN {
+                    unknown.push(index);
+                } else if feature_value < value {
+                    left.push(index);
                 } else {
-                    assert!(true, "feature can't be empty");
+                    right.push(index);
                 }
             }
             (Some((left, right, unknown)), index, value)
@@ -815,46 +985,41 @@ impl DecisionTree {
 
     /// Calculate the impurity.
     fn get_impurity(
-        train_data: &[&Data],
+        //_whole_data: &[Data],
+        train_data: &[usize],
         feature_index: usize,
         value: &mut ValueType,
         impurity: &mut ValueType,
+        cache: &TrainingCache,
+        impurity_cache: &mut ImpurityCache,
+
         //gain: &mut f64,
-    ) -> bool {
+    ) -> Vec<(usize, ValueType)> {
         *impurity = VALUE_TYPE_MAX;
         *value = VALUE_TYPE_UNKNOWN;
-        let mut data = train_data.to_vec();
-
-        for elem in train_data.iter() {
-            assert!(
-                elem.feature.get(feature_index).is_some(),
-                "feature is unknown"
-            );
-        }
-
-        let index = feature_index;
-        data.sort_by(|a, b| {
-            let v1: ValueType = a.feature[index];
-            let v2: ValueType = b.feature[index];
-            v1.partial_cmp(&v2).unwrap()
-        });
+        let sorted_data = cache.sort_with_bool_vec(feature_index, false, &impurity_cache.bool_vec, impurity_cache.sample_size);
 
         let mut unknown: usize = 0;
         let mut s: ValueType = 0.0;
         let mut ss: ValueType = 0.0;
         let mut c: ValueType = 0.0;
-        for i in data.iter() {
-            if i.feature[index] == VALUE_TYPE_UNKNOWN {
-                s += i.target * i.weight;
-                ss += i.target * i.target * i.weight;
-                c += i.weight;
+
+        for pair in sorted_data.iter() {
+            let (index, feature_value) = *pair;
+            if feature_value == VALUE_TYPE_UNKNOWN {
+                let cv: &CacheValue = &cache.cache_value[index];
+                s += cv.s;
+                ss += cv.ss;
+                c += cv.c;
                 unknown += 1;
-            } else {
+            }
+            else {
                 break;
             }
         }
-        if unknown == data.len() {
-            return false;
+
+        if unknown == sorted_data.len() {
+            return sorted_data;
         }
 
         let mut fitness0 = if c > 1.0 { ss - s * s / c } else { 0.0 };
@@ -863,15 +1028,20 @@ impl DecisionTree {
             fitness0 = 0.0;
         }
 
-        s = 0.0;
-        ss = 0.0;
-        c = 0.0;
-
-        for i in data.iter().skip(unknown) {
-            s += i.target * i.weight;
-            ss += i.target * i.target * i.weight;
-            c += i.weight;
+        if !impurity_cache.cached {
+            impurity_cache.sum_s = 0.0;
+            impurity_cache.sum_ss = 0.0;
+            impurity_cache.sum_c = 0.0;
+            for index in train_data.iter() {
+                let cv: &CacheValue = &cache.cache_value[*index];
+                impurity_cache.sum_s += cv.s;
+                impurity_cache.sum_ss += cv.ss;
+                impurity_cache.sum_c += cv.c;
+            }
         }
+        s = impurity_cache.sum_s - s;
+        ss = impurity_cache.sum_ss - ss;
+        c = impurity_cache.sum_c - c;
 
         let _fitness00 = if c > 1.0 { ss - s * s / c } else { 0.0 };
 
@@ -882,10 +1052,13 @@ impl DecisionTree {
         let mut rss: ValueType = ss;
         let mut rc: ValueType = c;
 
-        for i in unknown..(train_data.len() - 1) {
-            s = data[i].target * data[i].weight;
-            ss = data[i].target * data[i].target * data[i].weight;
-            c = data[i].weight;
+        for i in unknown..(sorted_data.len()-1) {
+            let (index, feature_value)= sorted_data[i];
+            let (next_index, next_value) = sorted_data[i+1];
+            let cv: &CacheValue = &cache.cache_value[index];
+            s = cv.s;
+            ss = cv.ss;
+            c = cv.c;
 
             ls += s;
             lss += ss;
@@ -895,8 +1068,8 @@ impl DecisionTree {
             rss -= ss;
             rc -= c;
 
-            let f1: ValueType = data[i].feature[index];
-            let f2: ValueType = data[i + 1].feature[index];
+            let f1: ValueType = feature_value;
+            let f2: ValueType = next_value;
 
             if almost_equal(f1, f2) {
                 continue;
@@ -921,7 +1094,8 @@ impl DecisionTree {
             }
         }
 
-        *impurity != VALUE_TYPE_MAX
+        sorted_data
+
     }
 
     /// Print the decision tree. For debug use.
