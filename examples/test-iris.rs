@@ -65,7 +65,7 @@ fn main() {
     }
 
     let mut gbdt = GBDT::new(&cfg);
-    gbdt.fit(&train_dv);
+    gbdt.fit(&mut train_dv);
     let predicted: PredVec = gbdt.predict(&test_dv);
 
     assert_eq!(predicted.len(), test_dv.len());

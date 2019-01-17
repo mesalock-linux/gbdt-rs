@@ -776,18 +776,18 @@ impl DecisionTree {
     /// If the function is called before the decision tree is trained, it will panic.
     ///
     /// If the test data have a smaller feature size than the tree's feature size, it will panic.
-    pub fn predict_n(&self, test_data: &DataVec, n: usize) -> PredVec {
+    pub fn predict_n(&self, test_data: &DataVec, subset: &[usize]) -> PredVec {
         let root = self
             .tree
             .get_node(self.tree.get_root_index())
             .expect("Decision tree should have root node");
 
+        let mut ret = vec![0.0; test_data.len()];
         // Inference the samples one by one.
-        test_data
-            .iter()
-            .take(std::cmp::min(n, test_data.len()))
-            .map(|x| self.predict_one(root, x))
-            .collect()
+        for index in subset {
+            ret[*index] = self.predict_one(root, &test_data[*index]);
+        }
+        ret
     }
 
     /// Inference the values of samples in the `test_data`. Return a vector of the predicted

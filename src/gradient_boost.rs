@@ -87,11 +87,13 @@
 
 use crate::config::{Config, Loss};
 use crate::decision_tree::DecisionTree;
-use crate::decision_tree::{DataVec, PredVec, ValueType, VALUE_TYPE_UNKNOWN};
+use crate::decision_tree::{DataVec, PredVec, ValueType, VALUE_TYPE_UNKNOWN, TrainingCache};
 use crate::fitness::*;
 use rand::prelude::SliceRandom;
 use rand::rngs::StdRng;
 use rand::SeedableRng;
+extern crate time;
+use time::PreciseTime;
 
 /// The gradient boosting decision tree.
 #[derive(Default, Serialize, Deserialize)]
@@ -242,7 +244,7 @@ impl GBDT {
     /// // train the decision trees.
     /// gbdt.fit(&dv);
     /// ```
-    pub fn fit(&mut self, train_data: &DataVec) {
+    pub fn fit(&mut self, train_data: &mut DataVec) {
         self.trees = Vec::with_capacity(self.conf.iterations);
         for i in 0..self.conf.iterations {
             self.trees.push(DecisionTree::new());
@@ -259,43 +261,73 @@ impl GBDT {
 
         self.init(train_data.len(), &train_data);
 
-        let mut train_data_copy = train_data.to_vec();
+        let t1 = PreciseTime::now();
+        //let mut train_data_copy = train_data.to_vec();
+        let t2 = PreciseTime::now();
+        //println!("copy {}", t1.to(t2));
 
         //let mut rng = thread_rng();
         let seed = rand_seed();
         let mut rng: StdRng = SeedableRng::from_seed(seed.clone());
         let mut rng_clone: StdRng = SeedableRng::from_seed(seed.clone());
-        let mut predicted_cache: PredVec = self.predict_n(&train_data_copy, 0, train_data.len());
-        if nr_samples < train_data.len() {
-            train_data_copy.shuffle(&mut rng);
-            predicted_cache.shuffle(&mut rng_clone);
-        }
+        let mut predicted_cache: PredVec = self.predict_n(train_data, 0, train_data.len());
+        println!("predicted_cache {}", predicted_cache[0]);
+        //let mut train_data_copy = train_data.to_vec();
+
+        let t1 = PreciseTime::now();
+        let mut cache = TrainingCache::get_cache(self.conf.feature_size, &train_data);
+        let t2 = PreciseTime::now();
+        //println!("cache {}", t1.to(t2));
+
+
+
         for i in 0..self.conf.iterations {
+            let t1 = PreciseTime::now();
+            let mut samples: Vec<usize> = (0..train_data.len()).collect();
+            let (subset, remain)  = if nr_samples < train_data.len() {
+                samples.shuffle(&mut rng);
+                let (left, right) = samples.split_at(nr_samples);
+                let mut left = left.to_vec();
+                let mut right = right.to_vec();
+                left.sort();
+                right.sort();
+                (left, right)
+            } else {
+                (samples, Vec::new())
+            };
+
             if self.conf.loss == Loss::SquaredError {
-                self.square_loss_process(&mut train_data_copy, nr_samples, &predicted_cache);
+                self.square_loss_process(train_data, nr_samples, &predicted_cache);
             } else if self.conf.loss == Loss::LogLikelyhood {
-                self.log_loss_process(&mut train_data_copy, nr_samples, &predicted_cache);
+                self.log_loss_process(train_data, nr_samples, &predicted_cache);
             } else if self.conf.loss == Loss::LAD {
-                self.lad_loss_process(&mut train_data_copy, nr_samples, &predicted_cache);
+                self.lad_loss_process(train_data, nr_samples, &predicted_cache);
             }
-            self.trees[i].fit_n(&train_data_copy, nr_samples);
-            let predicted_tmp = self.predict_nth(&train_data_copy, i, train_data_copy.len());
-            for j in 0..predicted_cache.len() {
-                predicted_cache[j] += predicted_tmp[j] * self.conf.shrinkage;
+            self.trees[i].fit_n(train_data, &subset, &mut cache);
+            let train_preds = cache.get_preds();
+            for index in subset.iter() {
+                predicted_cache[*index] += train_preds[*index] * self.conf.shrinkage;
             }
-            if nr_samples < train_data.len() {
-                train_data_copy.shuffle(&mut rng);
-                predicted_cache.shuffle(&mut rng_clone);
+            //self.trees[i].fit_n(&train_data_copy, nr_samples);
+            let predicted_tmp= self.trees[i].predict_n(train_data, &remain);
+            for index in remain.iter() {
+                predicted_cache[*index] += predicted_tmp[*index] * self.conf.shrinkage;
             }
+
+            let t2 = PreciseTime::now();
+            println!("one iter {} {}", i, t1.to(t2));
+
         }
     }
 
+
+    /*
     #[inline(always)]
     pub fn predict_nth(&self, test_data: &DataVec, iter: usize, n: usize) -> PredVec {
         assert!(test_data.len() >= n);
         assert!(iter < self.trees.len());
         self.trees[iter].predict_n(&test_data, n)
-    }
+    }*/
 
     /// Predicting the first `n` data in data vector with the first `iters` trees.
     ///
@@ -390,9 +422,10 @@ impl GBDT {
             test_data.iter().take(n).map(|x| x.initial_guess).collect()
         };
 
+        let subset: Vec<usize> = (0..n).collect();
         for i in 0..iters {
-            let v: PredVec = self.predict_nth(&test_data, i, n);
-            for d in 0..v.len() {
+            let v: PredVec = self.trees[i].predict_n(&test_data, &subset);
+            for d in 0..n {
                 predicted[d] += self.conf.shrinkage * v[d];
             }
         }

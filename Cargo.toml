@@ -32,3 +32,4 @@ crate-type = ["rlib", "staticlib"]
 rand="0.6.1"
 serde = "1"
 serde_derive = "1"
+time = "0.1.42"
