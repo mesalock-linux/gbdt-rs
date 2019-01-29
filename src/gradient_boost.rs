@@ -69,7 +69,7 @@
 //! dv.push(data4.clone());
 //!
 //! // train the decision trees.
-//! gbdt.fit(&dv);
+//! gbdt.fit(&mut dv);
 //!
 //! // setup the test data
 //!
@@ -242,7 +242,7 @@ impl GBDT {
     /// dv.push(data4.clone());
     ///
     /// // train the decision trees.
-    /// gbdt.fit(&dv);
+    /// gbdt.fit(&mut dv);
     /// ```
     pub fn fit(&mut self, train_data: &mut DataVec) {
         self.trees = Vec::with_capacity(self.conf.iterations);
@@ -261,22 +261,22 @@ impl GBDT {
 
         self.init(train_data.len(), &train_data);
 
-        let t1 = PreciseTime::now();
+        //let t1 = PreciseTime::now();
         //let mut train_data_copy = train_data.to_vec();
-        let t2 = PreciseTime::now();
+        //let t2 = PreciseTime::now();
         //println!("copy {}", t1.to(t2));
 
         //let mut rng = thread_rng();
         let seed = rand_seed();
         let mut rng: StdRng = SeedableRng::from_seed(seed.clone());
-        let mut rng_clone: StdRng = SeedableRng::from_seed(seed.clone());
+        //let mut rng_clone: StdRng = SeedableRng::from_seed(seed.clone());
         let mut predicted_cache: PredVec = self.predict_n(train_data, 0, train_data.len());
         println!("predicted_cache {}", predicted_cache[0]);
         //let mut train_data_copy = train_data.to_vec();
 
-        let t1 = PreciseTime::now();
+        //let t1 = PreciseTime::now();
         let mut cache = TrainingCache::get_cache(self.conf.feature_size, &train_data);
-        let t2 = PreciseTime::now();
+        //let t2 = PreciseTime::now();
         //println!("cache {}", t1.to(t2));
 
 
@@ -391,7 +391,7 @@ impl GBDT {
     /// dv.push(data4.clone());
     ///
     /// // train the decision trees.
-    /// gbdt.fit(&dv);
+    /// gbdt.fit(&mut dv);
     ///
     /// // setup the test data
     ///
@@ -495,7 +495,7 @@ impl GBDT {
     /// dv.push(data4.clone());
     ///
     /// // train the decision trees.
-    /// gbdt.fit(&dv);
+    /// gbdt.fit(&mut dv);
     ///
     /// // setup the test data
     ///
@@ -591,7 +591,7 @@ impl GBDT {
     /// dv.push(data4.clone());
     ///
     /// // train the decision trees.
-    /// gbdt.fit(&dv);
+    /// gbdt.fit(&mut dv);
     ///
     /// // print the tree.
     /// gbdt.print_trees();

@@ -120,7 +120,8 @@ mod tests {
         dv.push(data3.clone());
         dv.push(data4.clone());
 
-        tree.fit(&dv);
+        let mut cache = TrainingCache::get_cache(3, &dv);
+        tree.fit(&dv, &mut cache);
 
         tree.print();
 

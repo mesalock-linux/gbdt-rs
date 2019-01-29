@@ -29,7 +29,7 @@
 //! # Example
 //! ```
 //! use gbdt::config::Loss;
-//! use gbdt::decision_tree::{Data, DecisionTree};
+//! use gbdt::decision_tree::{Data, DecisionTree, TrainingCache};
 //! // set up training data
 //! let data1 = Data {
 //!     feature: vec![1.0, 2.0, 3.0],
@@ -77,7 +77,8 @@
 //! tree.set_max_depth(2);
 //! tree.set_min_leaf_size(1);
 //! tree.set_loss(Loss::SquaredError);
-//! tree.fit(&dv);
+//! let mut cache = TrainingCache::get_cache(3, &dv);
+//! tree.fit(&dv, &mut cache);
 //!
 //!
 //! // set up the test data
@@ -168,8 +169,8 @@ impl TrainingCache {
     pub fn get_cache(feature_size: usize, data: &DataVec) -> Self {
         let sample_size = data.len();
         let mut ordered_features = Vec::with_capacity(feature_size);
-        for index in 0..feature_size {
-            let mut nv: Vec<(usize, ValueType)> = Vec::with_capacity(data.len());
+        for _index in 0..feature_size {
+            let nv: Vec<(usize, ValueType)> = Vec::with_capacity(data.len());
             /*
             nv.sort_unstable_by(|a, b| {
                 let v1 = a.1;
@@ -222,7 +223,7 @@ impl TrainingCache {
     }
 
 
-    pub fn init_one_iteration(&mut self, whole_data: &[Data], train_data: &[usize], loss: &Loss) {
+    pub fn init_one_iteration(&mut self, whole_data: &[Data], loss: &Loss) {
         for (index, data) in whole_data.iter().enumerate() {
             let target = data.target;
             let weight = data.weight;
@@ -374,6 +375,7 @@ fn lad_optimal_value(data: &[usize], cache: &TrainingCache) -> ValueType {
     }
     weighted_median
 }
+
 
 /// Return whether the data vector have same target values.
 fn same(dv: &[Data], iv: &[usize]) -> bool {
@@ -528,7 +530,7 @@ impl DecisionTree {
     /// # Example
     /// ```
     /// use gbdt::config::Loss;
-    /// use gbdt::decision_tree::{Data, DecisionTree};
+    /// use gbdt::decision_tree::{Data, DecisionTree, TrainingCache};
     /// // set up training data
     /// let data1 = Data {
     ///     feature: vec![1.0, 2.0, 3.0],
@@ -567,11 +569,18 @@ impl DecisionTree {
     /// tree.set_max_depth(2);
     /// tree.set_min_leaf_size(1);
     /// tree.set_loss(Loss::SquaredError);
-    /// tree.fit_n(&dv, 2);
+    /// let subset = [0, 1];
+    /// let mut cache = TrainingCache::get_cache(3, &dv);
+    /// tree.fit_n(&dv, &subset, &mut cache);
     ///
     /// ```
     pub fn fit_n(&mut self, train_data: &DataVec, subset: &[usize], cache: &mut TrainingCache) {
-        cache.init_one_iteration(train_data, subset, &self.loss);
+        assert!(
+                self.feature_size == cache.feature_size,
+                "Decision_tree and TrainingCache should have same feature size"
+            );
+
+        cache.init_one_iteration(train_data, &self.loss);
 
         let root_index = self.tree.add_root(BinaryTreeNode::new(DTNode::new()));
         self.fit_node(root_index, 0, subset, cache);
@@ -582,7 +591,7 @@ impl DecisionTree {
     /// # Example
     /// ```
     /// use gbdt::config::Loss;
-    /// use gbdt::decision_tree::{Data, DecisionTree};
+    /// use gbdt::decision_tree::{Data, DecisionTree, TrainingCache};
     /// // set up training data
     /// let data1 = Data {
     ///     feature: vec![1.0, 2.0, 3.0],
@@ -621,14 +630,19 @@ impl DecisionTree {
     /// tree.set_max_depth(2);
     /// tree.set_min_leaf_size(1);
     /// tree.set_loss(Loss::SquaredError);
-    /// tree.fit(&dv);
-    ///
+    /// let mut cache = TrainingCache::get_cache(3, &dv);
+    /// tree.fit(&dv, &mut cache);
+    /// 
     /// ```
     pub fn fit(&mut self, train_data: &DataVec, cache: &mut TrainingCache) {
         //let mut gain: Vec<ValueType> = vec![0.0; self.feature_size];
 
+        assert!(
+                self.feature_size == cache.feature_size,
+                "Decision_tree and TrainingCache should have same feature size"
+            );
         let data_collection: Vec<usize> = (0..train_data.len()).collect();
-        cache.init_one_iteration(train_data, &data_collection, &self.loss);
+        cache.init_one_iteration(train_data, &self.loss);
 
         let root_index = self.tree.add_root(BinaryTreeNode::new(DTNode::new()));
         self.fit_node(root_index, 0, &data_collection, cache);
@@ -705,7 +719,7 @@ impl DecisionTree {
     /// # Example
     /// ```
     /// use gbdt::config::Loss;
-    /// use gbdt::decision_tree::{Data, DecisionTree};
+    /// use gbdt::decision_tree::{Data, DecisionTree, TrainingCache};
     /// // set up training data
     /// let data1 = Data {
     ///     feature: vec![1.0, 2.0, 3.0],
@@ -753,7 +767,8 @@ impl DecisionTree {
     /// tree.set_max_depth(2);
     /// tree.set_min_leaf_size(1);
     /// tree.set_loss(Loss::SquaredError);
-    /// tree.fit(&dv);
+    /// let mut cache = TrainingCache::get_cache(3, &dv);
+    /// tree.fit(&dv, &mut cache);
     ///
     ///
     /// // set up the test data
@@ -765,7 +780,8 @@ impl DecisionTree {
     ///
     ///
     /// // inference the test data with the decision tree
-    /// println!("{:?}", tree.predict_n(&dv, 3));
+    /// let subset = [0,1,2];
+    /// println!("{:?}", tree.predict_n(&dv, &subset));
     ///
     ///
     /// // output:
@@ -796,7 +812,7 @@ impl DecisionTree {
     /// # Example
     /// ```
     /// use gbdt::config::Loss;
-    /// use gbdt::decision_tree::{Data, DecisionTree};
+    /// use gbdt::decision_tree::{Data, DecisionTree, TrainingCache};
     /// // set up training data
     /// let data1 = Data {
     ///     feature: vec![1.0, 2.0, 3.0],
@@ -844,7 +860,8 @@ impl DecisionTree {
     /// tree.set_max_depth(2);
     /// tree.set_min_leaf_size(1);
     /// tree.set_loss(Loss::SquaredError);
-    /// tree.fit(&dv);
+    /// let mut cache = TrainingCache::get_cache(3, &dv);
+    /// tree.fit(&dv, &mut cache);
     ///
     ///
     /// // set up the test data
@@ -1054,7 +1071,7 @@ impl DecisionTree {
 
         for i in unknown..(sorted_data.len()-1) {
             let (index, feature_value)= sorted_data[i];
-            let (next_index, next_value) = sorted_data[i+1];
+            let (_next_index, next_value) = sorted_data[i+1];
             let cv: &CacheValue = &cache.cache_value[index];
             s = cv.s;
             ss = cv.ss;
@@ -1103,7 +1120,7 @@ impl DecisionTree {
     /// # Example
     /// ```
     /// use gbdt::config::Loss;
-    /// use gbdt::decision_tree::{Data, DecisionTree};
+    /// use gbdt::decision_tree::{Data, DecisionTree, TrainingCache};
     /// // set up training data
     /// let data1 = Data {
     ///     feature: vec![1.0, 2.0, 3.0],
@@ -1142,7 +1159,9 @@ impl DecisionTree {
     /// tree.set_max_depth(2);
     /// tree.set_min_leaf_size(1);
     /// tree.set_loss(Loss::SquaredError);
-    /// tree.fit_n(&dv, 2);
+    /// let mut cache = TrainingCache::get_cache(3, &dv);
+    /// let subset = [0, 1];
+    /// tree.fit_n(&dv, &subset, &mut cache);
     ///
     ///
     /// tree.print();
