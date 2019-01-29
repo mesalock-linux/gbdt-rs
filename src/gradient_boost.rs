@@ -142,12 +142,7 @@ impl GBDT {
     /// We simply check whether the length of feature vector in each data
     /// equals to the specified feature size in config.
     pub fn check_valid_data(&self, dv: &DataVec) -> bool {
-        for d in dv {
-            if d.feature.len() != self.conf.feature_size {
-                return false;
-            }
-        }
-        true
+        dv.iter().all(|x| x.feature.len() == self.conf.feature_size)
     }
 
     /// If initial_guess_enabled is set false in gbdt config, this function will calculate
@@ -294,13 +289,16 @@ impl GBDT {
                 (samples, Vec::new())
             };
 
-            if self.conf.loss == Loss::SquaredError {
-                self.square_loss_process(train_data, nr_samples, &predicted_cache);
-            } else if self.conf.loss == Loss::LogLikelyhood {
-                self.log_loss_process(train_data, nr_samples, &predicted_cache);
-            } else if self.conf.loss == Loss::LAD {
-                self.lad_loss_process(train_data, nr_samples, &predicted_cache);
+            match self.conf.loss {
+                Loss::SquaredError => {
+                    self.square_loss_process(train_data, nr_samples, &predicted_cache)
+                }
+                Loss::LogLikelyhood => {
+                    self.log_loss_process(train_data, nr_samples, &predicted_cache)
+                }
+                Loss::LAD => self.lad_loss_process(train_data, nr_samples, &predicted_cache),
             }
+
             self.trees[i].fit_n(train_data, &subset, &mut cache);
             let train_preds = cache.get_preds();
             for index in subset.iter() {
@@ -421,8 +419,8 @@ impl GBDT {
         let subset: Vec<usize> = (0..n).collect();
         for i in 0..iters {
             let v: PredVec = self.trees[i].predict_n(&test_data, &subset);
-            for d in 0..n {
-                predicted[d] += self.conf.shrinkage * v[d];
+            for (e, v) in predicted.iter_mut().take(n).zip(v.iter()) {
+                *e += self.conf.shrinkage * v;
             }
         }
         predicted
