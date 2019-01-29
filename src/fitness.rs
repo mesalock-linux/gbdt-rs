@@ -11,7 +11,7 @@ use crate::decision_tree::{DataVec, PredVec, ValueType};
 /// ```
 #[inline(always)]
 pub fn almost_equal_thrs(a: ValueType, b: ValueType, thrs: f64) -> bool {
-    ((a - b).abs() as f64) < thrs
+    f64::from((a - b).abs()) < thrs
 }
 
 /// Comparing two number with default floating error threshold.
@@ -23,7 +23,7 @@ pub fn almost_equal_thrs(a: ValueType, b: ValueType, thrs: f64) -> bool {
 /// assert_eq!(true, almost_equal(1.0, 0.999998));
 /// ```
 pub fn almost_equal(a: ValueType, b: ValueType) -> bool {
-    ((a - b).abs() as f64) < 1.0e-5
+    f64::from((a - b).abs()) < 1.0e-5
 }
 
 /// Return whether the first n data in data vector have same target values.

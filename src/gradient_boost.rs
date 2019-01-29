@@ -87,7 +87,7 @@
 
 use crate::config::{Config, Loss};
 use crate::decision_tree::DecisionTree;
-use crate::decision_tree::{DataVec, PredVec, ValueType, VALUE_TYPE_UNKNOWN, TrainingCache};
+use crate::decision_tree::{DataVec, PredVec, TrainingCache, ValueType, VALUE_TYPE_UNKNOWN};
 use crate::fitness::*;
 use rand::prelude::SliceRandom;
 use rand::rngs::StdRng;
@@ -268,7 +268,7 @@ impl GBDT {
 
         //let mut rng = thread_rng();
         let seed = rand_seed();
-        let mut rng: StdRng = SeedableRng::from_seed(seed.clone());
+        let mut rng: StdRng = SeedableRng::from_seed(seed);
         //let mut rng_clone: StdRng = SeedableRng::from_seed(seed.clone());
         let mut predicted_cache: PredVec = self.predict_n(train_data, 0, train_data.len());
         println!("predicted_cache {}", predicted_cache[0]);
@@ -279,12 +279,10 @@ impl GBDT {
         //let t2 = PreciseTime::now();
         //println!("cache {}", t1.to(t2));
 
-
-
         for i in 0..self.conf.iterations {
             let t1 = PreciseTime::now();
             let mut samples: Vec<usize> = (0..train_data.len()).collect();
-            let (subset, remain)  = if nr_samples < train_data.len() {
+            let (subset, remain) = if nr_samples < train_data.len() {
                 samples.shuffle(&mut rng);
                 let (left, right) = samples.split_at(nr_samples);
                 let mut left = left.to_vec();
@@ -309,17 +307,15 @@ impl GBDT {
                 predicted_cache[*index] += train_preds[*index] * self.conf.shrinkage;
             }
             //self.trees[i].fit_n(&train_data_copy, nr_samples);
-            let predicted_tmp= self.trees[i].predict_n(train_data, &remain);
+            let predicted_tmp = self.trees[i].predict_n(train_data, &remain);
             for index in remain.iter() {
                 predicted_cache[*index] += predicted_tmp[*index] * self.conf.shrinkage;
             }
 
             let t2 = PreciseTime::now();
             println!("one iter {} {}", i, t1.to(t2));
-
         }
     }
-
 
     /*
     #[inline(always)]
