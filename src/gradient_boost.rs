@@ -91,15 +91,15 @@ use crate::fitness::*;
 use rand::prelude::SliceRandom;
 use rand::rngs::StdRng;
 use rand::SeedableRng;
+use std::error::Error;
 use std::fs::File;
 use std::io::prelude::*;
-use std::error::Error;
-extern crate time;
-extern crate serde_derive;
 extern crate serde;
+extern crate serde_derive;
 extern crate serde_json;
-use time::PreciseTime;
+extern crate time;
 use std::io::{BufRead, BufReader};
+use time::PreciseTime;
 
 /// The gradient boosting decision tree.
 #[derive(Default, Serialize, Deserialize)]
@@ -656,9 +656,8 @@ impl GBDT {
     }
 
     pub fn from_xgoost_dump(model_file: &str) -> Result<Self, Box<Error>> {
-        
-        let mut tree_file = File::open(&model_file)?;
-        let mut reader = BufReader::new(tree_file);
+        let tree_file = File::open(&model_file)?;
+        let reader = BufReader::new(tree_file);
         let mut all_lines: Vec<String> = Vec::new();
         let mut has_read_score = false;
         let mut base_score: ValueType = 0.0;
@@ -674,7 +673,6 @@ impl GBDT {
         }
         let single_line = all_lines.join("");
         let json_obj: serde_json::Value = serde_json::from_str(&single_line)?;
-        let tree_size: usize = 0;
 
         let nodes = json_obj.as_array().ok_or("parse trees error")?;
 
@@ -688,10 +686,7 @@ impl GBDT {
         for node in nodes.iter() {
             let tree = DecisionTree::get_from_xgboost(node)?;
             gbdt.trees.push(tree);
-
         }
         Ok(gbdt)
     }
-
-    
 }

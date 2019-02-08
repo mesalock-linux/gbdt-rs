@@ -109,7 +109,6 @@ use rand::thread_rng;
 
 extern crate serde_json;
 
-
 // For now we only support std::$t using this macro.
 // We will generalize ValueType in future.
 macro_rules! def_value_type {
@@ -413,7 +412,7 @@ struct DTNode {
     /// the prediction of the leaf node
     pred: ValueType,
     /// how to handle missing value: -1 (left child), 0 (node prediction), 1 (right child)
-    missing: i8, 
+    missing: i8,
     /// whether the node is a leaf node
     is_leaf: bool,
 }
@@ -921,8 +920,8 @@ impl DecisionTree {
     fn predict_one(&self, node: &BinaryTreeNode<DTNode>, sample: &Data) -> ValueType {
         let mut is_node_value = false;
         let mut is_left_child = false;
-        let mut is_right_child = false;
-        if (node.value.is_leaf) {
+        let mut _is_right_child = false;
+        if node.value.is_leaf {
             is_node_value = true;
         } else {
             assert!(
@@ -931,35 +930,35 @@ impl DecisionTree {
             );
 
             if sample.feature[node.value.feature_index] == VALUE_TYPE_UNKNOWN {
-                if (node.value.missing == -1) {
+                if node.value.missing == -1 {
                     is_left_child = true;
-                } else if (node.value.missing == 0) {
+                } else if node.value.missing == 0 {
                     is_node_value = true;
                 } else {
-                    is_right_child = true;
+                    _is_right_child = true;
                 }
             } else if sample.feature[node.value.feature_index] < node.value.feature_value {
                 is_left_child = true;
             } else {
-                is_right_child = true;
+                _is_right_child = true;
             }
-        } 
-        
+        }
+
         // return the node's prediction
         if is_node_value {
             node.value.pred
         } else if is_left_child {
             let left = self
-                    .tree
-                    .get_left_child(node)
-                    .expect("Left child should not be None");
-                self.predict_one(left, sample)
+                .tree
+                .get_left_child(node)
+                .expect("Left child should not be None");
+            self.predict_one(left, sample)
         } else {
             let right = self
-                    .tree
-                    .get_right_child(node)
-                    .expect("Right child should not be None");
-                self.predict_one(right, sample)
+                .tree
+                .get_right_child(node)
+                .expect("Right child should not be None");
+            self.predict_one(right, sample)
         }
     }
 
@@ -1222,39 +1221,44 @@ impl DecisionTree {
     }
 
     pub fn get_from_xgboost(node: &serde_json::Value) -> Result<Self, Box<Error>> {
-        // Parameters are not used in prediction process, so we use default parameters. 
+        // Parameters are not used in prediction process, so we use default parameters.
         let mut tree = DecisionTree::new();
         let index = tree.tree.add_root(BinaryTreeNode::new(DTNode::new()));
         tree.add_node_from_json(index, node)?;
         Ok(tree)
     }
 
-    fn add_node_from_json(&mut self, index: TreeIndex, node: &serde_json::Value) -> Result<(), Box<Error>>{
+    fn add_node_from_json(
+        &mut self,
+        index: TreeIndex,
+        node: &serde_json::Value,
+    ) -> Result<(), Box<Error>> {
         {
             let node_ref = self
-                    .tree
-                    .get_node_mut(index)
-                    .expect("node should not be empty!");
+                .tree
+                .get_node_mut(index)
+                .expect("node should not be empty!");
             if let serde_json::Value::Number(pred) = &node["leaf"] {
                 let leaf_value = pred.as_f64().ok_or("parse 'leaf' error")?;
                 node_ref.value.pred = leaf_value as ValueType;
                 node_ref.value.is_leaf = true;
                 return Ok(());
             } else {
-                let feature_value = node["split_condition"].as_f64().ok_or("parse 'split condition' error")?;
+                let feature_value = node["split_condition"]
+                    .as_f64()
+                    .ok_or("parse 'split condition' error")?;
                 node_ref.value.feature_value = feature_value as ValueType;
-                
-                let feature_index = match(node["split"].as_i64()) {
+
+                let feature_index = match node["split"].as_i64() {
                     Some(v) => v,
                     None => {
                         let feature_name = node["split"].as_str().ok_or("parse 'split' error")?;
                         let feature_str: String = feature_name.chars().skip(3).collect();
-                        let v = feature_str.parse::<i64>()?;
-                        v
+                        feature_str.parse::<i64>()?
                     }
                 };
                 node_ref.value.feature_index = feature_index as usize;
-                
+
                 let missing = node["missing"].as_i64().ok_or("parse 'missing' error")?;
                 let left_child = node["yes"].as_i64().ok_or("parse 'yes' error")?;
                 let right_child = node["no"].as_i64().ok_or("parse 'no' error")?;
@@ -1271,19 +1275,25 @@ impl DecisionTree {
 
         let left_child = node["yes"].as_i64().ok_or("parse 'yes' error")?;
         let right_child = node["no"].as_i64().ok_or("parse 'no' error")?;
-        let children = node["children"].as_array().ok_or("parse 'children' error")?; 
+        let children = node["children"]
+            .as_array()
+            .ok_or("parse 'children' error")?;
         let mut find_left = false;
         let mut find_right = false;
         for child in children.iter() {
             let node_id = child["nodeid"].as_i64().ok_or("parse 'nodeid' error")?;
             if node_id == left_child {
                 find_left = true;
-                let left_index = self.tree.add_left_node(index, BinaryTreeNode::new(DTNode::new()));
+                let left_index = self
+                    .tree
+                    .add_left_node(index, BinaryTreeNode::new(DTNode::new()));
                 self.add_node_from_json(left_index, child)?;
             }
             if node_id == right_child {
                 find_right = true;
-                let right_index = self.tree.add_right_node(index, BinaryTreeNode::new(DTNode::new()));
+                let right_index = self
+                    .tree
+                    .add_right_node(index, BinaryTreeNode::new(DTNode::new()));
                 self.add_node_from_json(right_index, child)?;
             }
         }

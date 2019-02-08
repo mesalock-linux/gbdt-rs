@@ -6,9 +6,9 @@ use gbdt::fitness::almost_equal_thrs;
 use gbdt::gradient_boost::GBDT;
 
 use std::fs::File;
+use std::io::stdin;
 use std::io::{BufRead, BufReader};
 use time::PreciseTime;
-use std::io::stdin;
 
 fn main() {
     println!("Start test xgboost");
@@ -21,7 +21,7 @@ fn main() {
     for line in f.lines() {
         if flag == 0 {
             flag = 1;
-            continue ;
+            continue;
         }
         let l = line.unwrap();
         let lv: Vec<&str> = l.splitn(601, ",").collect();
@@ -62,8 +62,6 @@ fn main() {
         //println!("[{}]  {}  {}", i, test_dv[i].label, predicted[i]);
     }
 
-    //println!("correct: {}", correct);
-    //println!("wrong:   {}", wrong);
-    //stdin().read_line(&mut s).expect("wrong string");
-
+    println!("correct: {}", correct);
+    println!("wrong:   {}", wrong);
 }
