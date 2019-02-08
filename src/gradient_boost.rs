@@ -84,7 +84,6 @@
 //! // output:
 //! // [1.0, 1.0, 2.0, 0.0]
 //! ```
-
 use crate::config::{Config, Loss};
 use crate::decision_tree::DecisionTree;
 use crate::decision_tree::{DataVec, PredVec, TrainingCache, ValueType, VALUE_TYPE_UNKNOWN};
@@ -92,8 +91,15 @@ use crate::fitness::*;
 use rand::prelude::SliceRandom;
 use rand::rngs::StdRng;
 use rand::SeedableRng;
+use std::fs::File;
+use std::io::prelude::*;
+use std::error::Error;
 extern crate time;
+extern crate serde_derive;
+extern crate serde;
+extern crate serde_json;
 use time::PreciseTime;
+use std::io::{BufRead, BufReader};
 
 /// The gradient boosting decision tree.
 #[derive(Default, Serialize, Deserialize)]
@@ -246,6 +252,7 @@ impl GBDT {
             self.trees[i].set_feature_size(self.conf.feature_size);
             self.trees[i].set_max_depth(self.conf.max_depth);
             self.trees[i].set_min_leaf_size(self.conf.min_leaf_size);
+            self.trees[i].set_feature_sample_ratio(self.conf.feature_sample_ratio);
             self.trees[i].set_loss(self.conf.loss.clone());
         }
         let nr_samples: usize = if self.conf.data_sample_ratio < 1.0 {
@@ -631,4 +638,60 @@ impl GBDT {
             println!("MAE {}", MAE(&dv, &predicted, samples));
         }
     }
+
+    pub fn save_model(&self, filename: &str) -> Result<(), Box<Error>> {
+        let mut file = File::create(filename)?;
+        let serialized = serde_json::to_string(self)?;
+        file.write_all(serialized.as_bytes())?;
+
+        Ok(())
+    }
+
+    pub fn load_model(filename: &str) -> Result<Self, Box<Error>> {
+        let mut file = File::open(filename).unwrap();
+        let mut contents = String::new();
+        file.read_to_string(&mut contents)?;
+        let ret: Self = serde_json::from_str(&contents)?;
+        Ok(ret)
+    }
+
+    pub fn from_xgoost_dump(model_file: &str) -> Result<Self, Box<Error>> {
+        
+        let mut tree_file = File::open(&model_file)?;
+        let mut reader = BufReader::new(tree_file);
+        let mut all_lines: Vec<String> = Vec::new();
+        let mut has_read_score = false;
+        let mut base_score: ValueType = 0.0;
+        for line in reader.lines() {
+            if !has_read_score {
+                has_read_score = true;
+                base_score = line?.parse::<ValueType>()?;
+                continue;
+            }
+
+            let value: String = line?;
+            all_lines.push(value);
+        }
+        let single_line = all_lines.join("");
+        let json_obj: serde_json::Value = serde_json::from_str(&single_line)?;
+        let tree_size: usize = 0;
+
+        let nodes = json_obj.as_array().ok_or("parse trees error")?;
+
+        let mut cfg = Config::new();
+        cfg.set_loss("SquaredError");
+        cfg.set_iterations(nodes.len());
+        cfg.shrinkage = 1.0;
+        let mut gbdt = GBDT::new(&cfg);
+        gbdt.bias = base_score;
+
+        for node in nodes.iter() {
+            let tree = DecisionTree::get_from_xgboost(node)?;
+            gbdt.trees.push(tree);
+
+        }
+        Ok(gbdt)
+    }
+
+    
 }
