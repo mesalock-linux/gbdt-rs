@@ -1,12 +1,10 @@
 extern crate gbdt;
 
 use gbdt::config::Config;
-use gbdt::decision_tree::{Data, DataVec, PredVec, ValueType};
+use gbdt::decision_tree::{DataVec, PredVec};
 use gbdt::fitness::almost_equal_thrs;
 use gbdt::gradient_boost::GBDT;
-
-use std::fs::File;
-use std::io::{BufRead, BufReader};
+use gbdt::input::{infer, load};
 
 fn main() {
     let mut cfg = Config::new();
@@ -19,50 +17,10 @@ fn main() {
     let train_file = "dataset/agaricus-lepiota/train.txt";
     let test_file = "dataset/agaricus-lepiota/test.txt";
 
-    let mut train_dv: DataVec = Vec::new();
-    let mut test_dv: DataVec = Vec::new();
-
-    let f = File::open(train_file).unwrap();
-    let f = BufReader::new(f);
-    for line in f.lines() {
-        let l = line.unwrap();
-        let lv: Vec<&str> = l.splitn(23, ",").collect();
-        assert!(lv.len() == 23);
-        let mut feature: Vec<ValueType> = Vec::new();
-        for i in 0..22 {
-            feature.push(lv[i].parse::<ValueType>().unwrap());
-        }
-        let d = Data {
-            feature: feature,
-            target: 0.0,
-            weight: 1.0,
-            label: lv[22].parse::<ValueType>().unwrap(),
-            residual: 0.0,
-            initial_guess: 0.0,
-        };
-        train_dv.push(d);
-    }
-
-    let f = File::open(test_file).unwrap();
-    let f = BufReader::new(f);
-    for line in f.lines() {
-        let l = line.unwrap();
-        let lv: Vec<&str> = l.splitn(23, ",").collect();
-        assert!(lv.len() == 23);
-        let mut feature: Vec<ValueType> = Vec::new();
-        for i in 0..22 {
-            feature.push(lv[i].parse::<ValueType>().unwrap());
-        }
-        let d = Data {
-            feature: feature,
-            target: 0.0,
-            weight: 1.0,
-            label: lv[22].parse::<ValueType>().unwrap(),
-            residual: 0.0,
-            initial_guess: 0.0,
-        };
-        test_dv.push(d);
-    }
+    let mut input_format = infer(train_file);
+    input_format.set_label_index(22);
+    let mut train_dv: DataVec = load(train_file, input_format);
+    let test_dv: DataVec = load(test_file, input_format);
 
     let mut gbdt = GBDT::new(&cfg);
     gbdt.fit(&mut train_dv);

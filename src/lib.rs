@@ -41,6 +41,7 @@ pub mod config;
 pub mod decision_tree;
 pub mod fitness;
 pub mod gradient_boost;
+pub mod input;
 
 #[cfg(test)]
 mod tests {
