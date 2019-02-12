@@ -12,7 +12,7 @@ use time::PreciseTime;
 
 fn main() {
     println!("Start test xgboost");
-    let gbdt = GBDT::from_xgoost_dump("data/gbdt.model").unwrap();
+    let gbdt = GBDT::from_xgoost_dump("data/gbdt.model", "reg:linear").unwrap();
     let test_file = "data/train.csv";
     let f = File::open(test_file).unwrap();
     let f = BufReader::new(f);

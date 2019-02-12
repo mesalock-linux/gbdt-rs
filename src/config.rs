@@ -83,6 +83,19 @@ pub enum Loss {
 
     /// LAD loss type
     LAD,
+
+    /// XGBOOST
+    RegLinear,
+
+    RegLogistic,
+
+    BinaryLogistic,
+
+    BinaryLogitraw,
+
+    MultiSoftprob,
+
+    MultiSoftmax,
 }
 
 impl Default for Loss {
@@ -138,7 +151,16 @@ pub fn string2loss(s: &str) -> Loss {
         "LogLikelyhood" => Loss::LogLikelyhood,
         "SquaredError" => Loss::SquaredError,
         "LAD" => Loss::LAD,
-        _ => Loss::SquaredError,
+        "reg:linear" => Loss::RegLinear,
+        "binary:logistic" => Loss::BinaryLogistic,
+        "reg:logistic" => Loss::RegLogistic,
+        "binary:logitraw" => Loss::BinaryLogitraw,
+        "multi:softprob" => Loss::MultiSoftprob,
+        "multi:softmax" => Loss::MultiSoftmax,
+        _ => {
+            println!("unsupported loss, set to default(SquaredError)");
+            Loss::SquaredError
+        }
     }
 }
 
@@ -148,6 +170,12 @@ pub fn loss2string(l: &Loss) -> String {
         Loss::LogLikelyhood => String::from("LogLikelyhood"),
         Loss::SquaredError => String::from("SquaredError"),
         Loss::LAD => String::from("LAD"),
+        Loss::RegLinear => String::from("reg:linear"),
+        Loss::BinaryLogistic => String::from("binary:logistic"),
+        Loss::RegLogistic => String::from("reg:logistic"),
+        Loss::BinaryLogitraw => String::from("binary:logitraw"),
+        Loss::MultiSoftprob => String::from("multi:softprob"),
+        Loss::MultiSoftmax => String::from("multi:softmax"),
     }
 }
 

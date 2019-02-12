@@ -86,7 +86,9 @@
 //! ```
 use crate::config::{Config, Loss};
 use crate::decision_tree::DecisionTree;
-use crate::decision_tree::{DataVec, PredVec, TrainingCache, ValueType, VALUE_TYPE_UNKNOWN};
+use crate::decision_tree::{
+    DataVec, PredVec, TrainingCache, ValueType, VALUE_TYPE_MIN, VALUE_TYPE_UNKNOWN,
+};
 use crate::fitness::*;
 use rand::prelude::SliceRandom;
 use rand::rngs::StdRng;
@@ -177,6 +179,7 @@ impl GBDT {
                 ((1.0 + v) / (1.0 - v)).ln() / 2.0
             }
             Loss::LAD => weighted_label_median(dv, len),
+            _ => label_average(dv, len),
         }
     }
 
@@ -272,7 +275,7 @@ impl GBDT {
         let seed = rand_seed();
         let mut rng: StdRng = SeedableRng::from_seed(seed);
         //let mut rng_clone: StdRng = SeedableRng::from_seed(seed.clone());
-        let mut predicted_cache: PredVec = self.predict_n(train_data, 0, train_data.len());
+        let mut predicted_cache: PredVec = self.predict_n(train_data, 0, 0, train_data.len());
         println!("predicted_cache {}", predicted_cache[0]);
         //let mut train_data_copy = train_data.to_vec();
 
@@ -304,6 +307,8 @@ impl GBDT {
                     self.log_loss_process(train_data, nr_samples, &predicted_cache)
                 }
                 Loss::LAD => self.lad_loss_process(train_data, nr_samples, &predicted_cache),
+
+                _ => self.square_loss_process(train_data, nr_samples, &predicted_cache),
             }
 
             self.trees[i].fit_n(train_data, &subset, &mut cache);
@@ -402,15 +407,15 @@ impl GBDT {
     /// dv.push(data3.clone());
     /// dv.push(data4.clone());
     ///
-    /// println!("{:?}", gbdt.predict_n(&dv, 2, dv.len()));
+    /// println!("{:?}", gbdt.predict_n(&dv, 0, 2, dv.len()));
     /// ```
     ///
     /// # Panic
     /// If n is greater than the length of test data vector, it will panic.
     ///
     /// If the iterations is greater than the number of trees that have been trained, it will panic.
-    pub fn predict_n(&self, test_data: &DataVec, iters: usize, n: usize) -> PredVec {
-        assert!(iters <= self.trees.len());
+    pub fn predict_n(&self, test_data: &DataVec, begin: usize, iters: usize, n: usize) -> PredVec {
+        assert!((begin + iters) <= self.trees.len());
         assert!(n <= test_data.len());
 
         if self.trees.is_empty() {
@@ -424,7 +429,7 @@ impl GBDT {
         };
 
         let subset: Vec<usize> = (0..n).collect();
-        for i in 0..iters {
+        for i in begin..(iters + begin) {
             let v: PredVec = self.trees[i].predict_n(&test_data, &subset);
             for (e, v) in predicted.iter_mut().take(n).zip(v.iter()) {
                 *e += self.conf.shrinkage * v;
@@ -514,10 +519,10 @@ impl GBDT {
     /// is less than the iteration configuration in `self.conf`, it will panic.
     pub fn predict(&self, test_data: &DataVec) -> PredVec {
         assert_eq!(self.conf.iterations, self.trees.len());
-        let predicted = self.predict_n(test_data, self.conf.iterations, test_data.len());
+        let predicted = self.predict_n(test_data, 0, self.conf.iterations, test_data.len());
 
-        if self.conf.loss == Loss::LogLikelyhood {
-            predicted
+        match self.conf.loss {
+            Loss::LogLikelyhood => predicted
                 .iter()
                 .map(|x| {
                     if (1.0 / (1.0 + ((-2.0 * x).exp()))) >= 0.5 {
@@ -526,10 +531,55 @@ impl GBDT {
                         -1.0
                     }
                 })
-                .collect()
-        } else {
-            predicted
+                .collect(),
+            Loss::BinaryLogistic | Loss::RegLogistic => {
+                predicted.iter().map(|x| 1.0 / (1.0 + (-x).exp())).collect()
+            }
+            _ => predicted,
         }
+    }
+
+    pub fn predict_multiclass(
+        &self,
+        test_data: &DataVec,
+        class_num: usize,
+    ) -> (Vec<usize>, Vec<Vec<ValueType>>) {
+        assert_eq!(self.conf.iterations, self.trees.len());
+        assert_eq!(self.trees.len() % class_num, 0);
+
+        let mut probs: Vec<Vec<ValueType>> = Vec::with_capacity(test_data.len());
+        for _index in 0..test_data.len() {
+            probs.push(vec![self.bias; class_num]);
+        }
+
+        for (index, tree) in self.trees.iter().enumerate() {
+            let preds = tree.predict(test_data);
+            for (x, y) in probs.iter_mut().zip(preds.iter()) {
+                x[index % class_num] += y;
+            }
+        }
+        let mut labels = vec![0; test_data.len()];
+        for (elem_index, elem) in probs.iter_mut().enumerate() {
+            let mut sum: ValueType = 0.0;
+            let mut max_value = VALUE_TYPE_MIN;
+            let mut max_index = 0;
+            let mut prob_vec = vec![0.0; class_num];
+            for (index, item) in elem.iter().enumerate() {
+                let v = item.exp();
+                prob_vec[index] = v;
+                sum += v;
+                if v > max_value {
+                    max_index = index;
+                    max_value = v;
+                }
+            }
+            for item in prob_vec.iter_mut() {
+                *item /= sum;
+            }
+            *elem = prob_vec;
+            labels[elem_index] = max_index;
+        }
+        (labels, probs)
     }
 
     /// Predicting the given data.
@@ -655,7 +705,7 @@ impl GBDT {
         Ok(ret)
     }
 
-    pub fn from_xgoost_dump(model_file: &str) -> Result<Self, Box<Error>> {
+    pub fn from_xgoost_dump(model_file: &str, objective: &str) -> Result<Self, Box<Error>> {
         let tree_file = File::open(&model_file)?;
         let reader = BufReader::new(tree_file);
         let mut all_lines: Vec<String> = Vec::new();
@@ -677,7 +727,7 @@ impl GBDT {
         let nodes = json_obj.as_array().ok_or("parse trees error")?;
 
         let mut cfg = Config::new();
-        cfg.set_loss("SquaredError");
+        cfg.set_loss(objective);
         cfg.set_iterations(nodes.len());
         cfg.shrinkage = 1.0;
         let mut gbdt = GBDT::new(&cfg);

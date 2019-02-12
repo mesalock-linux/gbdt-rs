@@ -328,6 +328,7 @@ fn calculate_pred(data: &[usize], loss: &Loss, cache: &TrainingCache) -> ValueTy
         Loss::SquaredError => average(data, cache),
         Loss::LogLikelyhood => logit_optimal_value(data, cache),
         Loss::LAD => lad_optimal_value(data, cache),
+        _ => average(data, cache),
     }
 }
 
