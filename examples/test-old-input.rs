@@ -1,7 +1,7 @@
-use gbdt::decision_tree::{DataVec, Data, ValueType};
-use time::PreciseTime;
+use gbdt::decision_tree::{Data, DataVec, ValueType};
 use std::fs::File;
 use std::io::{BufRead, BufReader};
+use time::PreciseTime;
 fn main() {
     let start = PreciseTime::now();
     let train_file = "/Users/icst/workspace/xgboost/dataset/higgs/train.csv";

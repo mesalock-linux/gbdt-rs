@@ -1,12 +1,10 @@
 extern crate gbdt;
 
-use gbdt::config::Config;
 use gbdt::decision_tree::{Data, DataVec, PredVec, ValueType, VALUE_TYPE_UNKNOWN};
 use gbdt::fitness::almost_equal_thrs;
 use gbdt::gradient_boost::GBDT;
 
 use std::fs::File;
-use std::io::stdin;
 use std::io::{BufRead, BufReader};
 use time::PreciseTime;
 

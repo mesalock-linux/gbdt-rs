@@ -2,7 +2,7 @@ extern crate gbdt;
 
 use gbdt::decision_tree::{Data, DataVec, ValueType, VALUE_TYPE_UNKNOWN};
 use gbdt::gradient_boost::GBDT;
-use gbdt::input::{InputFormat, load};
+use gbdt::input::{load, InputFormat};
 
 use std::fs::File;
 use std::io::{BufRead, BufReader};

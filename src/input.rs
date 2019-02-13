@@ -85,7 +85,7 @@ fn count(mut hash_map: HashMap<char, u32>, word: char) -> HashMap<char, u32> {
 }
 
 pub fn infer(file_name: &str) -> InputFormat {
-    let mut file = File::open(file_name.to_string()).unwrap();
+    let file = File::open(file_name.to_string()).unwrap();
     let mut reader = BufReader::new(file);
 
     // check CSV or TXT
@@ -163,14 +163,15 @@ pub fn load_csv(file: &mut File, input_format: InputFormat) -> DataVec {
     if input_format.header {
         reader.read_line(&mut l).unwrap_or(0);
     }
-    let mut v: Vec<ValueType> = Vec::with_capacity(input_format.feature_size + 1);
+    let mut v: Vec<ValueType>;
     for line in reader.lines() {
         let content = line.unwrap();
 
-        v = content.split(input_format.delimeter)
-                    .map(|x| x.parse::<ValueType>().unwrap())
-                    .collect();
-        dv.push(Data{
+        v = content
+            .split(input_format.delimeter)
+            .map(|x| x.parse::<ValueType>().unwrap())
+            .collect();
+        dv.push(Data {
             label: v.swap_remove(input_format.label_idx),
             feature: v,
             target: 0.0,
@@ -186,10 +187,10 @@ pub fn load_txt(file: &mut File, input_format: InputFormat) -> DataVec {
     file.seek(SeekFrom::Start(0)).unwrap();
     let mut dv = Vec::new();
 
-    let mut reader = BufReader::new(file);
+    let reader = BufReader::new(file);
     let mut label: ValueType = 0.0;
-    let mut K: usize = 0;
-    let mut V: ValueType = 0.0;
+    let mut idx: usize = 0;
+    let mut val: ValueType = 0.0;
     //let mut v: Vec<ValueType> = Vec::with_capacity(input_format.feature_size);
     for line in reader.lines() {
         let mut v: Vec<ValueType> = vec![VALUE_TYPE_UNKNOWN; input_format.feature_size];
@@ -199,21 +200,21 @@ pub fn load_txt(file: &mut File, input_format: InputFormat) -> DataVec {
                 let mut err = false;
                 match splited_token[0 as usize].parse::<usize>() {
                     Ok(kk) => {
-                        K = kk;
+                        idx = kk;
                     }
                     Err(_) => err = true,
                 }
                 match splited_token[1 as usize].parse::<ValueType>() {
                     Ok(vv) => {
-                        V = vv;
+                        val = vv;
                     }
                     Err(_) => err = true,
                 }
-                if K >= input_format.feature_size {
+                if idx >= input_format.feature_size {
                     err = true;
                 }
                 if !err {
-                    v[K] = V;
+                    v[idx] = val;
                 }
             }
             if splited_token.len() == 1 {

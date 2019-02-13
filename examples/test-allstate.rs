@@ -34,7 +34,7 @@ fn main() {
     for line in f.lines() {
         if flag == 0 {
             flag = 1;
-            continue ;
+            continue;
         }
         let l = line.unwrap();
         let lv: Vec<&str> = l.splitn(36, ",").collect();
@@ -63,7 +63,7 @@ fn main() {
     for line in f.lines() {
         if flag == 0 {
             flag = 1;
-            continue ;
+            continue;
         }
         let l = line.unwrap();
         let lv: Vec<&str> = l.splitn(36, ",").collect();
@@ -89,7 +89,6 @@ fn main() {
     let t2 = PreciseTime::now();
     println!("Load data: {}", t1.to(t2));
 
-
     let mut gbdt = GBDT::new(&cfg);
     gbdt.fit(&mut train_dv);
     let predicted: PredVec = gbdt.predict(&test_dv);
@@ -97,16 +96,14 @@ fn main() {
     assert_eq!(predicted.len(), test_dv.len());
     let mut correct = 0;
     let mut wrong = 0;
-    /*
+
     for i in 0..predicted.len() {
         if almost_equal_thrs(test_dv[i].label, predicted[i], 0.2) {
             correct += 1;
         } else {
             wrong += 1;
         };
-        println!("[{}]  {}  {}", i, test_dv[i].label, predicted[i]);
     }
-    */
 
     println!("correct: {}", correct);
     println!("wrong:   {}", wrong);
