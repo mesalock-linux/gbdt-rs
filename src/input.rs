@@ -1,3 +1,29 @@
+//! This module implements the data loader.
+//! 
+//! Currently we support to kind of input format: csv format and libsvm data format.
+//! 
+//! # Example
+//! ## LibSVM format
+//! ```rust
+//! use gbdt::input::InputFormat;
+//! use gbdt::input;
+//! let test_file = "data/xgb_binary_logistic/agaricus.txt.test";
+//! let mut fmt = input::InputFormat::txt_format();
+//! fmt.set_feature_size(126);
+//! fmt.set_delimeter(' ');
+//! let test_data = input::load(test_file, fmt);
+//! ```
+//! 
+//! ## CSV format
+//! ```rust
+//! use gbdt::input::InputFormat;
+//! use gbdt::input;
+//! let test_file = "data/xgb_multi_softmax/dermatology.data.test";
+//! let mut fmt = InputFormat::csv_format();
+//! fmt.set_feature_size(34);
+//! let test_data = input::load(test_file, fmt);
+//! ```
+
 use crate::decision_tree::{Data, DataVec, ValueType, VALUE_TYPE_UNKNOWN};
 
 use std::collections::HashMap;
@@ -7,22 +33,50 @@ use std::io::{BufRead, BufReader, Seek, SeekFrom};
 extern crate regex;
 use regex::Regex;
 
+/// This enum type defines the data file format.
+/// 
+/// We support two data format:
+/// 1. CSV format
+/// 2. LibSVM data format
 #[derive(Copy, Debug, PartialEq, Clone, Serialize, Deserialize)]
 pub enum FileFormat {
+    /// CSV format
     CSV,
+    /// LibSVM data format
     TXT,
 }
 
+/// The input file format struct.
 #[derive(Copy, Debug, Clone, Serialize, Deserialize)]
 pub struct InputFormat {
+
+    /// Data file format
     pub ftype: FileFormat,
+
+    /// Set if ftype is set to [FileFormat](enum.FileFormat.CSV).
+    /// Indicates whether the csv has header.
     pub header: bool,
+
+    /// Set if ftype is set to [FileFormat](enum.FileFormat.CSV).
+    /// Indicates which colume is the data label. (default = 0)
     pub label_idx: usize,
+
+    /// Delimeter of the data file.
     pub delimeter: char,
+
+    /// Set if ftype is set to [FileFormat](enum.FileFormat.TXT).
+    /// Indicates the total feature size.
     pub feature_size: usize,
 }
 
 impl InputFormat {
+    /// Return a default CSV input format.
+    /// # Example
+    /// ```rust
+    /// use gbdt::input::InputFormat;
+    /// let mut fmt = InputFormat::csv_format();
+    /// println!("{}", fmt.to_string());
+    /// ```
     pub fn csv_format() -> InputFormat {
         InputFormat {
             ftype: FileFormat::CSV,
@@ -33,6 +87,13 @@ impl InputFormat {
         }
     }
 
+    /// Return a default LibSVM input format.
+    /// # Example
+    /// ```rust
+    /// use gbdt::input::InputFormat;
+    /// let mut fmt = InputFormat::txt_format();
+    /// println!("{}", fmt.to_string());
+    /// ```
     pub fn txt_format() -> InputFormat {
         InputFormat {
             ftype: FileFormat::TXT,
@@ -42,7 +103,13 @@ impl InputFormat {
             feature_size: 0,
         }
     }
-
+    /// Transform the input format to human readable string.
+    /// # Example
+    /// ```rust
+    /// use gbdt::input::InputFormat;
+    /// let mut fmt = InputFormat::csv_format();
+    /// println!("{}", fmt.to_string());
+    /// ```
     pub fn to_string(&self) -> String {
         let mut s = String::from("");
         s.push_str(&format!(
@@ -57,25 +124,49 @@ impl InputFormat {
                 s.push_str(&format!("Has header: {}\n", self.header));
                 s.push_str(&format!("Label index: {}\n", self.label_idx));
             }
-            _ => {}
+            FileFormat::TXT => {
+                s.push_str(&format!("Feature size: {}\n", self.feature_size));
+            }
         }
         s.push_str(&format!("Delemeter: [{}]", self.delimeter));
         s
     }
 
+    /// Set feature size for the LibSVM input format.
+    /// # Example
+    /// ```rust
+    /// use gbdt::input::InputFormat;
+    /// let mut fmt = InputFormat::txt_format();
+    /// fmt.set_feature_size(126); // the total feature size
+    /// ```
     pub fn set_feature_size(&mut self, size: usize) {
         self.feature_size = size;
     }
 
+    /// Set for label index for CSV format.
+    /// # Example
+    /// ```rust
+    /// use gbdt::input::InputFormat;
+    /// let mut fmt = InputFormat::csv_format();
+    /// fmt.set_label_index(34);
+    /// ```
     pub fn set_label_index(&mut self, idx: usize) {
         self.label_idx = idx;
     }
 
+    /// Set for label index for CSV format.
+    /// # Example
+    /// ```rust
+    /// use gbdt::input::InputFormat;
+    /// let mut fmt = InputFormat::txt_format();
+    /// fmt.set_delimeter(' ');
+    /// ```
     pub fn set_delimeter(&mut self, delim: char) {
         self.delimeter = delim;
     }
 }
 
+/// Function for char counting, used in [infer](function.input.infer)
 fn count(mut hash_map: HashMap<char, u32>, word: char) -> HashMap<char, u32> {
     {
         let c = hash_map.entry(word).or_insert(0);
@@ -84,6 +175,17 @@ fn count(mut hash_map: HashMap<char, u32>, word: char) -> HashMap<char, u32> {
     hash_map
 }
 
+/// Function used for input file type inference. This can help recognize the file format.
+/// If the file is in csv type, this function also helps to check whether the csv file has
+/// header.
+/// 
+/// # Example
+/// ```rust
+/// use gbdt::input::infer;
+/// let train_file = "dataset/iris/train.txt";
+/// let fmt = infer(train_file);
+/// println!("{}", fmt.to_string());
+/// ```
 pub fn infer(file_name: &str) -> InputFormat {
     let file = File::open(file_name.to_string()).unwrap();
     let mut reader = BufReader::new(file);
@@ -154,6 +256,17 @@ pub fn infer(file_name: &str) -> InputFormat {
     input_format
 }
 
+/// Load csv file.
+/// # Example
+/// ```rust
+/// use std::fs::File;
+/// use gbdt::input::{InputFormat, load_csv};
+/// let train_file = "dataset/iris/train.txt";
+/// let mut file = File::open(train_file.to_string()).unwrap();
+/// let mut fmt = InputFormat::csv_format();
+/// fmt.set_label_index(4);
+/// let train_dv = load_csv(&mut file, fmt);
+/// ```
 pub fn load_csv(file: &mut File, input_format: InputFormat) -> DataVec {
     file.seek(SeekFrom::Start(0)).unwrap();
     let mut dv = Vec::new();
@@ -183,6 +296,19 @@ pub fn load_csv(file: &mut File, input_format: InputFormat) -> DataVec {
     dv
 }
 
+/// Load txt file.
+/// Load csv file.
+/// # Example
+/// ```rust
+/// use std::fs::File;
+/// use gbdt::input::{InputFormat, load_txt};
+/// let test_file = "data/xgb_binary_logistic/agaricus.txt.test";
+/// let mut file = File::open(test_file.to_string()).unwrap();
+/// let mut fmt = InputFormat::csv_format();
+/// fmt.set_feature_size(126);
+/// fmt.set_delimeter(' ');
+/// let test_dv = load_txt(&mut file, fmt);
+/// ```
 pub fn load_txt(file: &mut File, input_format: InputFormat) -> DataVec {
     file.seek(SeekFrom::Start(0)).unwrap();
     let mut dv = Vec::new();
@@ -236,6 +362,28 @@ pub fn load_txt(file: &mut File, input_format: InputFormat) -> DataVec {
     dv
 }
 
+/// Load file with certain input format.
+/// # Example
+/// ## LibSVM format
+/// ```rust
+/// use gbdt::input::InputFormat;
+/// use gbdt::input;
+/// let test_file = "data/xgb_binary_logistic/agaricus.txt.test";
+/// let mut fmt = input::InputFormat::txt_format();
+/// fmt.set_feature_size(126);
+/// fmt.set_delimeter(' ');
+/// let test_data = input::load(test_file, fmt);
+/// ```
+/// 
+/// ## CSV format
+/// ```rust
+/// use gbdt::input::InputFormat;
+/// use gbdt::input;
+/// let test_file = "data/xgb_multi_softmax/dermatology.data.test";
+/// let mut fmt = InputFormat::csv_format();
+/// fmt.set_feature_size(34);
+/// let test_data = input::load(test_file, fmt);
+/// ```
 pub fn load(file_name: &str, input_format: InputFormat) -> DataVec {
     let mut file = File::open(file_name.to_string()).unwrap();
     match input_format.ftype {

@@ -20,8 +20,8 @@ fn main() {
     //cfg.set_feature_sample_ratio(0.7);
     cfg.set_min_leaf_size(3);
 
-    let train_file = "/Users/icst/workspace/xgboost/dataset/allstate/train.csv";
-    let test_file = "/Users/icst/workspace/xgboost/dataset/allstate/test.csv";
+    let train_file = "path/to/allstate/train.csv";
+    let test_file = "path/to/allstate/test.csv";
 
     let mut train_dv: DataVec = Vec::new();
     let mut test_dv: DataVec = Vec::new();

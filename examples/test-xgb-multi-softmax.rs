@@ -13,7 +13,7 @@ fn main() {
         GBDT::from_xgoost_dump("data/xgb_multi_softmax/gbdt.model", "multi:softmax").unwrap();
     let test_file = "data/xgb_multi_softmax/dermatology.data.test";
     let mut fmt = InputFormat::csv_format();
-    fmt.set_feature_size(34);
+    fmt.set_label_index(34);
     let mut test_data: DataVec = load(test_file, fmt);
 
     println!("start predict");

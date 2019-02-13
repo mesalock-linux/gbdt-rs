@@ -16,8 +16,8 @@ fn main() {
     cfg.set_loss("LogLikelyhood");
 
     // To get the test data, please clone the project from github
-    let train_file = "/Users/icst/workspace/xgboost/dataset/higgs/train.csv";
-    let test_file = "/Users/icst/workspace/xgboost/dataset/higgs/test.csv";
+    let train_file = "path/to/higgs/train.csv";
+    let test_file = "path/to/higgs/test.csv";
 
     let mut train_dv: DataVec = Vec::new();
     let mut test_dv: DataVec = Vec::new();
