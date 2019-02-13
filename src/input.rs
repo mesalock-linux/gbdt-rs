@@ -1,8 +1,8 @@
-use crate::decision_tree::{ValueType, Data, DataVec};
+use crate::decision_tree::{Data, DataVec, ValueType, VALUE_TYPE_UNKNOWN};
 
+use std::collections::HashMap;
 use std::fs::File;
 use std::io::{BufRead, BufReader, Seek, SeekFrom};
-use std::collections::HashMap;
 
 extern crate regex;
 use regex::Regex;
@@ -45,16 +45,19 @@ impl InputFormat {
 
     pub fn to_string(&self) -> String {
         let mut s = String::from("");
-        s.push_str(&format!("File type: {}\n", match self.ftype {
-            FileFormat::CSV => { "CSV" },
-            FileFormat::TXT => { "TXT" },
-        }));
+        s.push_str(&format!(
+            "File type: {}\n",
+            match self.ftype {
+                FileFormat::CSV => "CSV",
+                FileFormat::TXT => "TXT",
+            }
+        ));
         match self.ftype {
-            FileFormat::CSV=> {
+            FileFormat::CSV => {
                 s.push_str(&format!("Has header: {}\n", self.header));
                 s.push_str(&format!("Label index: {}\n", self.label_idx));
-            },
-            _ => { },
+            }
+            _ => {}
         }
         s.push_str(&format!("Delemeter: [{}]", self.delimeter));
         s
@@ -88,7 +91,7 @@ pub fn infer(file_name: &str) -> InputFormat {
     // check CSV or TXT
     let mut first_line = String::new();
     reader.read_line(&mut first_line).unwrap();
-    let mut input_format =  if first_line.contains(":") {
+    let mut input_format = if first_line.contains(":") {
         InputFormat::txt_format()
     } else {
         InputFormat::csv_format()
@@ -96,22 +99,19 @@ pub fn infer(file_name: &str) -> InputFormat {
 
     // Check delimeter
     let reg = match input_format.ftype {
-        FileFormat::CSV => {
-            Regex::new(r"[+-]?\d+(,\d+)*(.\d+(e\d+)?)?").unwrap()
-        },
-        FileFormat::TXT => {
-            Regex::new(r"\d+:[+-]?\d+(,\d+)*(.\d+(e\d+)?)?").unwrap()
-        },
+        FileFormat::CSV => Regex::new(r"[+-]?\d+(,\d+)*(.\d+(e\d+)?)?").unwrap(),
+        FileFormat::TXT => Regex::new(r"\d+:[+-]?\d+(,\d+)*(.\d+(e\d+)?)?").unwrap(),
     };
     let mut second_line = String::new();
-    reader.read_line(&mut second_line).expect("No second line to read");
+    reader
+        .read_line(&mut second_line)
+        .expect("No second line to read");
     let caps = reg.captures(&second_line).unwrap().len();
     let second_line_after = reg.replace_all(&second_line, "");
-    let cnt = second_line_after.chars()
-                .fold(HashMap::new(), count);
+    let cnt = second_line_after.chars().fold(HashMap::new(), count);
     let default_delim: char = match input_format.ftype {
-        FileFormat::CSV => { ',' },
-        FileFormat::TXT => { '\t' },
+        FileFormat::CSV => ',',
+        FileFormat::TXT => '\t',
     };
     let mut flag = false;
     if let Some(value) = cnt.get(&default_delim) {
@@ -144,16 +144,15 @@ pub fn infer(file_name: &str) -> InputFormat {
             match letters.captures(&first_line_after) {
                 Some(letter_caps) => {
                     input_format.header = if letter_caps.len() > 0 { true } else { false };
-                },
-                None => { },
+                }
+                None => {}
             }
-        },
-        _ => { },
+        }
+        _ => {}
     };
 
     input_format
 }
-
 
 pub fn load_csv(file: &mut File, input_format: InputFormat) -> DataVec {
     file.seek(SeekFrom::Start(0)).unwrap();
@@ -167,6 +166,7 @@ pub fn load_csv(file: &mut File, input_format: InputFormat) -> DataVec {
     let mut v: Vec<ValueType> = Vec::with_capacity(input_format.feature_size + 1);
     for line in reader.lines() {
         let content = line.unwrap();
+
         v = content.split(input_format.delimeter)
                     .map(|x| x.parse::<ValueType>().unwrap())
                     .collect();
@@ -192,18 +192,22 @@ pub fn load_txt(file: &mut File, input_format: InputFormat) -> DataVec {
     let mut V: ValueType = 0.0;
     //let mut v: Vec<ValueType> = Vec::with_capacity(input_format.feature_size);
     for line in reader.lines() {
-        let mut v: Vec<ValueType> = vec![0.0; input_format.feature_size];
+        let mut v: Vec<ValueType> = vec![VALUE_TYPE_UNKNOWN; input_format.feature_size];
         for token in line.unwrap().split(input_format.delimeter) {
             let splited_token: Vec<&str> = token.split(":").collect();
             if splited_token.len() == 2 {
                 let mut err = false;
                 match splited_token[0 as usize].parse::<usize>() {
-                    Ok(kk) => { K = kk; },
-                    Err(_) => { err = true },
+                    Ok(kk) => {
+                        K = kk;
+                    }
+                    Err(_) => err = true,
                 }
                 match splited_token[1 as usize].parse::<ValueType>() {
-                    Ok(vv) => { V = vv; },
-                    Err(_) => { err = true },
+                    Ok(vv) => {
+                        V = vv;
+                    }
+                    Err(_) => err = true,
                 }
                 if K >= input_format.feature_size {
                     err = true;
@@ -214,11 +218,11 @@ pub fn load_txt(file: &mut File, input_format: InputFormat) -> DataVec {
             }
             if splited_token.len() == 1 {
                 label = splited_token[0 as usize].parse::<ValueType>().unwrap();
-            }
-            else { // report error
+            } else {
+                // report error
             }
         }
-        dv.push(Data{
+        dv.push(Data {
             label: label,
             feature: v,
             target: 0.0,
@@ -234,7 +238,7 @@ pub fn load_txt(file: &mut File, input_format: InputFormat) -> DataVec {
 pub fn load(file_name: &str, input_format: InputFormat) -> DataVec {
     let mut file = File::open(file_name.to_string()).unwrap();
     match input_format.ftype {
-        FileFormat::CSV => { load_csv(&mut file, input_format) }
-        FileFormat::TXT => { load_txt(&mut file, input_format) }
+        FileFormat::CSV => load_csv(&mut file, input_format),
+        FileFormat::TXT => load_txt(&mut file, input_format),
     }
 }
