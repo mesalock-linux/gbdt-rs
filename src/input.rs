@@ -164,9 +164,10 @@ pub fn load_csv(file: &mut File, input_format: InputFormat) -> DataVec {
     if input_format.header {
         reader.read_line(&mut l).unwrap_or(0);
     }
+    let mut v: Vec<ValueType> = Vec::with_capacity(input_format.feature_size + 1);
     for line in reader.lines() {
         let content = line.unwrap();
-        let mut v: Vec<ValueType> = content.split(input_format.delimeter)
+        v = content.split(input_format.delimeter)
                     .map(|x| x.parse::<ValueType>().unwrap())
                     .collect();
         dv.push(Data{
