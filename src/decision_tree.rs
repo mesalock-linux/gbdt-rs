@@ -167,6 +167,7 @@ pub struct TrainingCache {
     preds: Vec<ValueType>,
 }
 
+
 impl TrainingCache {
     pub fn get_cache(feature_size: usize, data: &DataVec) -> Self {
         let sample_size = data.len();
@@ -253,7 +254,7 @@ impl TrainingCache {
         });
     }
 
-    pub fn sort_with_bool_vec(
+    fn sort_with_bool_vec(
         &self,
         feature_index: usize,
         is_residual: bool,
@@ -292,6 +293,107 @@ impl TrainingCache {
         self.sort_with_bool_vec(feature_index, is_residual, &index_exists, to_sort.len())
     }
 }
+
+struct SubCache {
+    ordered_features: Vec<Vec<(usize, ValueType)>>,
+    ordered_residual: Vec<(usize, ValueType)>,
+}
+
+impl SubCache {
+    fn get_cache_from_training_cache(cache: &TrainingCache) -> Self {
+        let mut ordered_features: Vec<Vec<(usize, ValueType)>> = Vec::with_capacity(cache.feature_size);
+        for index in 0..cache.feature_size {
+            ordered_features.push(cache.ordered_features[index].to_vec());
+        }
+
+        let ordered_residual: Vec<(usize, ValueType)> = cache.ordered_residual.to_vec();
+
+        SubCache {
+            ordered_features,
+            ordered_residual,
+        }
+
+    }
+
+    fn split_cache(self, left_set: &[usize], right_set: &[usize], cache: &TrainingCache) -> (Self, Self) {
+        let mut left_ordered_features: Vec<Vec<(usize, ValueType)>> = Vec::with_capacity(cache.feature_size);
+        let mut right_ordered_features: Vec<Vec<(usize, ValueType)>> = Vec::with_capacity(cache.feature_size);
+        let mut left_ordered_residual = Vec::with_capacity(left_set.len());
+        let mut right_ordered_residual = Vec::with_capacity(right_set.len());
+        for index in 0..cache.feature_size {
+            left_ordered_features.push(Vec::with_capacity(left_set.len()));
+            right_ordered_features.push(Vec::with_capacity(right_set.len()));
+        }
+        let mut left_bool = vec![false; cache.sample_size];
+        let mut right_bool = vec![false; cache.sample_size];
+        for index in left_set.iter() {
+            left_bool[*index] = true;
+        }
+        for index in right_set.iter() {
+            right_bool[*index] = true;
+        }
+
+        for (feature_index, feature_vec) in self.ordered_features.into_iter().enumerate() {
+            for pair in feature_vec.iter() {
+                let (index, value) = *pair;
+                if left_bool[index] {
+                    left_ordered_features[feature_index].push((index, value));
+                    continue;
+                }
+                if right_bool[index] {
+                    right_ordered_features[feature_index].push((index, value));
+                }
+            }
+        }
+
+        for pair in self.ordered_residual.iter() {
+            let (index, value) = *pair;
+            if left_bool[index] {
+                left_ordered_residual.push((index, value));
+                continue;
+            }
+            if right_bool[index] {
+                right_ordered_residual.push((index, value));
+            }
+        }
+        (
+            SubCache {
+                ordered_features: left_ordered_features,
+                ordered_residual: left_ordered_residual,
+            },
+            SubCache {
+                ordered_features: right_ordered_features,
+                ordered_residual: right_ordered_residual,
+            }
+        )
+
+
+
+    }
+
+    fn sort_with_bool_vec(
+        &self,
+        feature_index: usize,
+        is_residual: bool,
+        to_sort: &[bool],
+        to_sort_size: usize,
+    ) -> Vec<(usize, ValueType)> {
+        let whole_data_sorted_index = if is_residual {
+            &self.ordered_residual
+        } else {
+            &self.ordered_features[feature_index]
+        };
+        let mut ret = Vec::with_capacity(to_sort_size);
+        for item in whole_data_sorted_index.iter() {
+            let (index, value) = *item;
+            if to_sort[index] {
+                ret.push((index, value));
+            }
+        }
+        ret
+    }
+}
+
 /// A training sample or a test sample
 #[derive(Debug, Clone, Serialize, Deserialize)]
 pub struct Data {
@@ -596,7 +698,10 @@ impl DecisionTree {
         cache.init_one_iteration(train_data, &self.loss);
 
         let root_index = self.tree.add_root(BinaryTreeNode::new(DTNode::new()));
-        self.fit_node(root_index, 0, subset, cache);
+
+        let sub_cache = SubCache::get_cache_from_training_cache(cache);
+
+        self.fit_node(root_index, 0, subset, cache, sub_cache);
     }
 
     /// Use the samples in `train_data` to train the decision tree.
@@ -658,7 +763,8 @@ impl DecisionTree {
         cache.init_one_iteration(train_data, &self.loss);
 
         let root_index = self.tree.add_root(BinaryTreeNode::new(DTNode::new()));
-        self.fit_node(root_index, 0, &data_collection, cache);
+        let sub_cache = SubCache::get_cache_from_training_cache(cache);
+        self.fit_node(root_index, 0, &data_collection, cache, sub_cache);
     }
 
     /// Recursively build the tree nodes. It choose a feature and a value to split the node and the data.
@@ -670,6 +776,8 @@ impl DecisionTree {
         //whole_data: &[Data],
         train_data: &[usize],
         cache: &mut TrainingCache,
+        sub_cache: SubCache
+        
     ) {
         // If the node doesn't need to be splited.
         {
@@ -698,6 +806,7 @@ impl DecisionTree {
             self.feature_size,
             self.feature_sample_ratio,
             cache,
+            &sub_cache,
         );
 
         {
@@ -721,14 +830,15 @@ impl DecisionTree {
 
         // Use the splited data to build child nodes.
         if let Some((left_data, right_data, _unknown_data)) = splited_data {
+            let (left_sub_cache, right_sub_cache) = sub_cache.split_cache(&left_data, &right_data, cache);
             let left_index = self
                 .tree
                 .add_left_node(node, BinaryTreeNode::new(DTNode::new()));
-            self.fit_node(left_index, depth + 1, &left_data, cache);
+            self.fit_node(left_index, depth + 1, &left_data, cache, left_sub_cache);
             let right_index = self
                 .tree
                 .add_right_node(node, BinaryTreeNode::new(DTNode::new()));
-            self.fit_node(right_index, depth + 1, &right_data, cache);
+            self.fit_node(right_index, depth + 1, &right_data, cache, right_sub_cache);
         }
     }
 
@@ -978,6 +1088,7 @@ impl DecisionTree {
         feature_size: usize,
         feature_sample_ratio: f64,
         cache: &TrainingCache,
+        sub_cache: &SubCache,
     ) -> (
         Option<(Vec<usize>, Vec<usize>, Vec<usize>)>,
         usize,
@@ -1013,6 +1124,7 @@ impl DecisionTree {
                 &mut impurity,
                 cache,
                 &mut impurity_cache,
+                &sub_cache,
             );
             if best_fitness > impurity {
                 find = true;
@@ -1052,11 +1164,12 @@ impl DecisionTree {
         impurity: &mut ValueType,
         cache: &TrainingCache,
         impurity_cache: &mut ImpurityCache,
+        sub_cache: &SubCache,
         //gain: &mut f64,
     ) -> Vec<(usize, ValueType)> {
         *impurity = VALUE_TYPE_MAX;
         *value = VALUE_TYPE_UNKNOWN;
-        let sorted_data = cache.sort_with_bool_vec(
+        let sorted_data = sub_cache.sort_with_bool_vec(
             feature_index,
             false,
             &impurity_cache.bool_vec,
