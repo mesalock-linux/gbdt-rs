@@ -275,13 +275,12 @@ impl GBDT {
         let mut rng: StdRng = SeedableRng::from_seed(seed);
         //let mut rng_clone: StdRng = SeedableRng::from_seed(seed.clone());
         let mut predicted_cache: PredVec = self.predict_n(train_data, 0, 0, train_data.len());
-        println!("predicted_cache {}", predicted_cache[0]);
         //let mut train_data_copy = train_data.to_vec();
 
-        //let t1 = PreciseTime::now();
-        let mut cache = TrainingCache::get_cache(self.conf.feature_size, &train_data);
-        //let t2 = PreciseTime::now();
-        //println!("cache {}", t1.to(t2));
+        let t1 = PreciseTime::now();
+        let mut cache = TrainingCache::get_cache(self.conf.feature_size, &train_data, 2);
+        let t2 = PreciseTime::now();
+        println!("cache {}", t1.to(t2));
 
         for i in 0..self.conf.iterations {
             let t1 = PreciseTime::now();
@@ -322,7 +321,12 @@ impl GBDT {
             }
 
             let t2 = PreciseTime::now();
-            println!("one iter {} {}", i, t1.to(t2));
+            println!(
+                "iteration {} {} nodes: {}",
+                i,
+                t1.to(t2),
+                self.trees[i].len()
+            );
         }
     }
 

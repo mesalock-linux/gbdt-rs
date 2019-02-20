@@ -1,7 +1,7 @@
 //! This module implements the data loader.
-//! 
+//!
 //! Currently we support to kind of input format: csv format and libsvm data format.
-//! 
+//!
 //! # Example
 //! ## LibSVM format
 //! ```rust
@@ -13,7 +13,7 @@
 //! fmt.set_delimeter(' ');
 //! let test_data = input::load(test_file, fmt);
 //! ```
-//! 
+//!
 //! ## CSV format
 //! ```rust
 //! use gbdt::input::InputFormat;
@@ -34,7 +34,7 @@ use regex::Regex;
 use serde_derive::{Serialize, Deserialize};
 
 /// This enum type defines the data file format.
-/// 
+///
 /// We support two data format:
 /// 1. CSV format
 /// 2. LibSVM data format
@@ -49,7 +49,6 @@ pub enum FileFormat {
 /// The input file format struct.
 #[derive(Copy, Debug, Clone, Serialize, Deserialize)]
 pub struct InputFormat {
-
     /// Data file format
     pub ftype: FileFormat,
 
@@ -178,7 +177,7 @@ fn count(mut hash_map: HashMap<char, u32>, word: char) -> HashMap<char, u32> {
 /// Function used for input file type inference. This can help recognize the file format.
 /// If the file is in csv type, this function also helps to check whether the csv file has
 /// header.
-/// 
+///
 /// # Example
 /// ```rust
 /// use gbdt::input::infer;
@@ -374,7 +373,7 @@ pub fn load_txt(file: &mut File, input_format: InputFormat) -> DataVec {
 /// fmt.set_delimeter(' ');
 /// let test_data = input::load(test_file, fmt);
 /// ```
-/// 
+///
 /// ## CSV format
 /// ```rust
 /// use gbdt::input::InputFormat;
