@@ -298,4 +298,8 @@ impl<T> BinaryTree<T> {
             }
         }
     }
+
+    pub fn len(&self) -> usize {
+        self.tree.len()
+    }
 }

@@ -77,7 +77,7 @@
 //! tree.set_max_depth(2);
 //! tree.set_min_leaf_size(1);
 //! tree.set_loss(Loss::SquaredError);
-//! let mut cache = TrainingCache::get_cache(3, &dv);
+//! let mut cache = TrainingCache::get_cache(3, &dv, 3);
 //! tree.fit(&dv, &mut cache);
 //!
 //!
@@ -165,37 +165,16 @@ pub struct TrainingCache {
     sample_size: usize,
     feature_size: usize,
     preds: Vec<ValueType>,
+    cache_level: u8,
 }
 
-
 impl TrainingCache {
-    pub fn get_cache(feature_size: usize, data: &DataVec) -> Self {
+    pub fn get_cache(feature_size: usize, data: &DataVec, cache_level: u8) -> Self {
+        let level = if cache_level >= 3 { 2 } else { cache_level };
         let sample_size = data.len();
-        let mut ordered_features = Vec::with_capacity(feature_size);
-        for _index in 0..feature_size {
-            let nv: Vec<(usize, ValueType)> = Vec::with_capacity(data.len());
-            /*
-            nv.sort_unstable_by(|a, b| {
-                let v1 = a.1;
-                let v2 = b.1;
-                v1.partial_cmp(&v2).unwrap()
-            });
-            */
-            ordered_features.push(nv);
-        }
-        for (i, item) in data.iter().enumerate() {
-            for index in 0..feature_size {
-                ordered_features[index].push((i, item.feature[index]));
-            }
-        }
-        for index in 0..feature_size {
-            ordered_features[index].sort_unstable_by(|a, b| {
-                let v1 = a.1;
-                let v2 = b.1;
-                v1.partial_cmp(&v2).unwrap()
-            });
-        }
-        let ordered_residual: Vec<(usize, ValueType)> = Vec::new();
+        let logit_c = vec![0.0; data.len()];
+        let preds = vec![VALUE_TYPE_UNKNOWN; sample_size];
+
         let mut cache_value = Vec::with_capacity(data.len());
         for elem in data {
             let item = CacheValue {
@@ -205,10 +184,14 @@ impl TrainingCache {
             };
             cache_value.push(item);
         }
-        //let mut target = Vec::with_capacity(data.len());
-        let logit_c = vec![0.0; data.len()];
 
-        let preds = vec![VALUE_TYPE_UNKNOWN; sample_size];
+        let ordered_features: Vec<Vec<(usize, ValueType)>> = if (level == 0) || (level == 2) {
+            TrainingCache::cache_features(data, feature_size)
+        } else {
+            Vec::new()
+        };
+        let ordered_residual: Vec<(usize, ValueType)> = Vec::new();
+
         TrainingCache {
             ordered_features,
             ordered_residual,
@@ -218,7 +201,10 @@ impl TrainingCache {
             sample_size,
             feature_size,
             preds,
+            cache_level: level,
         }
+
+        //let mut target = Vec::with_capacity(data.len());
     }
     pub fn get_preds(&self) -> Vec<ValueType> {
         self.preds.to_vec()
@@ -238,20 +224,42 @@ impl TrainingCache {
             }
         }
         if let Loss::LAD = loss {
-            self.cache_residual(whole_data);
+            self.ordered_residual = TrainingCache::cache_residual(whole_data);
         }
     }
 
-    pub fn cache_residual(&mut self, whole_data: &[Data]) {
-        self.ordered_residual = Vec::with_capacity(whole_data.len());
-        for (index, elem) in whole_data.iter().enumerate() {
-            self.ordered_residual.push((index, elem.residual));
+    fn cache_features(whole_data: &[Data], feature_size: usize) -> Vec<Vec<(usize, ValueType)>> {
+        let mut ordered_features = Vec::with_capacity(feature_size);
+        for _index in 0..feature_size {
+            let nv: Vec<(usize, ValueType)> = Vec::with_capacity(whole_data.len());
+            ordered_features.push(nv);
         }
-        self.ordered_residual.sort_unstable_by(|a, b| {
+        for (i, item) in whole_data.iter().enumerate() {
+            for index in 0..feature_size {
+                ordered_features[index].push((i, item.feature[index]));
+            }
+        }
+        for index in 0..feature_size {
+            ordered_features[index].sort_unstable_by(|a, b| {
+                let v1 = a.1;
+                let v2 = b.1;
+                v1.partial_cmp(&v2).unwrap()
+            });
+        }
+        ordered_features
+    }
+
+    fn cache_residual(whole_data: &[Data]) -> Vec<(usize, ValueType)> {
+        let mut ordered_residual = Vec::with_capacity(whole_data.len());
+        for (index, elem) in whole_data.iter().enumerate() {
+            ordered_residual.push((index, elem.residual));
+        }
+        ordered_residual.sort_unstable_by(|a, b| {
             let v1: ValueType = a.1;
             let v2: ValueType = b.1;
             v1.partial_cmp(&v2).unwrap()
         });
+        ordered_residual
     }
 
     fn sort_with_bool_vec(
@@ -260,11 +268,20 @@ impl TrainingCache {
         is_residual: bool,
         to_sort: &[bool],
         to_sort_size: usize,
+        sub_cache: &SubCache,
     ) -> Vec<(usize, ValueType)> {
         let whole_data_sorted_index = if is_residual {
-            &self.ordered_residual
+            if (self.cache_level == 0) || sub_cache.lazy {
+                &self.ordered_residual
+            } else {
+                &sub_cache.ordered_residual
+            }
         } else {
-            &self.ordered_features[feature_index]
+            if (self.cache_level == 0) || sub_cache.lazy {
+                &self.ordered_features[feature_index]
+            } else {
+                &sub_cache.ordered_features[feature_index]
+            }
         };
         let mut ret = Vec::with_capacity(to_sort_size);
         for item in whole_data_sorted_index.iter() {
@@ -275,11 +292,12 @@ impl TrainingCache {
         }
         ret
     }
-    pub fn sort_with_cache(
+    fn sort_with_cache(
         &self,
         feature_index: usize,
         is_residual: bool,
         to_sort: &[usize],
+        sub_cache: &SubCache,
     ) -> Vec<(usize, ValueType)> {
         let whole_data_sorted_index = if is_residual {
             &self.ordered_residual
@@ -290,34 +308,90 @@ impl TrainingCache {
         for index in to_sort.iter() {
             index_exists[*index] = true;
         }
-        self.sort_with_bool_vec(feature_index, is_residual, &index_exists, to_sort.len())
+        self.sort_with_bool_vec(
+            feature_index,
+            is_residual,
+            &index_exists,
+            to_sort.len(),
+            sub_cache,
+        )
     }
 }
 
 struct SubCache {
     ordered_features: Vec<Vec<(usize, ValueType)>>,
     ordered_residual: Vec<(usize, ValueType)>,
+    lazy: bool,
 }
 
 impl SubCache {
-    fn get_cache_from_training_cache(cache: &TrainingCache) -> Self {
-        let mut ordered_features: Vec<Vec<(usize, ValueType)>> = Vec::with_capacity(cache.feature_size);
-        for index in 0..cache.feature_size {
-            ordered_features.push(cache.ordered_features[index].to_vec());
+    fn get_cache_from_training_cache(cache: &TrainingCache, data: &[Data], loss: &Loss) -> Self {
+        let level = cache.cache_level;
+        if level == 2 {
+            return SubCache {
+                ordered_features: Vec::new(),
+                ordered_residual: Vec::new(),
+                lazy: true,
+            };
         }
 
-        let ordered_residual: Vec<(usize, ValueType)> = cache.ordered_residual.to_vec();
+        let ordered_features = if level == 0 {
+            Vec::new()
+        } else if level == 1 {
+            TrainingCache::cache_features(data, cache.feature_size)
+        } else {
+            let mut ordered_features: Vec<Vec<(usize, ValueType)>> =
+                Vec::with_capacity(cache.feature_size);
+            for index in 0..cache.feature_size {
+                ordered_features.push(cache.ordered_features[index].to_vec());
+            }
+            ordered_features
+        };
+
+        let ordered_residual = if level == 0 {
+            Vec::new()
+        } else if level == 1 {
+            if let Loss::LAD = loss {
+                TrainingCache::cache_residual(data)
+            } else {
+                Vec::new()
+            }
+        } else {
+            if let Loss::LAD = loss {
+                cache.ordered_residual.to_vec()
+            } else {
+                Vec::new()
+            }
+        };
 
         SubCache {
             ordered_features,
             ordered_residual,
+            lazy: false,
         }
-
     }
 
-    fn split_cache(self, left_set: &[usize], right_set: &[usize], cache: &TrainingCache) -> (Self, Self) {
-        let mut left_ordered_features: Vec<Vec<(usize, ValueType)>> = Vec::with_capacity(cache.feature_size);
-        let mut right_ordered_features: Vec<Vec<(usize, ValueType)>> = Vec::with_capacity(cache.feature_size);
+    fn get_empty() -> Self {
+        SubCache {
+            ordered_features: Vec::new(),
+            ordered_residual: Vec::new(),
+            lazy: false,
+        }
+    }
+
+    pub fn split_cache(
+        mut self,
+        left_set: &[usize],
+        right_set: &[usize],
+        cache: &TrainingCache,
+    ) -> (Self, Self) {
+        if cache.cache_level == 0 {
+            return (SubCache::get_empty(), SubCache::get_empty());
+        }
+        let mut left_ordered_features: Vec<Vec<(usize, ValueType)>> =
+            Vec::with_capacity(cache.feature_size);
+        let mut right_ordered_features: Vec<Vec<(usize, ValueType)>> =
+            Vec::with_capacity(cache.feature_size);
         let mut left_ordered_residual = Vec::with_capacity(left_set.len());
         let mut right_ordered_residual = Vec::with_capacity(right_set.len());
         for index in 0..cache.feature_size {
@@ -333,50 +407,84 @@ impl SubCache {
             right_bool[*index] = true;
         }
 
-        for (feature_index, feature_vec) in self.ordered_features.into_iter().enumerate() {
-            for pair in feature_vec.iter() {
+        if self.lazy {
+            for (feature_index, feature_vec) in cache.ordered_features.iter().enumerate() {
+                for pair in feature_vec.iter() {
+                    let (index, value) = *pair;
+                    if left_bool[index] {
+                        left_ordered_features[feature_index].push((index, value));
+                        continue;
+                    }
+                    if right_bool[index] {
+                        right_ordered_features[feature_index].push((index, value));
+                    }
+                }
+            }
+        } else {
+            for feature_index in 0..self.ordered_features.len() {
+                let feature_vec = &mut self.ordered_features[feature_index];
+                for pair in feature_vec.iter() {
+                    let (index, value) = *pair;
+                    if left_bool[index] {
+                        left_ordered_features[feature_index].push((index, value));
+                        continue;
+                    }
+                    if right_bool[index] {
+                        right_ordered_features[feature_index].push((index, value));
+                    }
+                }
+                feature_vec.clear();
+                feature_vec.shrink_to_fit();
+            }
+            self.ordered_features.clear();
+            self.ordered_features.shrink_to_fit();
+        }
+
+        if self.lazy {
+            for pair in cache.ordered_residual.iter() {
                 let (index, value) = *pair;
                 if left_bool[index] {
-                    left_ordered_features[feature_index].push((index, value));
+                    left_ordered_residual.push((index, value));
                     continue;
                 }
                 if right_bool[index] {
-                    right_ordered_features[feature_index].push((index, value));
+                    right_ordered_residual.push((index, value));
                 }
             }
-        }
-
-        for pair in self.ordered_residual.iter() {
-            let (index, value) = *pair;
-            if left_bool[index] {
-                left_ordered_residual.push((index, value));
-                continue;
-            }
-            if right_bool[index] {
-                right_ordered_residual.push((index, value));
+        } else {
+            for pair in self.ordered_residual.into_iter() {
+                let (index, value) = pair;
+                if left_bool[index] {
+                    left_ordered_residual.push((index, value));
+                    continue;
+                }
+                if right_bool[index] {
+                    right_ordered_residual.push((index, value));
+                }
             }
         }
         (
             SubCache {
                 ordered_features: left_ordered_features,
                 ordered_residual: left_ordered_residual,
+                lazy: false,
             },
             SubCache {
                 ordered_features: right_ordered_features,
                 ordered_residual: right_ordered_residual,
-            }
+                lazy: false,
+            },
         )
-
-
-
     }
 
+    /*
     fn sort_with_bool_vec(
         &self,
         feature_index: usize,
         is_residual: bool,
         to_sort: &[bool],
         to_sort_size: usize,
+        sub_cache: &SubCache,
     ) -> Vec<(usize, ValueType)> {
         let whole_data_sorted_index = if is_residual {
             &self.ordered_residual
@@ -391,7 +499,7 @@ impl SubCache {
             }
         }
         ret
-    }
+    } */
 }
 
 /// A training sample or a test sample
@@ -425,11 +533,16 @@ pub enum Loss {
 */
 
 /// Calculate the prediction for each leaf node.
-fn calculate_pred(data: &[usize], loss: &Loss, cache: &TrainingCache) -> ValueType {
+fn calculate_pred(
+    data: &[usize],
+    loss: &Loss,
+    cache: &TrainingCache,
+    sub_cache: &SubCache,
+) -> ValueType {
     match loss {
         Loss::SquaredError => average(data, cache),
         Loss::LogLikelyhood => logit_optimal_value(data, cache),
-        Loss::LAD => lad_optimal_value(data, cache),
+        Loss::LAD => lad_optimal_value(data, cache, sub_cache),
         _ => average(data, cache),
     }
 }
@@ -465,8 +578,8 @@ fn logit_optimal_value(data: &[usize], cache: &TrainingCache) -> ValueType {
 }
 
 /// The leaf prediction value for LAD loss.
-fn lad_optimal_value(data: &[usize], cache: &TrainingCache) -> ValueType {
-    let sorted_data = cache.sort_with_cache(0, true, data);
+fn lad_optimal_value(data: &[usize], cache: &TrainingCache, sub_cache: &SubCache) -> ValueType {
+    let sorted_data = cache.sort_with_cache(0, true, data, sub_cache);
 
     let all_weight = sorted_data
         .iter()
@@ -685,7 +798,7 @@ impl DecisionTree {
     /// tree.set_min_leaf_size(1);
     /// tree.set_loss(Loss::SquaredError);
     /// let subset = [0, 1];
-    /// let mut cache = TrainingCache::get_cache(3, &dv);
+    /// let mut cache = TrainingCache::get_cache(3, &dv, 3);
     /// tree.fit_n(&dv, &subset, &mut cache);
     ///
     /// ```
@@ -699,7 +812,7 @@ impl DecisionTree {
 
         let root_index = self.tree.add_root(BinaryTreeNode::new(DTNode::new()));
 
-        let sub_cache = SubCache::get_cache_from_training_cache(cache);
+        let sub_cache = SubCache::get_cache_from_training_cache(cache, train_data, &self.loss);
 
         self.fit_node(root_index, 0, subset, cache, sub_cache);
     }
@@ -748,7 +861,7 @@ impl DecisionTree {
     /// tree.set_max_depth(2);
     /// tree.set_min_leaf_size(1);
     /// tree.set_loss(Loss::SquaredError);
-    /// let mut cache = TrainingCache::get_cache(3, &dv);
+    /// let mut cache = TrainingCache::get_cache(3, &dv, 3);
     /// tree.fit(&dv, &mut cache);
     ///
     /// ```
@@ -763,7 +876,7 @@ impl DecisionTree {
         cache.init_one_iteration(train_data, &self.loss);
 
         let root_index = self.tree.add_root(BinaryTreeNode::new(DTNode::new()));
-        let sub_cache = SubCache::get_cache_from_training_cache(cache);
+        let sub_cache = SubCache::get_cache_from_training_cache(cache, train_data, &self.loss);
         self.fit_node(root_index, 0, &data_collection, cache, sub_cache);
     }
 
@@ -776,8 +889,7 @@ impl DecisionTree {
         //whole_data: &[Data],
         train_data: &[usize],
         cache: &mut TrainingCache,
-        sub_cache: SubCache
-        
+        sub_cache: SubCache,
     ) {
         // If the node doesn't need to be splited.
         {
@@ -786,7 +898,7 @@ impl DecisionTree {
                 .get_node_mut(node)
                 .expect("node should not be empty!");
             // calculate to support unknown features
-            node_ref.value.pred = calculate_pred(train_data, &self.loss, cache);
+            node_ref.value.pred = calculate_pred(train_data, &self.loss, cache, &sub_cache);
             if (depth >= self.max_depth)
             //    || same(train_data)
                 || (train_data.len() <= self.min_leaf_size)
@@ -817,7 +929,7 @@ impl DecisionTree {
             if splited_data.is_none() {
                 node_ref.value.is_leaf = true;
                 //node_ref.value.pred = calculate_pred(train_data, &self.loss);
-                node_ref.value.pred = calculate_pred(train_data, &self.loss, cache);
+                node_ref.value.pred = calculate_pred(train_data, &self.loss, cache, &sub_cache);
                 for index in train_data.iter() {
                     cache.preds[*index] = node_ref.value.pred;
                 }
@@ -830,7 +942,8 @@ impl DecisionTree {
 
         // Use the splited data to build child nodes.
         if let Some((left_data, right_data, _unknown_data)) = splited_data {
-            let (left_sub_cache, right_sub_cache) = sub_cache.split_cache(&left_data, &right_data, cache);
+            let (left_sub_cache, right_sub_cache) =
+                sub_cache.split_cache(&left_data, &right_data, cache);
             let left_index = self
                 .tree
                 .add_left_node(node, BinaryTreeNode::new(DTNode::new()));
@@ -896,7 +1009,7 @@ impl DecisionTree {
     /// tree.set_max_depth(2);
     /// tree.set_min_leaf_size(1);
     /// tree.set_loss(Loss::SquaredError);
-    /// let mut cache = TrainingCache::get_cache(3, &dv);
+    /// let mut cache = TrainingCache::get_cache(3, &dv, 3);
     /// tree.fit(&dv, &mut cache);
     ///
     ///
@@ -989,7 +1102,7 @@ impl DecisionTree {
     /// tree.set_max_depth(2);
     /// tree.set_min_leaf_size(1);
     /// tree.set_loss(Loss::SquaredError);
-    /// let mut cache = TrainingCache::get_cache(3, &dv);
+    /// let mut cache = TrainingCache::get_cache(3, &dv, 3);
     /// tree.fit(&dv, &mut cache);
     ///
     ///
@@ -1169,11 +1282,12 @@ impl DecisionTree {
     ) -> Vec<(usize, ValueType)> {
         *impurity = VALUE_TYPE_MAX;
         *value = VALUE_TYPE_UNKNOWN;
-        let sorted_data = sub_cache.sort_with_bool_vec(
+        let sorted_data = cache.sort_with_bool_vec(
             feature_index,
             false,
             &impurity_cache.bool_vec,
             impurity_cache.sample_size,
+            sub_cache,
         );
 
         let mut unknown: usize = 0;
@@ -1317,7 +1431,7 @@ impl DecisionTree {
     /// tree.set_max_depth(2);
     /// tree.set_min_leaf_size(1);
     /// tree.set_loss(Loss::SquaredError);
-    /// let mut cache = TrainingCache::get_cache(3, &dv);
+    /// let mut cache = TrainingCache::get_cache(3, &dv, 3);
     /// let subset = [0, 1];
     /// tree.fit_n(&dv, &subset, &mut cache);
     ///
@@ -1417,5 +1531,9 @@ impl DecisionTree {
             return Err(err);
         }
         Ok(())
+    }
+
+    pub fn len(&self) -> usize {
+        self.tree.len()
     }
 }
