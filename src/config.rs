@@ -62,6 +62,7 @@
 //! // initial guess enabled = false
 //! ```
 
+use serde_derive::{Serialize, Deserialize};
 use crate::decision_tree::ValueType;
 
 /// This enum defines the loss type.
