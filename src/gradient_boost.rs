@@ -100,6 +100,7 @@ use std::io::{BufRead, BufReader};
 
 use serde_derive::{Serialize, Deserialize};
 
+#[cfg(feature = "profiling")]
 use time::PreciseTime;
 
 /// The gradient boosting decision tree.
@@ -278,12 +279,17 @@ impl GBDT {
         let mut predicted_cache: PredVec = self.predict_n(train_data, 0, 0, train_data.len());
         //let mut train_data_copy = train_data.to_vec();
 
+        #[cfg(feature = "profiling")]
         let t1 = PreciseTime::now();
         let mut cache = TrainingCache::get_cache(self.conf.feature_size, &train_data, self.conf.training_optimization_level);
+
+        #[cfg(feature = "profiling")]
         let t2 = PreciseTime::now();
+        #[cfg(feature = "profiling")]
         println!("cache {}", t1.to(t2));
 
         for i in 0..self.conf.iterations {
+            #[cfg(feature = "profiling")]
             let t1 = PreciseTime::now();
             let mut samples: Vec<usize> = (0..train_data.len()).collect();
             let (subset, remain) = if nr_samples < train_data.len() {
@@ -321,7 +327,9 @@ impl GBDT {
                 predicted_cache[*index] += predicted_tmp[*index] * self.conf.shrinkage;
             }
 
+            #[cfg(feature = "profiling")]
             let t2 = PreciseTime::now();
+            #[cfg(feature = "profiling")]
             println!(
                 "iteration {} {} nodes: {}",
                 i,
