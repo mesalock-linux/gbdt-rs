@@ -603,6 +603,7 @@ fn lad_optimal_value(data: &[usize], cache: &TrainingCache, sub_cache: &SubCache
 }
 
 /// Return whether the data vector have same target values.
+#[allow(unused)]
 fn same(dv: &[Data], iv: &[usize]) -> bool {
     if iv.is_empty() {
         return false;

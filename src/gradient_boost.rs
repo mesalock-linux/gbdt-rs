@@ -247,6 +247,7 @@ impl GBDT {
     /// // train the decision trees.
     /// gbdt.fit(&mut dv);
     /// ```
+    #[cfg(feature = "enable_training")]
     pub fn fit(&mut self, train_data: &mut DataVec) {
         self.trees = Vec::with_capacity(self.conf.iterations);
         for i in 0..self.conf.iterations {

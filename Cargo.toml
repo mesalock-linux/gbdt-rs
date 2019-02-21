@@ -23,6 +23,10 @@ include = [
     "examples/test-iris.rs",
 ]
 
+[features]
+default = ["enable_training"]
+enable_training = []
+
 [badges]
 
 [lib]
