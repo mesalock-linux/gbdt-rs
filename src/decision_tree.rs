@@ -124,9 +124,9 @@ macro_rules! def_value_type {
 def_value_type!(f32);
 
 struct ImpurityCache {
-    sum_s: ValueType,
-    sum_ss: ValueType,
-    sum_c: ValueType,
+    sum_s: f64,
+    sum_ss: f64,
+    sum_c: f64,
     cached: bool,
     bool_vec: Vec<bool>,
     sample_size: usize,
@@ -139,9 +139,9 @@ impl ImpurityCache {
             bool_vec[*index] = true;
         }
         ImpurityCache {
-            sum_s: VALUE_TYPE_UNKNOWN,
-            sum_ss: VALUE_TYPE_UNKNOWN,
-            sum_c: VALUE_TYPE_UNKNOWN,
+            sum_s: 0.0,
+            sum_ss: 0.0,
+            sum_c: 0.0,
             cached: false,
             bool_vec,
             sample_size,
@@ -549,31 +549,31 @@ fn calculate_pred(
 
 /// The leaf prediction value for SquaredError loss.
 fn average(data: &[usize], cache: &TrainingCache) -> ValueType {
-    let mut sum: ValueType = 0.0;
-    let mut weight: ValueType = 0.0;
+    let mut sum: f64 = 0.0;
+    let mut weight: f64 = 0.0;
 
     for index in data.iter() {
         let cv: &CacheValue = &cache.cache_value[*index];
-        sum += cv.s;
-        weight += cv.c;
+        sum += cv.s as f64;
+        weight += cv.c as f64;
     }
-    sum / weight
+    (sum / weight) as ValueType
 }
 
 /// The leaf prediction value for LogLikelyhood loss.
 fn logit_optimal_value(data: &[usize], cache: &TrainingCache) -> ValueType {
-    let mut s: ValueType = 0.0;
-    let mut c: ValueType = 0.0;
+    let mut s: f64 = 0.0;
+    let mut c: f64 = 0.0;
 
     for index in data.iter() {
-        s += cache.cache_value[*index].s;
-        c += cache.logit_c[*index];
+        s += cache.cache_value[*index].s as f64;
+        c += cache.logit_c[*index] as f64;
     }
 
     if c.abs() < 1e-10 {
         0.0
     } else {
-        s / c
+        (s / c) as ValueType
     }
 }
 
@@ -583,23 +583,23 @@ fn lad_optimal_value(data: &[usize], cache: &TrainingCache, sub_cache: &SubCache
 
     let all_weight = sorted_data
         .iter()
-        .fold(0.0, |acc, x| acc + cache.cache_value[x.0].c);
+        .fold(0.0f64, |acc, x| acc + (cache.cache_value[x.0].c) as f64);
 
-    let mut weighted_median: ValueType = 0.0;
-    let mut weight = 0.0;
+    let mut weighted_median: f64 = 0.0;
+    let mut weight: f64 = 0.0;
     for (i, pair) in sorted_data.iter().enumerate() {
-        weight += cache.cache_value[pair.0].c;
+        weight += cache.cache_value[pair.0].c as f64;
         if (weight * 2.0) > all_weight {
             if i >= 1 {
-                weighted_median = (pair.1 + sorted_data[i - 1].1) / 2.0;
+                weighted_median = ((pair.1 + sorted_data[i - 1].1) / 2.0) as f64;
             } else {
-                weighted_median = pair.1;
+                weighted_median = pair.1 as f64;
             }
 
             break;
         }
     }
-    weighted_median
+    weighted_median as ValueType
 }
 
 /// Return whether the data vector have same target values.
@@ -1217,9 +1217,9 @@ impl DecisionTree {
         }
 
         let mut v: ValueType = 0.0;
-        let mut impurity: ValueType = 0.0;
+        let mut impurity: f64 = 0.0;
         //let mut g: f64 = 0.0;
-        let mut best_fitness: ValueType = VALUE_TYPE_MAX;
+        let mut best_fitness: f64 = std::f64::MAX;
 
         let mut index: usize = 0;
         let mut value: ValueType = 0.0;
@@ -1274,13 +1274,13 @@ impl DecisionTree {
         train_data: &[usize],
         feature_index: usize,
         value: &mut ValueType,
-        impurity: &mut ValueType,
+        impurity: &mut f64,
         cache: &TrainingCache,
         impurity_cache: &mut ImpurityCache,
         sub_cache: &SubCache,
         //gain: &mut f64,
     ) -> Vec<(usize, ValueType)> {
-        *impurity = VALUE_TYPE_MAX;
+        *impurity = std::f64::MAX;
         *value = VALUE_TYPE_UNKNOWN;
         let sorted_data = cache.sort_with_bool_vec(
             feature_index,
@@ -1291,17 +1291,17 @@ impl DecisionTree {
         );
 
         let mut unknown: usize = 0;
-        let mut s: ValueType = 0.0;
-        let mut ss: ValueType = 0.0;
-        let mut c: ValueType = 0.0;
+        let mut s: f64 = 0.0;
+        let mut ss: f64 = 0.0;
+        let mut c: f64 = 0.0;
 
         for pair in sorted_data.iter() {
             let (index, feature_value) = *pair;
             if feature_value == VALUE_TYPE_UNKNOWN {
                 let cv: &CacheValue = &cache.cache_value[index];
-                s += cv.s;
-                ss += cv.ss;
-                c += cv.c;
+                s += cv.s as f64;
+                ss += cv.ss as f64;
+                c += cv.c as f64;
                 unknown += 1;
             } else {
                 break;
@@ -1324,31 +1324,31 @@ impl DecisionTree {
             impurity_cache.sum_c = 0.0;
             for index in train_data.iter() {
                 let cv: &CacheValue = &cache.cache_value[*index];
-                impurity_cache.sum_s += cv.s;
-                impurity_cache.sum_ss += cv.ss;
-                impurity_cache.sum_c += cv.c;
+                impurity_cache.sum_s += cv.s as f64;
+                impurity_cache.sum_ss += cv.ss as f64;
+                impurity_cache.sum_c += cv.c as f64;
             }
         }
         s = impurity_cache.sum_s - s;
         ss = impurity_cache.sum_ss - ss;
         c = impurity_cache.sum_c - c;
 
-        let _fitness00 = if c > 1.0 { ss - s * s / c } else { 0.0 };
+        let _fitness00: f64 = if c > 1.0 { ss - s * s / c } else { 0.0 };
 
-        let mut ls: ValueType = 0.0;
-        let mut lss: ValueType = 0.0;
-        let mut lc: ValueType = 0.0;
-        let mut rs: ValueType = s;
-        let mut rss: ValueType = ss;
-        let mut rc: ValueType = c;
+        let mut ls: f64 = 0.0;
+        let mut lss: f64 = 0.0;
+        let mut lc: f64 = 0.0;
+        let mut rs: f64 = s;
+        let mut rss: f64 = ss;
+        let mut rc: f64 = c;
 
         for i in unknown..(sorted_data.len() - 1) {
             let (index, feature_value) = sorted_data[i];
             let (_next_index, next_value) = sorted_data[i + 1];
             let cv: &CacheValue = &cache.cache_value[index];
-            s = cv.s;
-            ss = cv.ss;
-            c = cv.c;
+            s = cv.s as f64;
+            ss = cv.ss as f64;
+            c = cv.c as f64;
 
             ls += s;
             lss += ss;
@@ -1365,17 +1365,17 @@ impl DecisionTree {
                 continue;
             }
 
-            let mut fitness1 = if lc > 1.0 { lss - ls * ls / lc } else { 0.0 };
+            let mut fitness1: f64 = if lc > 1.0 { lss - ls * ls / lc } else { 0.0 };
             if fitness1 < 0.0 {
                 fitness1 = 0.0;
             }
 
-            let mut fitness2 = if rc > 1.0 { rss - rs * rs / rc } else { 0.0 };
+            let mut fitness2: f64 = if rc > 1.0 { rss - rs * rs / rc } else { 0.0 };
             if fitness2 < 0.0 {
                 fitness2 = 0.0;
             }
 
-            let fitness: ValueType = fitness0 + fitness1 + fitness2;
+            let fitness: f64 = fitness0 + fitness1 + fitness2;
 
             if *impurity > fitness {
                 *impurity = fitness;

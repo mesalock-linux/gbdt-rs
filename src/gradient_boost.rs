@@ -279,7 +279,7 @@ impl GBDT {
         //let mut train_data_copy = train_data.to_vec();
 
         let t1 = PreciseTime::now();
-        let mut cache = TrainingCache::get_cache(self.conf.feature_size, &train_data, 2);
+        let mut cache = TrainingCache::get_cache(self.conf.feature_size, &train_data, self.conf.training_optimization_level);
         let t2 = PreciseTime::now();
         println!("cache {}", t1.to(t2));
 

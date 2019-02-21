@@ -143,6 +143,12 @@ pub struct Config {
 
     /// Whether initial guess for test data is enabled. (default = false)
     pub initial_guess_enabled: bool,
+
+    /// set training optimization level (default = 3). 
+    /// 0: least memory, slowest speed.
+    /// 1: more memory usage, faster speed.
+    /// 2: most memory usage, fastest speed.
+    pub training_optimization_level: u8,
 }
 
 /// Converting [std::string::String](https://doc.rust-lang.org/std/string/struct.String.html) to [Loss](enum.Loss.html).
@@ -201,6 +207,7 @@ impl Config {
             feature_cost: Vec::new(),
             feature_tunning_enabled: false,
             initial_guess_enabled: false,
+            training_optimization_level: 2,
         }
     }
 
@@ -214,6 +221,19 @@ impl Config {
     /// ```
     pub fn set_feature_size(&mut self, n: usize) {
         self.feature_size = n;
+    }
+
+    pub fn set_shrinkage(&mut self, eta: ValueType) {
+        self.shrinkage = eta;
+    }
+
+    pub fn set_training_optimization_level(&mut self, level: u8) {
+        let optimization_level = if level >= 3 {
+            2
+        } else {
+            level
+        };
+        self.training_optimization_level = optimization_level;
     }
 
     /// Set max depth of the tree.
