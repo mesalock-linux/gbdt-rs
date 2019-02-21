@@ -96,11 +96,10 @@ use rand::SeedableRng;
 use std::error::Error;
 use std::fs::File;
 use std::io::prelude::*;
-extern crate serde;
-extern crate serde_derive;
-extern crate serde_json;
-extern crate time;
 use std::io::{BufRead, BufReader};
+
+use serde_derive::{Serialize, Deserialize};
+
 use time::PreciseTime;
 
 /// The gradient boosting decision tree.

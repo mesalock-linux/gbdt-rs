@@ -31,11 +31,6 @@
 #![allow(clippy::ptr_arg)]
 #![allow(clippy::type_complexity)]
 
-extern crate rand;
-extern crate serde;
-#[macro_use]
-extern crate serde_derive;
-
 pub mod binary_tree;
 pub mod config;
 pub mod decision_tree;

@@ -5,6 +5,8 @@
 //!
 //! [std::vec::Vec](https://doc.rust-lang.org/std/vec/struct.Vec.html) is used to implement the binary tree.
 
+use serde_derive::{Serialize, Deserialize};
+
 /// Node of the binary tree.
 #[derive(Debug, Default, Serialize, Deserialize)]
 pub struct BinaryTreeNode<T> {

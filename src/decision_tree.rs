@@ -107,7 +107,7 @@ use std::error::Error;
 use rand::prelude::SliceRandom;
 use rand::thread_rng;
 
-extern crate serde_json;
+use serde_derive::{Serialize, Deserialize};
 
 // For now we only support std::$t using this macro.
 // We will generalize ValueType in future.
@@ -394,7 +394,7 @@ impl SubCache {
             Vec::with_capacity(cache.feature_size);
         let mut left_ordered_residual = Vec::with_capacity(left_set.len());
         let mut right_ordered_residual = Vec::with_capacity(right_set.len());
-        for index in 0..cache.feature_size {
+        for _ in 0..cache.feature_size {
             left_ordered_features.push(Vec::with_capacity(left_set.len()));
             right_ordered_features.push(Vec::with_capacity(right_set.len()));
         }

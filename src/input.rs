@@ -30,8 +30,8 @@ use std::collections::HashMap;
 use std::fs::File;
 use std::io::{BufRead, BufReader, Seek, SeekFrom};
 
-extern crate regex;
 use regex::Regex;
+use serde_derive::{Serialize, Deserialize};
 
 /// This enum type defines the data file format.
 ///
