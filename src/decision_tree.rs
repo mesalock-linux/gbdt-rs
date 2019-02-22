@@ -557,7 +557,12 @@ fn average(data: &[usize], cache: &TrainingCache) -> ValueType {
         sum += cv.s as f64;
         weight += cv.c as f64;
     }
-    (sum / weight) as ValueType
+    if weight.abs() < 1e-10 {
+        0.0
+    } else {
+        (sum / weight) as ValueType
+    }
+    
 }
 
 /// The leaf prediction value for LogLikelyhood loss.
@@ -1254,16 +1259,30 @@ impl DecisionTree {
             let mut right: Vec<usize> = Vec::new();
             let mut unknown: Vec<usize> = Vec::new();
             for pair in data_to_split.iter() {
-                let (index, feature_value) = *pair;
+                let (item_index, feature_value) = *pair;
                 if feature_value == VALUE_TYPE_UNKNOWN {
-                    unknown.push(index);
+                    unknown.push(item_index);
                 } else if feature_value < value {
-                    left.push(index);
+                    left.push(item_index);
                 } else {
-                    right.push(index);
+                    right.push(item_index);
                 }
             }
-            (Some((left, right, unknown)), index, value)
+            let count: u8 = 0;
+            if left.is_none() {
+                count += 1;
+            }
+            if right.is_none() {
+                count += 1;
+            }
+            if unknown.is_none() {
+                count += 1;
+            }
+            if count >= 2 {
+                (None, 0, 0.0)
+            } else {
+                (Some((left, right, unknown)), index, value)
+            }
         } else {
             (None, 0, 0.0)
         }
