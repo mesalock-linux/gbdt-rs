@@ -87,11 +87,17 @@
 use crate::config::{Config, Loss};
 use crate::decision_tree::DecisionTree;
 use crate::decision_tree::{
-    DataVec, PredVec, TrainingCache, ValueType, VALUE_TYPE_MIN, VALUE_TYPE_UNKNOWN,
+    DataVec, PredVec, ValueType, VALUE_TYPE_MIN, VALUE_TYPE_UNKNOWN,
 };
+#[cfg(feature = "enable_training")]
+use crate::decision_tree::TrainingCache;
+#[cfg(feature = "enable_training")]
 use crate::fitness::*;
+#[cfg(feature = "enable_training")]
 use rand::prelude::SliceRandom;
+#[cfg(feature = "enable_training")]
 use rand::rngs::StdRng;
+#[cfg(feature = "enable_training")]
 use rand::SeedableRng;
 use std::error::Error;
 use std::fs::File;
@@ -149,6 +155,7 @@ impl GBDT {
     ///
     /// We simply check whether the length of feature vector in each data
     /// equals to the specified feature size in config.
+    #[cfg(feature = "enable_training")]
     pub fn check_valid_data(&self, dv: &DataVec) -> bool {
         dv.iter().all(|x| x.feature.len() == self.conf.feature_size)
     }
@@ -161,6 +168,7 @@ impl GBDT {
     /// If  specified length is greater than the length of data vector, it will panic.
     ///
     /// If there is invalid data that will confuse the training process, it will panic.
+    #[cfg(feature = "enable_training")]
     fn init(&mut self, len: usize, dv: &DataVec) {
         assert!(dv.len() >= len);
 
@@ -667,6 +675,7 @@ impl GBDT {
     /// This is the process to calculate the residual as the target in next iteration
     /// using squared error loss function. This is a private method that should not be
     /// called manually.
+    #[cfg(feature = "enable_training")]
     fn square_loss_process(&self, dv: &mut DataVec, samples: usize, predicted: &PredVec) {
         // let predicted: PredVec = self.predict_n(&dv, iters, samples);
         for i in 0..samples {
@@ -680,6 +689,7 @@ impl GBDT {
     /// This is the process to calculate the residual as the target in next iteration
     /// using negative binomial log-likehood loss function. This is a private method that should not be
     /// called manually.
+    #[cfg(feature = "enable_training")]
     fn log_loss_process(&self, dv: &mut DataVec, samples: usize, predicted: &PredVec) {
         // let predicted: PredVec = self.predict_n(&dv, iters, samples);
         for i in 0..samples {
@@ -690,6 +700,7 @@ impl GBDT {
     /// This is the process to calculate the residual as the target in next iteration
     /// using LAD loss function. This is a private method that should not be
     /// called manually.
+    #[cfg(feature = "enable_training")]
     fn lad_loss_process(&self, dv: &mut DataVec, samples: usize, predicted: &PredVec) {
         // let predicted: PredVec = self.predict_n(&dv, iters, samples);
         for i in 0..samples {

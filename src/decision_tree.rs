@@ -104,7 +104,9 @@ use crate::config::Loss;
 use crate::fitness::almost_equal;
 use std::error::Error;
 
+#[cfg(feature = "enable_training")]
 use rand::prelude::SliceRandom;
+#[cfg(feature = "enable_training")]
 use rand::thread_rng;
 
 use serde_derive::{Serialize, Deserialize};
@@ -123,6 +125,7 @@ macro_rules! def_value_type {
 // use continous variables for decision tree
 def_value_type!(f32);
 
+#[cfg(feature = "enable_training")]
 struct ImpurityCache {
     sum_s: f64,
     sum_ss: f64,
@@ -132,6 +135,7 @@ struct ImpurityCache {
     sample_size: usize,
 }
 
+#[cfg(feature = "enable_training")]
 impl ImpurityCache {
     fn new(sample_size: usize, train_data: &[usize]) -> Self {
         let mut bool_vec: Vec<bool> = vec![false; sample_size];
@@ -148,11 +152,15 @@ impl ImpurityCache {
         }
     }
 }
+
+#[cfg(feature = "enable_training")]
 struct CacheValue {
     s: ValueType,
     ss: ValueType,
     c: ValueType,
 }
+
+#[cfg(feature = "enable_training")]
 pub struct TrainingCache {
     ordered_features: Vec<Vec<(usize, ValueType)>>,
     ordered_residual: Vec<(usize, ValueType)>,
@@ -168,6 +176,7 @@ pub struct TrainingCache {
     cache_level: u8,
 }
 
+#[cfg(feature = "enable_training")]
 impl TrainingCache {
     pub fn get_cache(feature_size: usize, data: &DataVec, cache_level: u8) -> Self {
         let level = if cache_level >= 3 { 2 } else { cache_level };
@@ -317,13 +326,13 @@ impl TrainingCache {
         )
     }
 }
-
+#[cfg(feature = "enable_training")]
 struct SubCache {
     ordered_features: Vec<Vec<(usize, ValueType)>>,
     ordered_residual: Vec<(usize, ValueType)>,
     lazy: bool,
 }
-
+#[cfg(feature = "enable_training")]
 impl SubCache {
     fn get_cache_from_training_cache(cache: &TrainingCache, data: &[Data], loss: &Loss) -> Self {
         let level = cache.cache_level;
@@ -533,6 +542,7 @@ pub enum Loss {
 */
 
 /// Calculate the prediction for each leaf node.
+#[cfg(feature = "enable_training")]
 fn calculate_pred(
     data: &[usize],
     loss: &Loss,
@@ -548,6 +558,7 @@ fn calculate_pred(
 }
 
 /// The leaf prediction value for SquaredError loss.
+#[cfg(feature = "enable_training")]
 fn average(data: &[usize], cache: &TrainingCache) -> ValueType {
     let mut sum: f64 = 0.0;
     let mut weight: f64 = 0.0;
@@ -566,6 +577,7 @@ fn average(data: &[usize], cache: &TrainingCache) -> ValueType {
 }
 
 /// The leaf prediction value for LogLikelyhood loss.
+#[cfg(feature = "enable_training")]
 fn logit_optimal_value(data: &[usize], cache: &TrainingCache) -> ValueType {
     let mut s: f64 = 0.0;
     let mut c: f64 = 0.0;
@@ -583,6 +595,7 @@ fn logit_optimal_value(data: &[usize], cache: &TrainingCache) -> ValueType {
 }
 
 /// The leaf prediction value for LAD loss.
+#[cfg(feature = "enable_training")]
 fn lad_optimal_value(data: &[usize], cache: &TrainingCache, sub_cache: &SubCache) -> ValueType {
     let sorted_data = cache.sort_with_cache(0, true, data, sub_cache);
 
@@ -808,6 +821,7 @@ impl DecisionTree {
     /// tree.fit_n(&dv, &subset, &mut cache);
     ///
     /// ```
+    #[cfg(feature = "enable_training")]
     pub fn fit_n(&mut self, train_data: &DataVec, subset: &[usize], cache: &mut TrainingCache) {
         assert!(
             self.feature_size == cache.feature_size,
@@ -871,6 +885,7 @@ impl DecisionTree {
     /// tree.fit(&dv, &mut cache);
     ///
     /// ```
+    #[cfg(feature = "enable_training")]
     pub fn fit(&mut self, train_data: &DataVec, cache: &mut TrainingCache) {
         //let mut gain: Vec<ValueType> = vec![0.0; self.feature_size];
 
@@ -888,6 +903,7 @@ impl DecisionTree {
 
     /// Recursively build the tree nodes. It choose a feature and a value to split the node and the data.
     /// And then use the splited data to build the child nodes.
+    #[cfg(feature = "enable_training")]
     fn fit_node(
         &mut self,
         node: TreeIndex,
@@ -1201,6 +1217,7 @@ impl DecisionTree {
     /// Step 3: Find the feature that has the smallest impurity.
     ///
     /// Step 4: Use the feature and the feature value to split the data.
+    #[cfg(feature = "enable_training")]
     fn split(
         //whole_data: &[Data],
         train_data: &[usize],
@@ -1289,6 +1306,7 @@ impl DecisionTree {
     }
 
     /// Calculate the impurity.
+    #[cfg(feature = "enable_training")]
     fn get_impurity(
         //_whole_data: &[Data],
         train_data: &[usize],
