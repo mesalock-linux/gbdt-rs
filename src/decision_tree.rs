@@ -1268,14 +1268,14 @@ impl DecisionTree {
                     right.push(item_index);
                 }
             }
-            let count: u8 = 0;
-            if left.is_none() {
+            let mut count: u8 = 0;
+            if left.is_empty() {
                 count += 1;
             }
-            if right.is_none() {
+            if right.is_empty() {
                 count += 1;
             }
-            if unknown.is_none() {
+            if unknown.is_empty() {
                 count += 1;
             }
             if count >= 2 {
