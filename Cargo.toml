@@ -12,15 +12,8 @@ include = [
     "LICENSE",
     "Readme.md",
     "Cargo.toml",
-    "src/lib.rs",
-    "src/config.rs",
-    "src/binary_tree.rs",
-    "src/fitness.rs",
-    "src/decision_tree.rs",
-    "src/gradient_boost.rs",
-    "src/input.rs",
-    "examples/test-agaricus-lepiota.rs",
-    "examples/test-iris.rs",
+    "src/*.rs",
+    "examples/*.rs",
 ]
 
 [features]
