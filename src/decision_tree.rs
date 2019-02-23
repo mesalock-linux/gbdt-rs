@@ -155,9 +155,9 @@ impl ImpurityCache {
 
 #[cfg(feature = "enable_training")]
 struct CacheValue {
-    s: ValueType,
-    ss: ValueType,
-    c: ValueType,
+    s: f64,
+    ss: f64,
+    c: f64,
 }
 
 #[cfg(feature = "enable_training")]
@@ -165,6 +165,7 @@ pub struct TrainingCache {
     ordered_features: Vec<Vec<(usize, ValueType)>>,
     ordered_residual: Vec<(usize, ValueType)>,
     cache_value: Vec<CacheValue>, //s, ss, c
+    cache_target: Vec<ValueType>,
     //ss: Vec<ValueType>,
     //s: Vec<ValueType>,
     //c: Vec<ValueType>,
@@ -189,7 +190,7 @@ impl TrainingCache {
             let item = CacheValue {
                 s: 0.0,
                 ss: 0.0,
-                c: elem.weight,
+                c: elem.weight as f64,
             };
             cache_value.push(item);
         }
@@ -201,11 +202,13 @@ impl TrainingCache {
         };
         let ordered_residual: Vec<(usize, ValueType)> = Vec::new();
 
+        let cache_target: Vec<ValueType> = vec![0.0;data.len()];
+
         TrainingCache {
             ordered_features,
             ordered_residual,
             cache_value,
-            //target,
+            cache_target,
             logit_c,
             sample_size,
             feature_size,
@@ -222,14 +225,16 @@ impl TrainingCache {
     pub fn init_one_iteration(&mut self, whole_data: &[Data], loss: &Loss) {
         for (index, data) in whole_data.iter().enumerate() {
             let target = data.target;
-            let weight = data.weight;
+            self.cache_target[index] = target;
+            let weight = data.weight as f64;
+            let target = target as f64;
             let s = target * weight;
             self.cache_value[index].s = s;
             self.cache_value[index].ss = target * s;
             if let Loss::LogLikelyhood = loss {
                 let y = target.abs();
                 let c = y * (2.0 - y) * weight;
-                self.logit_c[index] = c;
+                self.logit_c[index] = c as f32;
             }
         }
         if let Loss::LAD = loss {
@@ -292,6 +297,9 @@ impl TrainingCache {
                 &sub_cache.ordered_features[feature_index]
             }
         };
+        if whole_data_sorted_index.len() == to_sort_size {
+            return whole_data_sorted_index.to_vec();
+        }
         let mut ret = Vec::with_capacity(to_sort_size);
         for item in whole_data_sorted_index.iter() {
             let (index, value) = *item;
@@ -622,14 +630,14 @@ fn lad_optimal_value(data: &[usize], cache: &TrainingCache, sub_cache: &SubCache
 
 /// Return whether the data vector have same target values.
 #[allow(unused)]
-fn same(dv: &[Data], iv: &[usize]) -> bool {
+fn same(iv: &[usize], cache: &TrainingCache) -> bool {
     if iv.is_empty() {
         return false;
     }
 
-    let t: ValueType = dv[iv[0]].target;
+    let t: ValueType = cache.cache_target[iv[0]];
     for i in iv.iter().skip(1) {
-        if !(almost_equal(t, dv[*i].target)) {
+        if !(almost_equal(t, cache.cache_target[*i])) {
             return false;
         }
     }
@@ -922,7 +930,7 @@ impl DecisionTree {
             // calculate to support unknown features
             node_ref.value.pred = calculate_pred(train_data, &self.loss, cache, &sub_cache);
             if (depth >= self.max_depth)
-            //    || same(train_data)
+                || same(train_data, cache)
                 || (train_data.len() <= self.min_leaf_size)
             {
                 node_ref.value.is_leaf = true;
@@ -1324,7 +1332,7 @@ impl DecisionTree {
             feature_index,
             false,
             &impurity_cache.bool_vec,
-            impurity_cache.sample_size,
+            train_data.len(),
             sub_cache,
         );
 
@@ -1362,9 +1370,9 @@ impl DecisionTree {
             impurity_cache.sum_c = 0.0;
             for index in train_data.iter() {
                 let cv: &CacheValue = &cache.cache_value[*index];
-                impurity_cache.sum_s += cv.s as f64;
-                impurity_cache.sum_ss += cv.ss as f64;
-                impurity_cache.sum_c += cv.c as f64;
+                impurity_cache.sum_s += cv.s;
+                impurity_cache.sum_ss += cv.ss;
+                impurity_cache.sum_c += cv.c;
             }
         }
         s = impurity_cache.sum_s - s;
@@ -1384,9 +1392,9 @@ impl DecisionTree {
             let (index, feature_value) = sorted_data[i];
             let (_next_index, next_value) = sorted_data[i + 1];
             let cv: &CacheValue = &cache.cache_value[index];
-            s = cv.s as f64;
-            ss = cv.ss as f64;
-            c = cv.c as f64;
+            s = cv.s;
+            ss = cv.ss;
+            c = cv.c;
 
             ls += s;
             lss += ss;
