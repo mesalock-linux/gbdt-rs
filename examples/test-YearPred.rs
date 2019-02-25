@@ -14,8 +14,8 @@ fn main() {
     cfg.set_loss("SquaredError");
 
     // To get the test data, please clone the project from github
-    let train_file = "/Users/icst/workspace/xgboost/dataset/YearPred/train.csv";
-    let test_file = "/Users/icst/workspace/xgboost/dataset/YearPred/test.csv";
+    let train_file = "dataset/YearPred/train.csv";
+    let test_file = "dataset/YearPred/test.csv";
 
     let mut input_format = InputFormat::csv_format();
     let mut train_dv: DataVec = load(train_file, input_format);
