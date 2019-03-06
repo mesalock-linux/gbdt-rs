@@ -721,7 +721,7 @@ impl GBDT {
     }
 
     pub fn load_model(filename: &str) -> Result<Self, Box<Error>> {
-        let mut file = File::open(filename).unwrap();
+        let mut file = File::open(filename)?;
         let mut contents = String::new();
         file.read_to_string(&mut contents)?;
         let ret: Self = serde_json::from_str(&contents)?;
