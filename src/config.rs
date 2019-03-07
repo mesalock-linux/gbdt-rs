@@ -62,8 +62,8 @@
 //! // initial guess enabled = false
 //! ```
 
-use serde_derive::{Serialize, Deserialize};
 use crate::decision_tree::ValueType;
+use serde_derive::{Deserialize, Serialize};
 
 /// This enum defines the loss type.
 ///
@@ -145,7 +145,7 @@ pub struct Config {
     /// Whether initial guess for test data is enabled. (default = false)
     pub initial_guess_enabled: bool,
 
-    /// set training optimization level (default = 3). 
+    /// set training optimization level (default = 3).
     /// 0: least memory, slowest speed.
     /// 1: more memory usage, faster speed.
     /// 2: most memory usage, fastest speed.
@@ -229,11 +229,7 @@ impl Config {
     }
 
     pub fn set_training_optimization_level(&mut self, level: u8) {
-        let optimization_level = if level >= 3 {
-            2
-        } else {
-            level
-        };
+        let optimization_level = if level >= 3 { 2 } else { level };
         self.training_optimization_level = optimization_level;
     }
 

@@ -1,14 +1,9 @@
 extern crate gbdt;
 
-use gbdt::config::Config;
-use gbdt::decision_tree::{Data, DataVec, PredVec, ValueType, VALUE_TYPE_UNKNOWN};
-use gbdt::fitness::almost_equal_thrs;
+use gbdt::decision_tree::PredVec;
 use gbdt::gradient_boost::GBDT;
 use gbdt::input;
 
-use std::fs::File;
-use std::io::stdin;
-use std::io::{BufRead, BufReader};
 use time::PreciseTime;
 
 fn main() {
@@ -18,7 +13,7 @@ fn main() {
     let mut input_format = input::InputFormat::txt_format();
     input_format.set_feature_size(126);
     input_format.set_delimeter(' ');
-    let test_data = input::load(test_file, input_format);
+    let test_data = input::load(test_file, input_format).unwrap();
 
     println!("start predict");
     let t1 = PreciseTime::now();

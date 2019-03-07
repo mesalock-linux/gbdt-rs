@@ -1,11 +1,9 @@
 extern crate gbdt;
 
-use gbdt::decision_tree::{Data, DataVec, ValueType, VALUE_TYPE_UNKNOWN};
+use gbdt::decision_tree::DataVec;
 use gbdt::gradient_boost::GBDT;
 use gbdt::input::{load, InputFormat};
 
-use std::fs::File;
-use std::io::{BufRead, BufReader};
 use time::PreciseTime;
 
 fn main() {
@@ -14,7 +12,7 @@ fn main() {
     let test_file = "data/xgb_multi_softmax/dermatology.data.test";
     let mut fmt = InputFormat::csv_format();
     fmt.set_label_index(34);
-    let mut test_data: DataVec = load(test_file, fmt);
+    let test_data: DataVec = load(test_file, fmt).unwrap();
 
     println!("start predict");
     let t1 = PreciseTime::now();

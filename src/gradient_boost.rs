@@ -86,25 +86,21 @@
 //! ```
 use crate::config::{Config, Loss};
 use crate::decision_tree::DecisionTree;
-use crate::decision_tree::{
-    DataVec, PredVec, ValueType, VALUE_TYPE_MIN, VALUE_TYPE_UNKNOWN,
-};
 #[cfg(feature = "enable_training")]
 use crate::decision_tree::TrainingCache;
+use crate::decision_tree::{DataVec, PredVec, ValueType, VALUE_TYPE_MIN, VALUE_TYPE_UNKNOWN};
 #[cfg(feature = "enable_training")]
 use crate::fitness::*;
 #[cfg(feature = "enable_training")]
 use rand::prelude::SliceRandom;
 #[cfg(feature = "enable_training")]
-use rand::rngs::StdRng;
-#[cfg(feature = "enable_training")]
-use rand::SeedableRng;
+use rand::thread_rng;
 use std::error::Error;
 use std::fs::File;
 use std::io::prelude::*;
 use std::io::{BufRead, BufReader};
 
-use serde_derive::{Serialize, Deserialize};
+use serde_derive::{Deserialize, Serialize};
 
 #[cfg(feature = "profiling")]
 use time::PreciseTime;
@@ -275,21 +271,16 @@ impl GBDT {
 
         self.init(train_data.len(), &train_data);
 
-        //let t1 = PreciseTime::now();
-        //let mut train_data_copy = train_data.to_vec();
-        //let t2 = PreciseTime::now();
-        //println!("copy {}", t1.to(t2));
-
-        //let mut rng = thread_rng();
-        let seed = rand_seed();
-        let mut rng: StdRng = SeedableRng::from_seed(seed);
-        //let mut rng_clone: StdRng = SeedableRng::from_seed(seed.clone());
+        let mut rng = thread_rng();
         let mut predicted_cache: PredVec = self.predict_n(train_data, 0, 0, train_data.len());
-        //let mut train_data_copy = train_data.to_vec();
 
         #[cfg(feature = "profiling")]
         let t1 = PreciseTime::now();
-        let mut cache = TrainingCache::get_cache(self.conf.feature_size, &train_data, self.conf.training_optimization_level);
+        let mut cache = TrainingCache::get_cache(
+            self.conf.feature_size,
+            &train_data,
+            self.conf.training_optimization_level,
+        );
 
         #[cfg(feature = "profiling")]
         let t2 = PreciseTime::now();
@@ -329,7 +320,6 @@ impl GBDT {
             for index in subset.iter() {
                 predicted_cache[*index] += train_preds[*index] * self.conf.shrinkage;
             }
-            //self.trees[i].fit_n(&train_data_copy, nr_samples);
             let predicted_tmp = self.trees[i].predict_n(train_data, &remain);
             for index in remain.iter() {
                 predicted_cache[*index] += predicted_tmp[*index] * self.conf.shrinkage;
@@ -346,14 +336,6 @@ impl GBDT {
             );
         }
     }
-
-    /*
-    #[inline(always)]
-    pub fn predict_nth(&self, test_data: &DataVec, iter: usize, n: usize) -> PredVec {
-        assert!(test_data.len() >= n);
-        assert!(iter < self.trees.len());
-        self.trees[iter].predict_n(&test_data, n)
-    }*/
 
     /// Predicting the first `n` data in data vector with the first `iters` trees.
     ///
@@ -559,6 +541,20 @@ impl GBDT {
         }
     }
 
+    /// Predict multi class data and return the probabilities for each class.
+    ///
+    /// # Example
+    ///
+    /// ```rust
+    /// use gbdt::gradient_boost::GBDT;
+    /// let gbdt =
+    ///     GBDT::from_xgoost_dump("data/xgb_multi_softmax/gbdt.model", "multi:softmax").unwrap();
+    /// let test_file = "data/xgb_multi_softmax/dermatology.data.test";
+    /// let mut fmt = InputFormat::csv_format();
+    /// fmt.set_label_index(34);
+    /// let test_data: DataVec = load(test_file, fmt).unwrap();
+    /// let (labels, probs) = gbdt.predict_multiclass(&test_data, 6);
+    /// ```
     pub fn predict_multiclass(
         &self,
         test_data: &DataVec,
@@ -666,6 +662,7 @@ impl GBDT {
     ///
     /// // print the tree.
     /// gbdt.print_trees();
+    /// ```
     pub fn print_trees(&self) {
         for i in 0..self.trees.len() {
             self.trees[i].print();
@@ -677,7 +674,6 @@ impl GBDT {
     /// called manually.
     #[cfg(feature = "enable_training")]
     fn square_loss_process(&self, dv: &mut DataVec, samples: usize, predicted: &PredVec) {
-        // let predicted: PredVec = self.predict_n(&dv, iters, samples);
         for i in 0..samples {
             dv[i].target = dv[i].label - predicted[i];
         }
@@ -691,7 +687,6 @@ impl GBDT {
     /// called manually.
     #[cfg(feature = "enable_training")]
     fn log_loss_process(&self, dv: &mut DataVec, samples: usize, predicted: &PredVec) {
-        // let predicted: PredVec = self.predict_n(&dv, iters, samples);
         for i in 0..samples {
             dv[i].target = logit_loss_gradient(dv[i].label, predicted[i]);
         }
@@ -702,7 +697,6 @@ impl GBDT {
     /// called manually.
     #[cfg(feature = "enable_training")]
     fn lad_loss_process(&self, dv: &mut DataVec, samples: usize, predicted: &PredVec) {
-        // let predicted: PredVec = self.predict_n(&dv, iters, samples);
         for i in 0..samples {
             dv[i].residual = dv[i].label - predicted[i];
             dv[i].target = if dv[i].residual >= 0.0 { 1.0 } else { -1.0 };
@@ -712,6 +706,71 @@ impl GBDT {
         }
     }
 
+    /// Save gbdt-rs model to file.
+    ///
+    /// # Example
+    /// ```rust
+    /// use gbdt::config::Config;
+    /// use gbdt::gradient_boost::GBDT;
+    /// use gbdt::decision_tree::{Data, DataVec, PredVec, ValueType};
+    ///
+    /// // set config for algorithm
+    /// let mut cfg = Config::new();
+    /// cfg.set_feature_size(3);
+    /// cfg.set_max_depth(2);
+    /// cfg.set_min_leaf_size(1);
+    /// cfg.set_loss("SquaredError");
+    /// cfg.set_iterations(2);
+    ///
+    /// // initialize GBDT algorithm
+    /// let mut gbdt = GBDT::new(&cfg);
+    ///
+    /// // setup training data
+    /// let data1 = Data {
+    ///     feature: vec![1.0, 2.0, 3.0],
+    ///     target: 2.0,
+    ///     weight: 1.0,
+    ///     label: 1.0,
+    ///     residual: 1.0,
+    ///     initial_guess: 1.0,
+    /// };
+    /// let data2 = Data {
+    ///     feature: vec![1.1, 2.1, 3.1],
+    ///     target: 1.0,
+    ///     weight: 1.0,
+    ///     label: 1.0,
+    ///     residual: 1.0,
+    ///     initial_guess: 1.0,
+    /// };
+    /// let data3 = Data {
+    ///     feature: vec![2.0, 2.0, 1.0],
+    ///     target: 0.5,
+    ///     weight: 1.0,
+    ///     label: 2.0,
+    ///     residual: 2.0,
+    ///     initial_guess: 2.0,
+    /// };
+    /// let data4 = Data {
+    ///     feature: vec![2.0, 2.3, 1.2],
+    ///     target: 3.0,
+    ///     weight: 1.0,
+    ///     label: 0.0,
+    ///     residual: 0.0,
+    ///     initial_guess: 1.0,
+    /// };
+    ///
+    /// let mut dv: DataVec = Vec::new();
+    /// dv.push(data1.clone());
+    /// dv.push(data2.clone());
+    /// dv.push(data3.clone());
+    /// dv.push(data4.clone());
+    ///
+    /// // train the decision trees.
+    /// gbdt.fit(&mut dv);
+    ///
+    /// // Save model.
+    /// gbdt.save_model("gbdt.model");
+    /// ```
     pub fn save_model(&self, filename: &str) -> Result<(), Box<Error>> {
         let mut file = File::create(filename)?;
         let serialized = serde_json::to_string(self)?;
@@ -720,6 +779,17 @@ impl GBDT {
         Ok(())
     }
 
+    /// Load GBDT model from saved gbdt-rs model.
+    ///
+    /// # Example
+    ///
+    /// ```rust
+    /// use gbdt::gradient_boost::GBDT;
+    /// let gbdt = GBDT::load_model("./gbdt-rs.model").unwrap();
+    /// ```
+    ///
+    /// # Error
+    /// Error when get exception during model file parsing or deserialize.
     pub fn load_model(filename: &str) -> Result<Self, Box<Error>> {
         let mut file = File::open(filename)?;
         let mut contents = String::new();
@@ -728,6 +798,18 @@ impl GBDT {
         Ok(ret)
     }
 
+    /// Load GBDT model from xgboost saved model.
+    ///
+    /// # Example
+    ///
+    /// ```rust
+    /// use gbdt::gradient_boost::GBDT;
+    /// let gbdt =
+    ///     GBDT::from_xgoost_dump("data/xgb_binary_logistic/gbdt.model", "binary:logistic").unwrap();
+    /// ```
+    ///
+    /// # Error
+    /// Error when get exception during model file parsing.
     pub fn from_xgoost_dump(model_file: &str, objective: &str) -> Result<Self, Box<Error>> {
         let tree_file = File::open(&model_file)?;
         let reader = BufReader::new(tree_file);

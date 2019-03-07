@@ -27,11 +27,12 @@
 use crate::decision_tree::{Data, DataVec, ValueType, VALUE_TYPE_UNKNOWN};
 
 use std::collections::HashMap;
+use std::error::Error;
 use std::fs::File;
 use std::io::{BufRead, BufReader, Seek, SeekFrom};
 
 use regex::Regex;
-use serde_derive::{Serialize, Deserialize};
+use serde_derive::{Deserialize, Serialize};
 
 /// This enum type defines the data file format.
 ///
@@ -60,6 +61,10 @@ pub struct InputFormat {
     /// Indicates which colume is the data label. (default = 0)
     pub label_idx: usize,
 
+    /// Set if ftype is set to [FileFormat](enum.FileFormat.CSV).
+    /// Indicates if we allow unknown value in data file or not.
+    pub enable_unknown_value: bool,
+
     /// Delimeter of the data file.
     pub delimeter: char,
 
@@ -81,6 +86,7 @@ impl InputFormat {
             ftype: FileFormat::CSV,
             header: false,
             label_idx: 0,
+            enable_unknown_value: false,
             delimeter: ',',
             feature_size: 0,
         }
@@ -98,6 +104,7 @@ impl InputFormat {
             ftype: FileFormat::TXT,
             header: false,
             label_idx: 0,
+            enable_unknown_value: false,
             delimeter: '\t',
             feature_size: 0,
         }
@@ -266,8 +273,11 @@ pub fn infer(file_name: &str) -> InputFormat {
 /// fmt.set_label_index(4);
 /// let train_dv = load_csv(&mut file, fmt);
 /// ```
-pub fn load_csv(file: &mut File, input_format: InputFormat) -> DataVec {
-    file.seek(SeekFrom::Start(0)).unwrap();
+///
+/// # Error
+/// Raise error if file cannot be read correctly.
+pub fn load_csv(file: &mut File, input_format: InputFormat) -> Result<DataVec, Box<Error>> {
+    file.seek(SeekFrom::Start(0))?;
     let mut dv = Vec::new();
 
     let mut reader = BufReader::new(file);
@@ -277,12 +287,18 @@ pub fn load_csv(file: &mut File, input_format: InputFormat) -> DataVec {
     }
     let mut v: Vec<ValueType>;
     for line in reader.lines() {
-        let content = line.unwrap();
-
-        v = content
-            .split(input_format.delimeter)
-            .map(|x| x.parse::<ValueType>().unwrap())
-            .collect();
+        let content = line?;
+        if input_format.enable_unknown_value {
+            v = content
+                .split(input_format.delimeter)
+                .map(|x| x.parse::<ValueType>().unwrap_or(VALUE_TYPE_UNKNOWN))
+                .collect();
+        } else {
+            v = content
+                .split(input_format.delimeter)
+                .map(|x| x.parse::<ValueType>().unwrap())
+                .collect();
+        }
         dv.push(Data {
             label: v.swap_remove(input_format.label_idx),
             feature: v,
@@ -292,7 +308,7 @@ pub fn load_csv(file: &mut File, input_format: InputFormat) -> DataVec {
             initial_guess: 0.0,
         })
     }
-    dv
+    Ok(dv)
 }
 
 /// Load txt file.
@@ -308,15 +324,17 @@ pub fn load_csv(file: &mut File, input_format: InputFormat) -> DataVec {
 /// fmt.set_delimeter(' ');
 /// let test_dv = load_txt(&mut file, fmt);
 /// ```
-pub fn load_txt(file: &mut File, input_format: InputFormat) -> DataVec {
-    file.seek(SeekFrom::Start(0)).unwrap();
+///
+/// # Error
+/// Raise error if file cannot be read correctly.
+pub fn load_txt(file: &mut File, input_format: InputFormat) -> Result<DataVec, Box<Error>> {
+    file.seek(SeekFrom::Start(0))?;
     let mut dv = Vec::new();
 
     let reader = BufReader::new(file);
     let mut label: ValueType = 0.0;
     let mut idx: usize = 0;
     let mut val: ValueType = 0.0;
-    //let mut v: Vec<ValueType> = Vec::with_capacity(input_format.feature_size);
     for line in reader.lines() {
         let mut v: Vec<ValueType> = vec![VALUE_TYPE_UNKNOWN; input_format.feature_size];
         for token in line.unwrap().split(input_format.delimeter) {
@@ -358,7 +376,7 @@ pub fn load_txt(file: &mut File, input_format: InputFormat) -> DataVec {
         });
     }
 
-    dv
+    Ok(dv)
 }
 
 /// Load file with certain input format.
@@ -383,8 +401,11 @@ pub fn load_txt(file: &mut File, input_format: InputFormat) -> DataVec {
 /// fmt.set_feature_size(34);
 /// let test_data = input::load(test_file, fmt);
 /// ```
-pub fn load(file_name: &str, input_format: InputFormat) -> DataVec {
-    let mut file = File::open(file_name.to_string()).unwrap();
+///
+/// # Error
+/// Raise error if file cannot be open correctly.
+pub fn load(file_name: &str, input_format: InputFormat) -> Result<DataVec, Box<Error>> {
+    let mut file = File::open(file_name.to_string())?;
     match input_format.ftype {
         FileFormat::CSV => load_csv(&mut file, input_format),
         FileFormat::TXT => load_txt(&mut file, input_format),

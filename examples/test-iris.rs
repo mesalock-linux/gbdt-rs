@@ -19,8 +19,8 @@ fn main() {
 
     let mut input_format = infer(train_file);
     input_format.set_label_index(4);
-    let mut train_dv: DataVec = load(train_file, input_format);
-    let test_dv: DataVec = load(test_file, input_format);
+    let mut train_dv: DataVec = load(train_file, input_format).unwrap();
+    let test_dv: DataVec = load(test_file, input_format).unwrap();
 
     let mut gbdt = GBDT::new(&cfg);
     gbdt.fit(&mut train_dv);

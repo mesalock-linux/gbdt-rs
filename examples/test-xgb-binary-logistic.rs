@@ -13,7 +13,7 @@ fn main() {
     let mut input_format = input::InputFormat::txt_format();
     input_format.set_feature_size(126);
     input_format.set_delimeter(' ');
-    let test_data = input::load(test_file, input_format);
+    let test_data = input::load(test_file, input_format).unwrap();
 
     println!("start predict");
     let t1 = PreciseTime::now();

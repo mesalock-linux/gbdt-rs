@@ -109,7 +109,7 @@ use rand::prelude::SliceRandom;
 #[cfg(feature = "enable_training")]
 use rand::thread_rng;
 
-use serde_derive::{Serialize, Deserialize};
+use serde_derive::{Deserialize, Serialize};
 
 // For now we only support std::$t using this macro.
 // We will generalize ValueType in future.
@@ -202,7 +202,7 @@ impl TrainingCache {
         };
         let ordered_residual: Vec<(usize, ValueType)> = Vec::new();
 
-        let cache_target: Vec<ValueType> = vec![0.0;data.len()];
+        let cache_target: Vec<ValueType> = vec![0.0; data.len()];
 
         TrainingCache {
             ordered_features,
@@ -581,7 +581,6 @@ fn average(data: &[usize], cache: &TrainingCache) -> ValueType {
     } else {
         (sum / weight) as ValueType
     }
-    
 }
 
 /// The leaf prediction value for LogLikelyhood loss.
