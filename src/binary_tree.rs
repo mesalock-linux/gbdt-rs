@@ -13,9 +13,7 @@ pub struct BinaryTreeNode<T> {
     /// Store information in a node.
     pub value: T,
 
-    /// the index of the std::vec::Vec that implements the tree.
-    ///
-    /// [std::vec::Vec](https://doc.rust-lang.org/std/vec/struct.Vec.html)
+    /// The index of the current node.
     index: usize,
 
     /// The index of the left child node. 0 means no left child.
@@ -26,13 +24,14 @@ pub struct BinaryTreeNode<T> {
 }
 
 impl<T> BinaryTreeNode<T> {
-    /// New a node with given value
+    /// Generate a node with given value
     ///
     /// # Example
     /// ```
     /// use gbdt::binary_tree::BinaryTreeNode;
-    /// let root = BinaryTreeNode::new(10.0);
+    /// let root = BinaryTreeNode::new(10);
     /// println!("{}", root.value);
+    /// assert_eq!(10, root.value);
     /// ```
     pub fn new(value: T) -> Self {
         BinaryTreeNode {
@@ -76,7 +75,7 @@ impl<T> BinaryTree<T> {
     /// let mut tree: BinaryTree<f32> = BinaryTree::new();
     /// let root = BinaryTreeNode::new(10.0);
     /// let root_index = tree.add_root(root);
-    /// assert_eq!(root_index, tree.get_root_index());
+    /// assert_eq!(0, root_index);
     /// println!("{}", root_index)
     /// ```
     pub fn add_root(&mut self, root: BinaryTreeNode<T>) -> TreeIndex {
@@ -91,9 +90,7 @@ impl<T> BinaryTree<T> {
     /// use gbdt::binary_tree::{BinaryTree, BinaryTreeNode};
     /// let mut tree: BinaryTree<f32> = BinaryTree::new();
     /// let root = BinaryTreeNode::new(10.0);
-    /// let root_index = tree.add_root(root);
-    /// assert_eq!(root_index, tree.get_root_index());
-    /// println!("{}", root_index)
+    /// assert_eq!(0, tree.get_root_index());
     /// ```
     pub fn get_root_index(&self) -> TreeIndex {
         0
@@ -112,6 +109,7 @@ impl<T> BinaryTree<T> {
     /// let root = tree.get_node(root_index).expect("Didn't find root node");
     /// let left_node = tree.get_left_child(root).expect("Didn't find left child");
     /// println!("{}", left_node.value);
+    /// assert!((left_node.value - 5.0) < 0.001)
     /// ```
     pub fn get_left_child(&self, node: &BinaryTreeNode<T>) -> Option<&BinaryTreeNode<T>> {
         if node.left == 0 {
@@ -134,6 +132,7 @@ impl<T> BinaryTree<T> {
     /// let root = tree.get_node(root_index).expect("Didn't find root node");
     /// let right_node = tree.get_right_child(root).expect("Didn't find right child");
     /// println!("{}", right_node.value);
+    ///assert!((right_node.value - 5.0) < 0.001)
     /// ```
     pub fn get_right_child(&self, node: &BinaryTreeNode<T>) -> Option<&BinaryTreeNode<T>> {
         if node.right == 0 {
@@ -189,6 +188,7 @@ impl<T> BinaryTree<T> {
     /// let root = tree.get_node(root_index).expect("Didn't find root node");
     /// let left_node = tree.get_left_child(root).expect("Didn't find left child");
     /// println!("{}", left_node.value);
+    /// assert!((left_node.value - 5.0) < 0.001)
     /// ```
     pub fn add_left_node(&mut self, parent: TreeIndex, child: BinaryTreeNode<T>) -> TreeIndex {
         self.add_node(parent, true, child)
@@ -207,6 +207,7 @@ impl<T> BinaryTree<T> {
     /// let root = tree.get_node(root_index).expect("Didn't find root node");
     /// let right_node = tree.get_right_child(root).expect("Didn't find right child");
     /// println!("{}", right_node.value);
+    /// assert!((right_node.value - 5.0) < 0.001)
     /// ```
     pub fn add_right_node(&mut self, parent: TreeIndex, child: BinaryTreeNode<T>) -> TreeIndex {
         self.add_node(parent, false, child)
@@ -301,6 +302,22 @@ impl<T> BinaryTree<T> {
         }
     }
 
+    /// Get the amount of the nodes in this tree.
+    /// # Example
+    /// ```
+    /// use gbdt::binary_tree::{BinaryTree, BinaryTreeNode};
+    /// let mut tree: BinaryTree<f32> = BinaryTree::new();
+    /// let root = BinaryTreeNode::new(10.0);
+    ///
+    /// let root_index = tree.add_root(root);
+    ///
+    /// let n1 = BinaryTreeNode::new(5.0);
+    /// let n2 = BinaryTreeNode::new(6.0);
+    ///
+    /// let n1_index = tree.add_left_node(root_index, n1);
+    /// let n2_index = tree.add_right_node(root_index, n2);
+    ///
+    /// assert_eq!(3, tree.len());
     pub fn len(&self) -> usize {
         self.tree.len()
     }

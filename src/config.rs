@@ -97,6 +97,8 @@ pub enum Loss {
     MultiSoftprob,
 
     MultiSoftmax,
+
+    RankPairwise,
 }
 
 impl Default for Loss {
@@ -164,6 +166,7 @@ pub fn string2loss(s: &str) -> Loss {
         "binary:logitraw" => Loss::BinaryLogitraw,
         "multi:softprob" => Loss::MultiSoftprob,
         "multi:softmax" => Loss::MultiSoftmax,
+        "rank:pairwise" => Loss::RankPairwise,
         _ => {
             println!("unsupported loss, set to default(SquaredError)");
             Loss::SquaredError
@@ -183,6 +186,7 @@ pub fn loss2string(l: &Loss) -> String {
         Loss::BinaryLogitraw => String::from("binary:logitraw"),
         Loss::MultiSoftprob => String::from("multi:softprob"),
         Loss::MultiSoftmax => String::from("multi:softmax"),
+        Loss::RankPairwise => String::from("rank:pairwise"),
     }
 }
 

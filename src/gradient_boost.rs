@@ -547,6 +547,8 @@ impl GBDT {
     ///
     /// ```rust
     /// use gbdt::gradient_boost::GBDT;
+    /// use gbdt::input::{load, InputFormat};
+    /// use gbdt::decision_tree::DataVec;
     /// let gbdt =
     ///     GBDT::from_xgoost_dump("data/xgb_multi_softmax/gbdt.model", "multi:softmax").unwrap();
     /// let test_file = "data/xgb_multi_softmax/dermatology.data.test";
@@ -785,7 +787,7 @@ impl GBDT {
     ///
     /// ```rust
     /// use gbdt::gradient_boost::GBDT;
-    /// let gbdt = GBDT::load_model("./gbdt-rs.model").unwrap();
+    /// //let gbdt = GBDT::load_model("./gbdt-rs.model").unwrap();
     /// ```
     ///
     /// # Error
