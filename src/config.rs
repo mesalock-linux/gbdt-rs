@@ -1,4 +1,4 @@
-//! This module is implements the config for gradient boosting.
+//! This module implements the config for gradient boosting.
 //!
 //! Following hyperparameters are supported:
 //!
@@ -8,7 +8,7 @@
 //! 2. max_depth: the max depth of a single decision tree. The root node is considered
 //!    to be in the layer 0. (default = 2)
 //!
-//! 3. iterations: the iterations to train, which is also the number of trees in the
+//! 3. iterations: the iterations for training, which is also the number of trees in the
 //!    gradient boosting algorithm. (default = 2)
 //!
 //! 4. shrinkage: the learning rate parameter of the gradient boosting algorithm.
@@ -24,18 +24,13 @@
 //! 7. min_leaf_size: the minimum number of samples required to be at a leaf node during training.
 //!    (default = 1)
 //!
-//! 8. loss: the loss function type. SquaredError, LogLikelyhood and LAD are supported. See
-//!    [Loss](enum.Loss.html). (default = SquareError)
+//! 8. loss: the loss function type. SquaredError, LogLikelyhood and LAD are supported for training and inference.
+//!    RegLinear, RegLogistic, BinaryLogistic, BinaryLogitraw, MultiSoftprob, MultiSoftmax, RankPairwise are supported for inference with xgboost's model.
+//!    See [Loss](enum.Loss.html). (default = SquareError)
 //!
 //! 9. debug: whether the debug information should be outputed. (default = false)
 //!
-//! 10. feature_cost: the parameter to tune the model. Used if feature_tunning_enabled is set true.
-//!     (default = Vec::new())
-//!
-//! 11. feature_tunning_enabled: whether feature tuning is enabled. When set true,
-//!     `feature_costs' is used to tune the model. (default = false)
-//!
-//! 12. initial_guess_enabled: whether initial guess for test data is enabled. (default = false)
+//! 10. initial_guess_enabled: whether initial guess for test data is enabled. (default = false)
 //!
 //!
 //! # Example
@@ -58,7 +53,6 @@
 //! // data sample ratio = 1
 //! // debug enabled = false
 //! // loss type = LAD
-//! // feature tuning enabled = false
 //! // initial guess enabled = false
 //! ```
 
@@ -67,37 +61,52 @@ use serde_derive::{Deserialize, Serialize};
 
 /// This enum defines the loss type.
 ///
-/// We support three loss types:
+/// We support three loss types for training and inference:
 ///
-/// 1. SquaredError
-/// 2. LogLikelyhood
-/// 3. LAD
+/// 1. SquaredError for regression. The label and the predicted value will be a float number.
+/// 2. LogLikelyhood for binary classification. The label value should be -1 or 1. The predicted value should be a float number between 0 and 1, which is the possibility of label 1.
+/// 3. LAD for regression. The label and the predicted value will be a float number.
 ///
-/// Note that `LogLikelyhood` only support two class classification.
+/// Note that `LogLikelyhood` only support binary classification.
+///
+/// We also suppot seven objectives from Xgboost for inference. See [xgboost](https://xgboost.readthedocs.io/en/latest/parameter.html)
+/// 1. RegLinear ("reg:linear" in xgboost): linear regression.
+/// 2. RegLogistic ("reg:logistic" in xgboost): logistic regression.
+/// 3. BinaryLogistic ("binary:logistic" in xgboost): logistic regression for binary classification, output probability
+/// 4. BinaryLogitraw ("binary:logitraw" in xgboost): logistic regression for binary classification, output score before logistic transformation
+/// 5. MultiSoftprob ("multi:softprob" in xgboost):  multiclass classification. Call [gbdt::predict_multiclass](../gradient_boost/struct.GBDT.html#method.predict_multiclass) to get the predictions.
+/// 6. MultiSoftmax ("multi:softmax" in xgboost): multiclass classification. Call [gbdt::predict_multiclass](../gradient_boost/struct.GBDT.html#method.predict_multiclass) to get the predictions.
+/// 7. RankPairwise ("rank:pairwise" in xgboost): pairwise rank. See [xgboost's demo](https://github.com/dmlc/xgboost/tree/master/demo/rank)
 #[derive(Debug, PartialEq, Clone, Serialize, Deserialize)]
 pub enum Loss {
-    /// Squared Error loss type.
+    /// SquaredError ("SquaredError") for regression. The label and the predicted value will be a float number.
     SquaredError,
 
-    /// Negative binomial log-likehood loss type.
+    /// LogLikelyhood ("LogLikelyhood") for binary classification. The label value should be -1 or 1. The predicted value should be a float number between 0 and 1, which is the possibility of label 1.
     LogLikelyhood,
 
-    /// LAD loss type
+    /// LAD ("LAD") for regression. The label and the predicted value will be a float number.
     LAD,
 
-    /// XGBOOST
+    /// RegLinear ("reg:linear") from Xgboost: linear regression.
     RegLinear,
 
+    /// RegLogistic ("reg:logistic") from Xgboost: logistic regression.
     RegLogistic,
 
+    /// BinaryLogistic ("binary:logistic") from Xgboost: logistic regression for binary classification, output probability
     BinaryLogistic,
 
+    /// BinaryLogitraw ("binary:logitraw") from Xgboost: logistic regression for binary classification, output score before logistic transformation
     BinaryLogitraw,
 
+    /// MultiSoftprob ("multi:softprob") from Xgboost:  multiclass classification. Call [gbdt::predict_multiclass](../gradient_boost/struct.GBDT.html#method.predict_multiclass) to get the predictions.
     MultiSoftprob,
 
+    /// MultiSoftmax ("multi:softmax") from Xgboost: multiclass classification. Call [gbdt::predict_multiclass](../gradient_boost/struct.GBDT.html#method.predict_multiclass) to get the predictions.
     MultiSoftmax,
 
+    /// RankPairwise ("rank:pairwise") from Xgboost: pairwise rank. See [xgboost's demo](https://github.com/dmlc/xgboost/tree/master/demo/rank)
     RankPairwise,
 }
 
@@ -108,53 +117,14 @@ impl Default for Loss {
     }
 }
 
-/// The config for the gradient boosting algorithm.
-#[derive(Default, Clone, Serialize, Deserialize)]
-pub struct Config {
-    /// The size of features. Training data and test data should have the same feature size. (default = 1)
-    pub feature_size: usize,
-
-    /// The max depth of a single decision tree. The root node is considered to be in the layer 0. (default = 2)
-    pub max_depth: u32,
-
-    /// The iterations to train, which is also the number of trees in thegradient boosting algorithm.
-    pub iterations: usize,
-
-    /// The learning rate parameter of the gradient boosting algorithm.(default = 1.0)
-    pub shrinkage: ValueType,
-
-    /// Portion of features to be splited. (default = 1.0)
-    pub feature_sample_ratio: f64,
-
-    /// Portion of data to be splited. (default = 1.0)
-    pub data_sample_ratio: f64,
-
-    /// The minimum number of samples required to be at a leaf node during training. (default = 1.0)
-    pub min_leaf_size: usize,
-
-    /// The loss function type. (default = SquareError)
-    pub loss: Loss,
-
-    /// Whether the debug information should be outputed. (default = false)
-    pub debug: bool,
-
-    /// The parameter to tune the model. (default = vec![])
-    pub feature_cost: Vec<f64>,
-
-    /// Whether feature tuning is enabled. (default = false)
-    pub feature_tunning_enabled: bool,
-
-    /// Whether initial guess for test data is enabled. (default = false)
-    pub initial_guess_enabled: bool,
-
-    /// set training optimization level (default = 3).
-    /// 0: least memory, slowest speed.
-    /// 1: more memory usage, faster speed.
-    /// 2: most memory usage, fastest speed.
-    pub training_optimization_level: u8,
-}
-
 /// Converting [std::string::String](https://doc.rust-lang.org/std/string/struct.String.html) to [Loss](enum.Loss.html).
+///
+/// # Example
+/// ```rust
+/// use gbdt::config::{Loss, string2loss};
+///
+/// let loss = string2loss("SquaredError");
+/// ```
 pub fn string2loss(s: &str) -> Loss {
     match s {
         "LogLikelyhood" => Loss::LogLikelyhood,
@@ -175,6 +145,12 @@ pub fn string2loss(s: &str) -> Loss {
 }
 
 /// Converting [Loss](enum.Loss.html) to [std::string::String](https://doc.rust-lang.org/std/string/struct.String.html).
+///
+/// # Example
+/// ```rust
+/// use gbdt::config::{Loss, loss2string};
+/// println!("{}", loss2string(&Loss::SquaredError));
+/// ```
 pub fn loss2string(l: &Loss) -> String {
     match l {
         Loss::LogLikelyhood => String::from("LogLikelyhood"),
@@ -188,6 +164,49 @@ pub fn loss2string(l: &Loss) -> String {
         Loss::MultiSoftmax => String::from("multi:softmax"),
         Loss::RankPairwise => String::from("rank:pairwise"),
     }
+}
+
+/// The config for the gradient boosting algorithm.
+#[derive(Default, Clone, Serialize, Deserialize)]
+pub struct Config {
+    /// The size of features. Training data and test data should have the same feature size. (default = 1)
+    pub feature_size: usize,
+
+    /// The max depth of a single decision tree. The root node is considered to be in the layer 0. (default = 2)
+    pub max_depth: u32,
+
+    /// The iterations to train, which is also the number of trees in the gradient boosting algorithm. (default = 2)
+    pub iterations: usize,
+
+    /// The learning rate parameter of the gradient boosting algorithm.(default = 1.0)
+    pub shrinkage: ValueType,
+
+    /// Portion of features to be splited. (default = 1.0)
+    pub feature_sample_ratio: f64,
+
+    /// Portion of data to be splited. (default = 1.0)
+    pub data_sample_ratio: f64,
+
+    /// The minimum number of samples required to be at a leaf node during training. (default = 1.0)
+    pub min_leaf_size: usize,
+
+    /// The loss function type. (default = SquareError)
+    pub loss: Loss,
+
+    /// Whether the debug information should be outputed. (default = false)
+    pub debug: bool,
+
+    /// Whether initial guess for test data is enabled. (default = false)
+    pub initial_guess_enabled: bool,
+
+    /// Training optimization level (default = 2).
+    ///
+    /// 0: least memory, slowest speed.
+    ///
+    /// 1: more memory usage, faster speed.
+    ///
+    /// 2: most memory usage, fastest speed.
+    pub training_optimization_level: u8,
 }
 
 impl Config {
@@ -209,8 +228,6 @@ impl Config {
             min_leaf_size: 1,
             loss: Loss::SquaredError,
             debug: false,
-            feature_cost: Vec::new(),
-            feature_tunning_enabled: false,
             initial_guess_enabled: false,
             training_optimization_level: 2,
         }
@@ -228,10 +245,32 @@ impl Config {
         self.feature_size = n;
     }
 
+    /// Set learning rate.
+    ///
+    /// # Example
+    /// ```rust
+    /// use gbdt::config::Config;
+    /// let mut cfg = Config::new();
+    /// cfg.set_shrinkage(1.0);
+    /// ```
     pub fn set_shrinkage(&mut self, eta: ValueType) {
         self.shrinkage = eta;
     }
 
+    /// Set training optimization level (default = 2).
+    ///
+    /// 0: least memory, slowest speed.
+    ///
+    /// 1: more memory usage, faster speed.
+    ///
+    /// 2: most memory usage, fastest speed.
+    ///
+    /// # Example
+    /// ```rust
+    /// use gbdt::config::Config;
+    /// let mut cfg = Config::new();
+    /// cfg.set_training_optimization_level(2);
+    /// ```
     pub fn set_training_optimization_level(&mut self, level: u8) {
         let optimization_level = if level >= 3 { 2 } else { level };
         self.training_optimization_level = optimization_level;
@@ -297,13 +336,15 @@ impl Config {
         self.min_leaf_size = n;
     }
 
-    /// Set loss type.
+    /// Set loss type: "SquaredError", "LogLikelyhood", "LAD", "reg:linear", "binary:logistic", "reg:logistic", "binary:logitraw", "multi:softprob",  "multi:softmax",  "rank:pairwise"
     ///
     /// # Example
     /// ```rust
-    /// use gbdt::config::Config;
+    /// use gbdt::config::{Config, Loss, loss2string};
     /// let mut cfg = Config::new();
     /// cfg.set_loss("LAD");
+    /// // Alternative way
+    /// cfg.set_loss(&loss2string(&Loss::SquaredError));
     /// ```
     pub fn set_loss(&mut self, l: &str) {
         self.loss = string2loss(&l);
@@ -321,19 +362,7 @@ impl Config {
         self.debug = option;
     }
 
-    /// Set whther feature tunning is enabled.
-    ///
-    /// # Example
-    /// ```rust
-    /// use gbdt::config::Config;
-    /// let mut cfg = Config::new();
-    /// cfg.enable_feature_tunning(true);
-    /// ```
-    pub fn enable_feature_tunning(&mut self, option: bool) {
-        self.feature_tunning_enabled = option;
-    }
-
-    /// Set whther initial guess of test data is enabled.
+    /// Set whether initial guess of test data is enabled.
     ///
     /// # Example
     /// ```rust
@@ -367,10 +396,6 @@ impl Config {
         s.push_str(&format!("data sample ratio = {}\n", self.data_sample_ratio));
         s.push_str(&format!("debug enabled = {}\n", self.debug));
         s.push_str(&format!("loss type = {}\n", loss2string(&self.loss)));
-        s.push_str(&format!(
-            "feature tuning enabled = {}\n",
-            self.feature_tunning_enabled
-        ));
         s.push_str(&format!(
             "initial guess enabled = {}\n",
             self.initial_guess_enabled

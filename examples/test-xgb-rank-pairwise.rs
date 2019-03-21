@@ -7,7 +7,8 @@ use gbdt::input;
 use time::PreciseTime;
 
 fn main() {
-    let gbdt = GBDT::from_xgoost_dump("data/xgb_rank_pairwise/gbdt.model", "rank:pairwise").unwrap();
+    let gbdt =
+        GBDT::from_xgoost_dump("data/xgb_rank_pairwise/gbdt.model", "rank:pairwise").unwrap();
     let test_file = "data/xgb_rank_pairwise/mq2008.test";
     let mut input_format = input::InputFormat::txt_format();
     input_format.set_feature_size(47);

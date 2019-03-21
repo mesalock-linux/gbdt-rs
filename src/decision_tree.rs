@@ -2,7 +2,6 @@
 //!
 //! In the training process, the nodes are splited according `impurity`.
 //!
-//! The decision tree accepts features represented by f64. Unknown features are not supported yet.
 //!
 //! Following hyperparameters are supported:
 //!
@@ -31,38 +30,30 @@
 //! use gbdt::config::Loss;
 //! use gbdt::decision_tree::{Data, DecisionTree, TrainingCache};
 //! // set up training data
-//! let data1 = Data {
-//!     feature: vec![1.0, 2.0, 3.0],
-//!     target: 2.0,
-//!     weight: 1.0,
-//!     label: 1.0,
-//!     residual: 1.0,
-//!     initial_guess: 1.0,
-//! };
-//! let data2 = Data {
-//!     feature: vec![1.1, 2.1, 3.1],
-//!     target: 1.0,
-//!     weight: 1.0,
-//!     label: 1.0,
-//!     residual: 1.0,
-//!     initial_guess: 1.0,
-//! };
-//! let data3 = Data {
-//!     feature: vec![2.0, 2.0, 1.0],
-//!     target: 0.5,
-//!     weight: 1.0,
-//!     label: 2.0,
-//!     residual: 2.0,
-//!     initial_guess: 2.0,
-//! };
-//! let data4 = Data {
-//!     feature: vec![2.0, 2.3, 1.2],
-//!     target: 3.0,
-//! weight: 1.0,
-//! label: 0.0,
-//! residual: 0.0,
-//! initial_guess: 1.0,
-//! };
+//! let data1 = Data::new_training_data(
+//!     vec![1.0, 2.0, 3.0],
+//!     1.0,
+//!     2.0,
+//!     None
+//! );
+//! let data2 = Data::new_training_data(
+//!     vec![1.1, 2.1, 3.1],
+//!     1.0,
+//!     1.0,
+//!     None
+//! );
+//! let data3 = Data::new_training_data(
+//!     vec![2.0, 2.0, 1.0],
+//!     1.0,
+//!     0.5,
+//!     None
+//! );
+//! let data4 = Data::new_training_data(
+//!     vec![2.0, 2.3, 1.2],
+//!     1.0,
+//!     3.0,
+//!     None,
+//! );
 //!
 //! let mut dv = Vec::new();
 //! dv.push(data1.clone());
@@ -77,7 +68,7 @@
 //! tree.set_max_depth(2);
 //! tree.set_min_leaf_size(1);
 //! tree.set_loss(Loss::SquaredError);
-//! let mut cache = TrainingCache::get_cache(3, &dv, 3);
+//! let mut cache = TrainingCache::get_cache(3, &dv, 2);
 //! tree.fit(&dv, &mut cache);
 //!
 //!
@@ -85,8 +76,12 @@
 //! let mut dv = Vec::new();
 //! dv.push(data1.clone());
 //! dv.push(data2.clone());
-//! dv.push(data3.clone());
-//! dv.push(data4.clone());
+//! dv.push(Data::new_test_data(
+//!     vec![2.0, 2.0, 1.0],
+//!     None));
+//! dv.push(Data::new_test_data(
+//!     vec![2.0, 2.3, 1.2],
+//!     Some(3.0)));
 //!
 //!
 //! // inference the test data with the decision tree
@@ -111,8 +106,8 @@ use rand::thread_rng;
 
 use serde_derive::{Deserialize, Serialize};
 
-// For now we only support std::$t using this macro.
-// We will generalize ValueType in future.
+///! For now we only support std::$t using this macro.
+/// We will generalize ValueType in future.
 macro_rules! def_value_type {
     ($t: tt) => {
         pub type ValueType = $t;
@@ -122,23 +117,126 @@ macro_rules! def_value_type {
     };
 }
 
-// use continous variables for decision tree
+/// use continous variables for decision tree
 def_value_type!(f32);
 
+/// A training sample or a test sample. You can call `new_training_data` to generate a training sample, and call `new_test_data` to generate a test sample.
+///
+/// A training sample can be used as a test sample.
+///
+/// You can also directly generate a data with following guides:
+///
+/// 1. When using the gbdt algorithm for training, you should set the values of feature, weight and label. If Config::initial_guess_enabled is true, you should set the value of initial_guess as well. Other fields can be arbitrary value.
+///
+/// 2. When using the gbdt algorithm for inference, you should set the value of feature. Other fields can be arbitrary value.
+///
+/// 3. When directly using the decision tree for training, only "SquaredError" is supported and you should set the values of feature, weight, label and target. `label` and `target` are equal. Other fields can be arbitrary value.
+///
+/// 4. When directly using the decision tree for inference, only "SquaredError" is supported and you should set the values of feature.
+#[derive(Debug, Clone, Serialize, Deserialize)]
+pub struct Data {
+    /// the vector of features
+    pub feature: Vec<ValueType>,
+    /// the target value of the sample to be fit in one decistion tree. This value is calculated by gradient boost algorithm. If you want to use the decision tree with "SquaredError" directly, set this value with `label` value    
+    pub target: ValueType,
+    /// sample's weight. Used in training.
+    pub weight: ValueType,
+    /// sample's label. Used in training. This value is the actual value of the training sample.
+    pub label: ValueType,
+    /// used by LAD loss. Calculated by gradient boost algorithm.
+    pub residual: ValueType,
+    /// used by gradient boost. Set this value if Config::initial_guess_enabled is true.
+    pub initial_guess: ValueType,
+}
+
+impl Data {
+    /// Generate a training sample.
+    ///
+    /// feature: the vector of features
+    ///
+    /// weight: sample's weight
+    ///
+    /// label: sample's label
+    ///
+    /// initial_guess: initial prediction for the sample. This value is optional. Set this value if Config::initial_guess_enabled is true.
+    ///
+    /// # Example
+    /// ``` rust
+    /// use gbdt::decision_tree::Data;
+    /// let data1 = Data::new_training_data(vec![1.0, 2.0, 3.0],
+    ///                                 1.0,
+    ///                                 2.0,
+    ///                                 Some(0.5));
+    /// let data2 = Data::new_training_data(vec![1.0, 2.0, 3.0],
+    ///                                 1.0,
+    ///                                 2.0,
+    ///                                 None);
+    /// ```
+    pub fn new_training_data(
+        feature: Vec<ValueType>,
+        weight: ValueType,
+        label: ValueType,
+        initial_guess: Option<ValueType>,
+    ) -> Self {
+        Data {
+            feature,
+            target: label,
+            weight,
+            label,
+            residual: label,
+            initial_guess: initial_guess.unwrap_or(0.0),
+        }
+    }
+
+    /// Generate a test sample.
+    ///
+    /// label: sample's label. It's optional.
+    ///
+    /// # Example
+    /// ``` rust
+    /// use gbdt::decision_tree::Data;
+    /// let data1 = Data::new_test_data(vec![1.0, 2.0, 3.0],
+    ///                                 Some(0.5));
+    /// let data2 = Data::new_test_data(vec![1.0, 2.0, 3.0],
+    ///                                 None);
+    /// ```
+    pub fn new_test_data(feature: Vec<ValueType>, label: Option<ValueType>) -> Self {
+        Data {
+            feature,
+            target: 0.0,
+            weight: 1.0,
+            label: label.unwrap_or(0.0),
+            residual: 0.0,
+            initial_guess: 0.0,
+        }
+    }
+}
+
+/// The vector of the samples
+pub type DataVec = Vec<Data>;
+/// The vector of the predicted values.
+pub type PredVec = Vec<ValueType>;
+
+/// Cache some values for calculating the impurity.
 #[cfg(feature = "enable_training")]
 struct ImpurityCache {
+    /// sum of target * weight
     sum_s: f64,
+    /// sum of target * target * weight
     sum_ss: f64,
+    /// sum of weight
     sum_c: f64,
+    /// whether this cache is calcualted
     cached: bool,
+    /// whether a data is in the current node
     bool_vec: Vec<bool>,
-    sample_size: usize,
 }
 
 #[cfg(feature = "enable_training")]
 impl ImpurityCache {
     fn new(sample_size: usize, train_data: &[usize]) -> Self {
         let mut bool_vec: Vec<bool> = vec![false; sample_size];
+        // set bool_vec
         for index in train_data.iter() {
             bool_vec[*index] = true;
         }
@@ -146,41 +244,89 @@ impl ImpurityCache {
             sum_s: 0.0,
             sum_ss: 0.0,
             sum_c: 0.0,
-            cached: false,
+            cached: false, //`cached` is false
             bool_vec,
-            sample_size,
         }
     }
 }
 
+/// These results are repeatly used together: target*weight, target*target*weight, weight
 #[cfg(feature = "enable_training")]
 struct CacheValue {
+    /// target * weight
     s: f64,
+    /// target * target * weight
     ss: f64,
+    /// weight
     c: f64,
 }
 
+/// Cache the sort results and some calculation results
 #[cfg(feature = "enable_training")]
 pub struct TrainingCache {
+    /// Sort the training data with the feature value.
+    /// ordered_features[i] is the data sorted by (i+1)th feature.
+    /// (usize, ValueType) is the sample's index in the training set and its (i+1)th feature value.
     ordered_features: Vec<Vec<(usize, ValueType)>>,
+    /// Sort the training data with the residual field.
+    /// (uisze, ValueType) is the smaple's index in the training set and its residual value.
     ordered_residual: Vec<(usize, ValueType)>,
+    /// cache_value[i] is the (i+1)th sample's `CacheValue`
     cache_value: Vec<CacheValue>, //s, ss, c
+    /// cache_target[i] is the (i+1)th sample's `target` value (not the label). Organizing the `target` and `CacheValue` together will have better spatial locality.
     cache_target: Vec<ValueType>,
-    //ss: Vec<ValueType>,
-    //s: Vec<ValueType>,
-    //c: Vec<ValueType>,
-    //target: Vec<ValueType>,
+    /// loigt_c[i] is the (i+1)th sample's logit value. let y = target.abs(); let logit_value = y * (2.0 - y) * weight;
     logit_c: Vec<ValueType>,
+    /// The sample size of the training set.
     sample_size: usize,
+    /// The feature size of the training data
     feature_size: usize,
+    /// The prediction of the training samples.
     preds: Vec<ValueType>,
+    /// The cache level.
+    /// 0: ordered_features is calculated only once. SubCache is not used.
+    /// 1: ordered_features is calculated in each iterations. SubCache is used.
+    /// 2: ordered_features is calculated only once. SubCache is used.
     cache_level: u8,
 }
 
 #[cfg(feature = "enable_training")]
 impl TrainingCache {
+    /// Allocate the training cache. Feature size, training set and cache level should be provided.
+    /// ``` rust
+    /// use gbdt::config::Loss;
+    /// use gbdt::decision_tree::{Data, DecisionTree, TrainingCache};
+    /// // set up training data
+    /// let data1 = Data::new_training_data(
+    ///     vec![1.0, 2.0, 3.0],
+    ///     1.0,
+    ///     2.0,
+    ///     None
+    /// );
+    /// let data2 = Data::new_training_data(
+    ///     vec![1.1, 2.1, 3.1],
+    ///     1.0,
+    ///     1.0,
+    ///     None
+    /// );
+    /// let data3 = Data::new_training_data(
+    ///     vec![2.0, 2.0, 1.0],
+    ///     1.0,
+    ///     0.5,
+    ///     None
+    /// );
+    /// let mut dv = Vec::new();
+    /// dv.push(data1);
+    /// dv.push(data2);
+    /// dv.push(data3);
+    ///
+    /// let mut cache = TrainingCache::get_cache(3, &dv, 2);
+    /// ```
+    // Only ordered_features may be pre-computed. Other fields will be computed by calling init_one_iteration
     pub fn get_cache(feature_size: usize, data: &DataVec, cache_level: u8) -> Self {
+        // cache_level is 0, 1 or 2.
         let level = if cache_level >= 3 { 2 } else { cache_level };
+
         let sample_size = data.len();
         let logit_c = vec![0.0; data.len()];
         let preds = vec![VALUE_TYPE_UNKNOWN; sample_size];
@@ -195,11 +341,13 @@ impl TrainingCache {
             cache_value.push(item);
         }
 
+        // Calculate the ordred_features if cache_level is 0 or 2.
         let ordered_features: Vec<Vec<(usize, ValueType)>> = if (level == 0) || (level == 2) {
             TrainingCache::cache_features(data, feature_size)
         } else {
             Vec::new()
         };
+
         let ordered_residual: Vec<(usize, ValueType)> = Vec::new();
 
         let cache_target: Vec<ValueType> = vec![0.0; data.len()];
@@ -215,14 +363,72 @@ impl TrainingCache {
             preds,
             cache_level: level,
         }
-
-        //let mut target = Vec::with_capacity(data.len());
     }
+
+    /// Return the training data's predictions using this decision tree. These results are computed during training and then cached.
+    /// # Example
+    /// ```
+    /// use gbdt::config::Loss;
+    /// use gbdt::decision_tree::{Data, DecisionTree, TrainingCache};
+    /// // set up training data
+    /// let data1 = Data::new_training_data(
+    ///     vec![1.0, 2.0, 3.0],
+    ///     1.0,
+    ///     2.0,
+    ///     None
+    /// );
+    /// let data2 = Data::new_training_data(
+    ///     vec![1.1, 2.1, 3.1],
+    ///     1.0,
+    ///     1.0,
+    ///     None
+    /// );
+    /// let data3 = Data::new_training_data(
+    ///     vec![2.0, 2.0, 1.0],
+    ///     1.0,
+    ///     0.5,
+    ///     None
+    /// );
+    /// let data4 = Data::new_training_data(
+    ///     vec![2.0, 2.3, 1.2],
+    ///     1.0,
+    ///     3.0,
+    ///     None
+    /// );
+    ///
+    /// let mut dv = Vec::new();
+    /// dv.push(data1);
+    /// dv.push(data2);
+    /// dv.push(data3);
+    /// dv.push(data4);
+    ///
+    ///
+    /// // train a decision tree
+    /// let mut tree = DecisionTree::new();
+    /// tree.set_feature_size(3);
+    /// tree.set_max_depth(2);
+    /// tree.set_min_leaf_size(1);
+    /// tree.set_loss(Loss::SquaredError);
+    /// let mut cache = TrainingCache::get_cache(3, &dv, 2);
+    /// tree.fit(&dv, &mut cache);
+    /// // get predictions for the training data
+    /// println!("{:?}", cache.get_preds());
+    ///
+    ///
+    /// // output:
+    /// // [2.0, 0.75, 0.75, 3.0]
+    /// ```
     pub fn get_preds(&self) -> Vec<ValueType> {
         self.preds.to_vec()
     }
 
-    pub fn init_one_iteration(&mut self, whole_data: &[Data], loss: &Loss) {
+    /// Compute the training cache in the begining of training the deceision tree.
+    ///
+    /// `whole_data`: the training set.
+    ///
+    /// `loss`: the loss type.  
+    fn init_one_iteration(&mut self, whole_data: &[Data], loss: &Loss) {
+        // Compute the cache_target, cache_value, logit_c.
         for (index, data) in whole_data.iter().enumerate() {
             let target = data.target;
             self.cache_target[index] = target;
@@ -237,22 +443,33 @@ impl TrainingCache {
                 self.logit_c[index] = c as f32;
             }
         }
+        // Compute the ordered_residual.
         if let Loss::LAD = loss {
             self.ordered_residual = TrainingCache::cache_residual(whole_data);
         }
     }
 
+    /// Compute the ordered_features.
+    ///
+    /// Input the training set (`whole_data`) and feature size (`feature_size`)
+    ///
+    /// Output the ordered_features.
     fn cache_features(whole_data: &[Data], feature_size: usize) -> Vec<Vec<(usize, ValueType)>> {
+        // Allocate memory
         let mut ordered_features = Vec::with_capacity(feature_size);
         for _index in 0..feature_size {
             let nv: Vec<(usize, ValueType)> = Vec::with_capacity(whole_data.len());
             ordered_features.push(nv);
         }
+
+        // Put data
         for (i, item) in whole_data.iter().enumerate() {
             for index in 0..feature_size {
                 ordered_features[index].push((i, item.feature[index]));
             }
         }
+
+        // Sort all the vectors
         for index in 0..feature_size {
             ordered_features[index].sort_unstable_by(|a, b| {
                 let v1 = a.1;
@@ -260,22 +477,43 @@ impl TrainingCache {
                 v1.partial_cmp(&v2).unwrap()
             });
         }
+
         ordered_features
     }
 
+    /// Compute the ordered_residual.
+    ///
+    /// Input the training set (`whole_data`). Output the ordered_residual.
     fn cache_residual(whole_data: &[Data]) -> Vec<(usize, ValueType)> {
+        // Allocate memory
         let mut ordered_residual = Vec::with_capacity(whole_data.len());
+
+        // Put data.
         for (index, elem) in whole_data.iter().enumerate() {
             ordered_residual.push((index, elem.residual));
         }
+
+        // Sort data
         ordered_residual.sort_unstable_by(|a, b| {
             let v1: ValueType = a.1;
             let v2: ValueType = b.1;
             v1.partial_cmp(&v2).unwrap()
         });
+
         ordered_residual
     }
 
+    /// Sort data with Training Cache. Bucket sort is used.
+    ///
+    /// feature_index: which feature is used to sort.
+    ///
+    /// is_residual: true, sort with residual value; false, sort with feature value
+    ///
+    /// to_sort: bool vector. The index is the sample's index in whole training set. The boolean value indicates whether the sample is needed to be sorted.
+    ///
+    /// to_sort_size: the amount of the data.
+    ///
+    /// sub_cache: SubCache.
     fn sort_with_bool_vec(
         &self,
         feature_index: usize,
@@ -284,6 +522,7 @@ impl TrainingCache {
         to_sort_size: usize,
         sub_cache: &SubCache,
     ) -> Vec<(usize, ValueType)> {
+        // Get sorted data.
         let whole_data_sorted_index = if is_residual {
             if (self.cache_level == 0) || sub_cache.lazy {
                 &self.ordered_residual
@@ -297,9 +536,13 @@ impl TrainingCache {
                 &sub_cache.ordered_features[feature_index]
             }
         };
+
+        // The whole_data_sorted_index.len() is greater than or equal to to_sort_size. If they are equal, then whole_data_sorted_index is what we want.
         if whole_data_sorted_index.len() == to_sort_size {
             return whole_data_sorted_index.to_vec();
         }
+
+        // Filter the whole_data_sorted_index with the boolean vector.
         let mut ret = Vec::with_capacity(to_sort_size);
         for item in whole_data_sorted_index.iter() {
             let (index, value) = *item;
@@ -309,6 +552,16 @@ impl TrainingCache {
         }
         ret
     }
+
+    /// Sort data with Training Cache. Bucket sort is used.
+    ///
+    /// feature_index: which feature is used to sort.
+    ///
+    /// is_residual: true, sort with residual value; false, sort with feature value
+    ///
+    /// to_sort: a vector containing samples' indexes.
+    ///
+    /// sub_cache: SubCache.
     fn sort_with_cache(
         &self,
         feature_index: usize,
@@ -316,15 +569,20 @@ impl TrainingCache {
         to_sort: &[usize],
         sub_cache: &SubCache,
     ) -> Vec<(usize, ValueType)> {
+        // Allocate the boolean vector
         let whole_data_sorted_index = if is_residual {
             &self.ordered_residual
         } else {
             &self.ordered_features[feature_index]
         };
         let mut index_exists: Vec<bool> = vec![false; whole_data_sorted_index.len()];
+
+        // Generate the boolean vector
         for index in to_sort.iter() {
             index_exists[*index] = true;
         }
+
+        // Call sort_with_bool_vec to get sorted data
         self.sort_with_bool_vec(
             feature_index,
             is_residual,
@@ -334,16 +592,30 @@ impl TrainingCache {
         )
     }
 }
+
+/// SubCache is used to accelerate the data sorting.
+/// ordered_features and ordered_residual are used in bucket sort.
+/// In TrainingCache, the two vectors contains information from the whole training set. But only the information from samples in current node are needed.
+/// So SubCache only restore the information from samples in current node.
 #[cfg(feature = "enable_training")]
 struct SubCache {
+    /// Sort the samples with the feature value.
+    /// ordered_features[i] is the data sorted by (i+1)th feature.
+    /// (usize, ValueType) is the sample's index in the whole training set and its (i+1)th feature value.
     ordered_features: Vec<Vec<(usize, ValueType)>>,
+    /// Sort the samples with the residual field.
+    /// (uisze, ValueType) is the smaple's index in the whole training set and its residual value.
     ordered_residual: Vec<(usize, ValueType)>,
+    /// True means the SubCache is not computed. For the root node, the samples in current node are the whole training set. So SubCache is not needed.
     lazy: bool,
 }
 #[cfg(feature = "enable_training")]
 impl SubCache {
+    /// Generate the SubCache frome the TrainingCache. `data` is the whole training set. `loss` is the loss type.
     fn get_cache_from_training_cache(cache: &TrainingCache, data: &[Data], loss: &Loss) -> Self {
         let level = cache.cache_level;
+
+        // level 2: lazy is True, ordered_features and ordered_residual is empty.
         if level == 2 {
             return SubCache {
                 ordered_features: Vec::new(),
@@ -352,28 +624,35 @@ impl SubCache {
             };
         }
 
+        // level 0: ordered_features is empty, lazy is false.
         let ordered_features = if level == 0 {
             Vec::new()
         } else if level == 1 {
+            // level 1: ordered_features is computed from the whole training set. lazy is false
             TrainingCache::cache_features(data, cache.feature_size)
         } else {
+            // Other: clone the ordered_features in the TrainingCache.
             let mut ordered_features: Vec<Vec<(usize, ValueType)>> =
                 Vec::with_capacity(cache.feature_size);
+
             for index in 0..cache.feature_size {
                 ordered_features.push(cache.ordered_features[index].to_vec());
             }
             ordered_features
         };
 
+        // level 0: ordered_residual is empty. lazy is false.
         let ordered_residual = if level == 0 {
             Vec::new()
         } else if level == 1 {
+            // level 1: ordered_residual is computed from the whole train set. lazy if alse
             if let Loss::LAD = loss {
                 TrainingCache::cache_residual(data)
             } else {
                 Vec::new()
             }
         } else {
+            // other: clone the ordered_features in the TrainingCache.
             if let Loss::LAD = loss {
                 cache.ordered_residual.to_vec()
             } else {
@@ -388,6 +667,7 @@ impl SubCache {
         }
     }
 
+    /// Generate an empty SubCache.
     fn get_empty() -> Self {
         SubCache {
             ordered_features: Vec::new(),
@@ -396,15 +676,27 @@ impl SubCache {
         }
     }
 
-    pub fn split_cache(
+    /// Split the SubCache for child nodes
+    ///  
+    /// left_set: the samples in left child.
+    ///
+    /// right_set: the samples in right child.
+    ///
+    /// cache: the TrainingCache
+    ///
+    /// output: two SubCache
+    fn split_cache(
         mut self,
         left_set: &[usize],
         right_set: &[usize],
         cache: &TrainingCache,
     ) -> (Self, Self) {
+        // level 0: return empty SubCache
         if cache.cache_level == 0 {
             return (SubCache::get_empty(), SubCache::get_empty());
         }
+
+        // allocate the vectors
         let mut left_ordered_features: Vec<Vec<(usize, ValueType)>> =
             Vec::with_capacity(cache.feature_size);
         let mut right_ordered_features: Vec<Vec<(usize, ValueType)>> =
@@ -415,6 +707,8 @@ impl SubCache {
             left_ordered_features.push(Vec::with_capacity(left_set.len()));
             right_ordered_features.push(Vec::with_capacity(right_set.len()));
         }
+
+        // compute two boolean vectors
         let mut left_bool = vec![false; cache.sample_size];
         let mut right_bool = vec![false; cache.sample_size];
         for index in left_set.iter() {
@@ -424,6 +718,7 @@ impl SubCache {
             right_bool[*index] = true;
         }
 
+        // If lazy is true, compute the ordered_features from the TrainingCache.
         if self.lazy {
             for (feature_index, feature_vec) in cache.ordered_features.iter().enumerate() {
                 for pair in feature_vec.iter() {
@@ -438,6 +733,7 @@ impl SubCache {
                 }
             }
         } else {
+            // If lazy is false, compute the ordered_features from the current SubCache
             for feature_index in 0..self.ordered_features.len() {
                 let feature_vec = &mut self.ordered_features[feature_index];
                 for pair in feature_vec.iter() {
@@ -457,6 +753,7 @@ impl SubCache {
             self.ordered_features.shrink_to_fit();
         }
 
+        // If lazy is true, compute the ordered_residual from the TrainingCache
         if self.lazy {
             for pair in cache.ordered_residual.iter() {
                 let (index, value) = *pair;
@@ -469,6 +766,7 @@ impl SubCache {
                 }
             }
         } else {
+            // If lazy is false, compute the ordered_residual from the current SubCache
             for pair in self.ordered_residual.into_iter() {
                 let (index, value) = pair;
                 if left_bool[index] {
@@ -480,6 +778,7 @@ impl SubCache {
                 }
             }
         }
+        // return result
         (
             SubCache {
                 ordered_features: left_ordered_features,
@@ -493,63 +792,13 @@ impl SubCache {
             },
         )
     }
-
-    /*
-    fn sort_with_bool_vec(
-        &self,
-        feature_index: usize,
-        is_residual: bool,
-        to_sort: &[bool],
-        to_sort_size: usize,
-        sub_cache: &SubCache,
-    ) -> Vec<(usize, ValueType)> {
-        let whole_data_sorted_index = if is_residual {
-            &self.ordered_residual
-        } else {
-            &self.ordered_features[feature_index]
-        };
-        let mut ret = Vec::with_capacity(to_sort_size);
-        for item in whole_data_sorted_index.iter() {
-            let (index, value) = *item;
-            if to_sort[index] {
-                ret.push((index, value));
-            }
-        }
-        ret
-    } */
 }
-
-/// A training sample or a test sample
-#[derive(Debug, Clone, Serialize, Deserialize)]
-pub struct Data {
-    /// the vector of features
-    pub feature: Vec<ValueType>,
-    /// the target value of the sample. Used in training.
-    pub target: ValueType,
-    /// sample weight. Used in training.
-    pub weight: ValueType,
-    /// sample's label. Used in training
-    pub label: ValueType,
-    /// used by LAD loss.
-    pub residual: ValueType,
-    /// used by gradient boost.
-    pub initial_guess: ValueType,
-}
-
-/// The vector of the samples
-pub type DataVec = Vec<Data>;
-/// The vector of the predicted values.
-pub type PredVec = Vec<ValueType>;
-
-/*
-pub enum Loss {
-    SquaredError,
-    LogLikelyhood,
-    LAD,
-}
-*/
 
 /// Calculate the prediction for each leaf node.
+/// data: the samples in current node
+/// loss: loss type
+/// cache: TrainingCache
+/// sub_cache: SubCache
 #[cfg(feature = "enable_training")]
 fn calculate_pred(
     data: &[usize],
@@ -629,6 +878,7 @@ fn lad_optimal_value(data: &[usize], cache: &TrainingCache, sub_cache: &SubCache
 
 /// Return whether the data vector have same target values.
 #[allow(unused)]
+#[cfg(feature = "enable_training")]
 fn same(iv: &[usize], cache: &TrainingCache) -> bool {
     if iv.is_empty() {
         return false;
@@ -644,7 +894,6 @@ fn same(iv: &[usize], cache: &TrainingCache) -> bool {
 }
 
 /// The internal node of the decision tree. It's stored in the `value` of the gbdt::binary_tree::BinaryTreeNode
-///
 #[derive(Debug, Serialize, Deserialize)]
 struct DTNode {
     /// the feature used to split the node
@@ -779,42 +1028,43 @@ impl DecisionTree {
         self.feature_sample_ratio = feature_sample_ratio;
     }
 
-    /// Use the first `n` samples in the `train_data` to train a decision tree
+    /// Use the `subset` of the `train_data` to train a decision tree
     ///
     /// # Example
     /// ```
     /// use gbdt::config::Loss;
     /// use gbdt::decision_tree::{Data, DecisionTree, TrainingCache};
     /// // set up training data
-    /// let data1 = Data {
-    ///     feature: vec![1.0, 2.0, 3.0],
-    ///     target: 2.0,
-    ///     weight: 1.0,
-    ///     label: 1.0,
-    ///     residual: 1.0,
-    ///     initial_guess: 1.0,
-    /// };
-    /// let data2 = Data {
-    ///     feature: vec![1.1, 2.1, 3.1],
-    ///     target: 1.0,
-    ///     weight: 1.0,
-    ///     label: 1.0,
-    ///     residual: 1.0,
-    ///     initial_guess: 1.0,
-    /// };
-    /// let data3 = Data {
-    ///     feature: vec![2.0, 2.0, 1.0],
-    ///     target: 0.5,
-    ///     weight: 1.0,
-    ///     label: 2.0,
-    ///     residual: 2.0,
-    ///     initial_guess: 2.0,
-    /// };
+    /// let data1 = Data::new_training_data(
+    ///     vec![1.0, 2.0, 3.0],
+    ///     1.0,
+    ///     2.0,
+    ///     None
+    /// );
+    /// let data2 = Data::new_training_data(
+    ///     vec![1.1, 2.1, 3.1],
+    ///     1.0,
+    ///     1.0,
+    ///     None
+    /// );
+    /// let data3 = Data::new_training_data(
+    ///     vec![2.0, 2.0, 1.0],
+    ///     1.0,
+    ///     0.5,
+    ///     None
+    /// );
+    /// let data4 = Data::new_training_data(
+    ///     vec![2.0, 2.3, 1.2],
+    ///     1.0,
+    ///     3.0,
+    ///     None
+    /// );
     ///
     /// let mut dv = Vec::new();
     /// dv.push(data1.clone());
     /// dv.push(data2.clone());
     /// dv.push(data3.clone());
+    /// dv.push(data4.clone());
     ///
     ///
     /// // train a decision tree
@@ -823,10 +1073,9 @@ impl DecisionTree {
     /// tree.set_max_depth(2);
     /// tree.set_min_leaf_size(1);
     /// tree.set_loss(Loss::SquaredError);
-    /// let subset = [0, 1];
-    /// let mut cache = TrainingCache::get_cache(3, &dv, 3);
+    /// let mut cache = TrainingCache::get_cache(3, &dv, 2);
+    /// let subset = [0,1,2];
     /// tree.fit_n(&dv, &subset, &mut cache);
-    ///
     /// ```
     #[cfg(feature = "enable_training")]
     pub fn fit_n(&mut self, train_data: &DataVec, subset: &[usize], cache: &mut TrainingCache) {
@@ -835,10 +1084,12 @@ impl DecisionTree {
             "Decision_tree and TrainingCache should have same feature size"
         );
 
+        // Compute the TrainingCache
         cache.init_one_iteration(train_data, &self.loss);
 
         let root_index = self.tree.add_root(BinaryTreeNode::new(DTNode::new()));
 
+        // Generate the SubCache
         let sub_cache = SubCache::get_cache_from_training_cache(cache, train_data, &self.loss);
 
         self.fit_node(root_index, 0, subset, cache, sub_cache);
@@ -851,30 +1102,24 @@ impl DecisionTree {
     /// use gbdt::config::Loss;
     /// use gbdt::decision_tree::{Data, DecisionTree, TrainingCache};
     /// // set up training data
-    /// let data1 = Data {
-    ///     feature: vec![1.0, 2.0, 3.0],
-    ///     target: 2.0,
-    ///     weight: 1.0,
-    ///     label: 1.0,
-    ///     residual: 1.0,
-    ///     initial_guess: 1.0,
-    /// };
-    /// let data2 = Data {
-    ///     feature: vec![1.1, 2.1, 3.1],
-    ///     target: 1.0,
-    ///     weight: 1.0,
-    ///     label: 1.0,
-    ///     residual: 1.0,
-    ///     initial_guess: 1.0,
-    /// };
-    /// let data3 = Data {
-    ///     feature: vec![2.0, 2.0, 1.0],
-    ///     target: 0.5,
-    ///     weight: 1.0,
-    ///     label: 2.0,
-    ///     residual: 2.0,
-    ///     initial_guess: 2.0,
-    /// };
+    /// let data1 = Data::new_training_data(
+    ///     vec![1.0, 2.0, 3.0],
+    ///     1.0,
+    ///     1.0,
+    ///     None
+    /// );
+    /// let data2 = Data::new_training_data(
+    ///     vec![1.1, 2.1, 3.1],
+    ///     1.0,
+    ///     1.0,
+    ///     None
+    /// );
+    /// let data3 = Data::new_training_data(
+    ///     vec![2.0, 2.0, 1.0],
+    ///     1.0,
+    ///     2.0,
+    ///     None
+    /// );
     ///
     /// let mut dv = Vec::new();
     /// dv.push(data1.clone());
@@ -888,7 +1133,7 @@ impl DecisionTree {
     /// tree.set_max_depth(2);
     /// tree.set_min_leaf_size(1);
     /// tree.set_loss(Loss::SquaredError);
-    /// let mut cache = TrainingCache::get_cache(3, &dv, 3);
+    /// let mut cache = TrainingCache::get_cache(3, &dv, 2);
     /// tree.fit(&dv, &mut cache);
     ///
     /// ```
@@ -901,39 +1146,46 @@ impl DecisionTree {
             "Decision_tree and TrainingCache should have same feature size"
         );
         let data_collection: Vec<usize> = (0..train_data.len()).collect();
+
+        // Compute the TrainingCache
         cache.init_one_iteration(train_data, &self.loss);
 
         let root_index = self.tree.add_root(BinaryTreeNode::new(DTNode::new()));
+
+        // Generate the SubCache
         let sub_cache = SubCache::get_cache_from_training_cache(cache, train_data, &self.loss);
         self.fit_node(root_index, 0, &data_collection, cache, sub_cache);
     }
 
     /// Recursively build the tree nodes. It choose a feature and a value to split the node and the data.
     /// And then use the splited data to build the child nodes.
+    /// node: the tree index of the current node
+    /// depth: the deepth of the current node
+    /// train_data: sample data in current node
+    /// cache: TrainingCache
+    /// sub_cache: SubCache
     #[cfg(feature = "enable_training")]
     fn fit_node(
         &mut self,
         node: TreeIndex,
         depth: u32,
-        //whole_data: &[Data],
         train_data: &[usize],
         cache: &mut TrainingCache,
         sub_cache: SubCache,
     ) {
-        // If the node doesn't need to be splited.
+        // If the node doesn't need to be splited, make this node a leaf node.
         {
             let node_ref = self
                 .tree
                 .get_node_mut(node)
                 .expect("node should not be empty!");
-            // calculate to support unknown features
+            // compute the prediction to support unknown features
             node_ref.value.pred = calculate_pred(train_data, &self.loss, cache, &sub_cache);
             if (depth >= self.max_depth)
                 || same(train_data, cache)
                 || (train_data.len() <= self.min_leaf_size)
             {
                 node_ref.value.is_leaf = true;
-                //node_ref.value.pred = calculate_pred(train_data, &self.loss);
                 for index in train_data.iter() {
                     cache.preds[*index] = node_ref.value.pred;
                 }
@@ -955,9 +1207,9 @@ impl DecisionTree {
                 .tree
                 .get_node_mut(node)
                 .expect("node should not be empty");
+            // If spliting the node is failed, make this node a leaf node
             if splited_data.is_none() {
                 node_ref.value.is_leaf = true;
-                //node_ref.value.pred = calculate_pred(train_data, &self.loss);
                 node_ref.value.pred = calculate_pred(train_data, &self.loss, cache, &sub_cache);
                 for index in train_data.iter() {
                     cache.preds[*index] = node_ref.value.pred;
@@ -984,46 +1236,39 @@ impl DecisionTree {
         }
     }
 
-    /// Inference the values of the first `n` samples in the `test_data`. Return a vector of
-    /// predicted values.
+    /// Inference the subset of the `test_data`. Return a vector of
+    /// predicted values. If the `i` is in the subset, then output[i] is the prediction.
+    /// `i` is not in the subset, then output[i] is 0.0
     ///
     /// # Example
     /// ```
     /// use gbdt::config::Loss;
     /// use gbdt::decision_tree::{Data, DecisionTree, TrainingCache};
     /// // set up training data
-    /// let data1 = Data {
-    ///     feature: vec![1.0, 2.0, 3.0],
-    ///     target: 2.0,
-    ///     weight: 1.0,
-    ///     label: 1.0,
-    ///     residual: 1.0,
-    ///     initial_guess: 1.0,
-    /// };
-    /// let data2 = Data {
-    ///     feature: vec![1.1, 2.1, 3.1],
-    ///     target: 1.0,
-    ///     weight: 1.0,
-    ///     label: 1.0,
-    ///     residual: 1.0,
-    ///     initial_guess: 1.0,
-    /// };
-    /// let data3 = Data {
-    ///     feature: vec![2.0, 2.0, 1.0],
-    ///     target: 0.5,
-    ///     weight: 1.0,
-    ///     label: 2.0,
-    ///     residual: 2.0,
-    ///     initial_guess: 2.0,
-    /// };
-    /// let data4 = Data {
-    ///     feature: vec![2.0, 2.3, 1.2],
-    ///     target: 3.0,
-    /// weight: 1.0,
-    /// label: 0.0,
-    /// residual: 0.0,
-    /// initial_guess: 1.0,
-    /// };
+    /// let data1 = Data::new_training_data(
+    ///     vec![1.0, 2.0, 3.0],
+    ///     1.0,
+    ///     2.0,
+    ///     None
+    /// );
+    /// let data2 = Data::new_training_data(
+    ///     vec![1.1, 2.1, 3.1],
+    ///     1.0,
+    ///     1.0,
+    ///     None
+    /// );
+    /// let data3 = Data::new_training_data(
+    ///     vec![2.0, 2.0, 1.0],
+    ///     1.0,
+    ///     0.5,
+    ///     None
+    /// );
+    /// let data4 = Data::new_training_data(
+    ///     vec![2.0, 2.3, 1.2],
+    ///     1.0,
+    ///     3.0,
+    ///     None
+    /// );
     ///
     /// let mut dv = Vec::new();
     /// dv.push(data1.clone());
@@ -1038,7 +1283,7 @@ impl DecisionTree {
     /// tree.set_max_depth(2);
     /// tree.set_min_leaf_size(1);
     /// tree.set_loss(Loss::SquaredError);
-    /// let mut cache = TrainingCache::get_cache(3, &dv, 3);
+    /// let mut cache = TrainingCache::get_cache(3, &dv, 2);
     /// tree.fit(&dv, &mut cache);
     ///
     ///
@@ -1056,7 +1301,7 @@ impl DecisionTree {
     ///
     ///
     /// // output:
-    /// // [2.0, 0.75, 0.75]
+    /// // [2.0, 0.75, 0.75, 0.0]
     /// ```
     ///
     /// # Panic
@@ -1085,38 +1330,30 @@ impl DecisionTree {
     /// use gbdt::config::Loss;
     /// use gbdt::decision_tree::{Data, DecisionTree, TrainingCache};
     /// // set up training data
-    /// let data1 = Data {
-    ///     feature: vec![1.0, 2.0, 3.0],
-    ///     target: 2.0,
-    ///     weight: 1.0,
-    ///     label: 1.0,
-    ///     residual: 1.0,
-    ///     initial_guess: 1.0,
-    /// };
-    /// let data2 = Data {
-    ///     feature: vec![1.1, 2.1, 3.1],
-    ///     target: 1.0,
-    ///     weight: 1.0,
-    ///     label: 1.0,
-    ///     residual: 1.0,
-    ///     initial_guess: 1.0,
-    /// };
-    /// let data3 = Data {
-    ///     feature: vec![2.0, 2.0, 1.0],
-    ///     target: 0.5,
-    ///     weight: 1.0,
-    ///     label: 2.0,
-    ///     residual: 2.0,
-    ///     initial_guess: 2.0,
-    /// };
-    /// let data4 = Data {
-    ///     feature: vec![2.0, 2.3, 1.2],
-    ///     target: 3.0,
-    /// weight: 1.0,
-    /// label: 0.0,
-    /// residual: 0.0,
-    /// initial_guess: 1.0,
-    /// };
+    /// let data1 = Data::new_training_data(
+    ///     vec![1.0, 2.0, 3.0],
+    ///     1.0,
+    ///     2.0,
+    ///     None
+    /// );
+    /// let data2 = Data::new_training_data(
+    ///     vec![1.1, 2.1, 3.1],
+    ///     1.0,
+    ///     1.0,
+    ///     None
+    /// );
+    /// let data3 = Data::new_training_data(
+    ///     vec![2.0, 2.0, 1.0],
+    ///     1.0,
+    ///     0.5,
+    ///     None
+    /// );
+    /// let data4 = Data::new_training_data(
+    ///     vec![2.0, 2.3, 1.2],
+    ///     1.0,
+    ///     3.0,
+    ///     None
+    /// );
     ///
     /// let mut dv = Vec::new();
     /// dv.push(data1.clone());
@@ -1131,7 +1368,7 @@ impl DecisionTree {
     /// tree.set_max_depth(2);
     /// tree.set_min_leaf_size(1);
     /// tree.set_loss(Loss::SquaredError);
-    /// let mut cache = TrainingCache::get_cache(3, &dv, 3);
+    /// let mut cache = TrainingCache::get_cache(3, &dv, 2);
     /// tree.fit(&dv, &mut cache);
     ///
     ///
@@ -1224,9 +1461,10 @@ impl DecisionTree {
     /// Step 3: Find the feature that has the smallest impurity.
     ///
     /// Step 4: Use the feature and the feature value to split the data.
+    ///
+    /// Output: (left set, right set, unknown set), feature index, feature value
     #[cfg(feature = "enable_training")]
     fn split(
-        //whole_data: &[Data],
         train_data: &[usize],
         feature_size: usize,
         feature_sample_ratio: f64,
@@ -1248,17 +1486,17 @@ impl DecisionTree {
 
         let mut v: ValueType = 0.0;
         let mut impurity: f64 = 0.0;
-        //let mut g: f64 = 0.0;
         let mut best_fitness: f64 = std::f64::MAX;
 
         let mut index: usize = 0;
         let mut value: ValueType = 0.0;
-        // let mut gain: f64 = 0.0;
 
+        // Generate the ImpurityCache
         let mut impurity_cache = ImpurityCache::new(cache.sample_size, train_data);
 
         let mut find: bool = false;
         let mut data_to_split: Vec<(usize, ValueType)> = Vec::new();
+        // Calculate each feature's impurity
         for i in fv.iter().take(fs) {
             let sorted_data = DecisionTree::get_impurity(
                 train_data,
@@ -1275,9 +1513,10 @@ impl DecisionTree {
                 index = *i;
                 value = v;
                 data_to_split = sorted_data;
-                //gain = g;
             }
         }
+
+        // Split the node according to the impurity
         if find {
             let mut left: Vec<usize> = Vec::new();
             let mut right: Vec<usize> = Vec::new();
@@ -1313,9 +1552,16 @@ impl DecisionTree {
     }
 
     /// Calculate the impurity.
+    /// train_data: samples in current node
+    /// feature_index: the index of the selected feature
+    /// value: the result of the feature value
+    /// impurity: the result of the impurity
+    /// cache: TrainingCache
+    /// impurity_cache: ImpurityCache
+    /// sub_cache: SubCache
+    /// output: The sorted data according to the feature
     #[cfg(feature = "enable_training")]
     fn get_impurity(
-        //_whole_data: &[Data],
         train_data: &[usize],
         feature_index: usize,
         value: &mut ValueType,
@@ -1323,10 +1569,10 @@ impl DecisionTree {
         cache: &TrainingCache,
         impurity_cache: &mut ImpurityCache,
         sub_cache: &SubCache,
-        //gain: &mut f64,
     ) -> Vec<(usize, ValueType)> {
         *impurity = std::f64::MAX;
         *value = VALUE_TYPE_UNKNOWN;
+        // Sort the samples with the feature value
         let sorted_data = cache.sort_with_bool_vec(
             feature_index,
             false,
@@ -1425,7 +1671,6 @@ impl DecisionTree {
             if *impurity > fitness {
                 *impurity = fitness;
                 *value = (f1 + f2) / 2.0;
-                //*gain = fitness00 - fitness1 - fitness2;
             }
         }
 
@@ -1439,30 +1684,24 @@ impl DecisionTree {
     /// use gbdt::config::Loss;
     /// use gbdt::decision_tree::{Data, DecisionTree, TrainingCache};
     /// // set up training data
-    /// let data1 = Data {
-    ///     feature: vec![1.0, 2.0, 3.0],
-    ///     target: 2.0,
-    ///     weight: 1.0,
-    ///     label: 1.0,
-    ///     residual: 1.0,
-    ///     initial_guess: 1.0,
-    /// };
-    /// let data2 = Data {
-    ///     feature: vec![1.1, 2.1, 3.1],
-    ///     target: 1.0,
-    ///     weight: 1.0,
-    ///     label: 1.0,
-    ///     residual: 1.0,
-    ///     initial_guess: 1.0,
-    /// };
-    /// let data3 = Data {
-    ///     feature: vec![2.0, 2.0, 1.0],
-    ///     target: 0.5,
-    ///     weight: 1.0,
-    ///     label: 2.0,
-    ///     residual: 2.0,
-    ///     initial_guess: 2.0,
-    /// };
+    /// let data1 = Data::new_training_data(
+    ///     vec![1.0, 2.0, 3.0],
+    ///     1.0,
+    ///     2.0,
+    ///     None
+    /// );
+    /// let data2 = Data::new_training_data(
+    ///     vec![1.1, 2.1, 3.1],
+    ///     1.0,
+    ///     1.0,
+    ///     None
+    /// );
+    /// let data3 = Data::new_training_data(
+    ///     vec![2.0, 2.0, 1.0],
+    ///     1.0,
+    ///     0.5,
+    ///     None
+    /// );
     ///
     /// let mut dv = Vec::new();
     /// dv.push(data1.clone());
@@ -1476,7 +1715,7 @@ impl DecisionTree {
     /// tree.set_max_depth(2);
     /// tree.set_min_leaf_size(1);
     /// tree.set_loss(Loss::SquaredError);
-    /// let mut cache = TrainingCache::get_cache(3, &dv, 3);
+    /// let mut cache = TrainingCache::get_cache(3, &dv, 2);
     /// let subset = [0, 1];
     /// tree.fit_n(&dv, &subset, &mut cache);
     ///
@@ -1485,7 +1724,7 @@ impl DecisionTree {
     ///
     /// // output:
     ///
-    /// //  ----DTNode { feature_index: 0, feature_value: 1.05, pred: 0.0, is_leaf: false }
+    /// //  ----DTNode { feature_index: 0, feature_value: 1.05, pred: 1.5, is_leaf: false }
     /// //      ----DTNode { feature_index: 0, feature_value: 0.0, pred: 2.0, is_leaf: true }
     /// //      ----DTNode { feature_index: 0, feature_value: 0.0, pred: 1.0, is_leaf: true }
     /// ```
@@ -1493,6 +1732,18 @@ impl DecisionTree {
         self.tree.print();
     }
 
+    /// Build a decision tree from xgboost's model. xgboost can dump the model in JSON format. We used serde_json to parse a JSON string.  
+    /// # Example
+    /// ``` rust
+    /// use serde_json::{Result, Value};
+    /// use gbdt::decision_tree::DecisionTree;
+    /// let data = r#"
+    ///       { "nodeid": 0, "depth": 0, "split": 0, "split_condition": 750, "yes": 1, "no": 2, "missing": 2, "children": [
+    ///          { "nodeid": 1, "leaf": 25.7333336 },
+    ///          { "nodeid": 2, "leaf": 15.791667 }]}"#;
+    /// let node: Value = serde_json::from_str(data).unwrap();
+    /// let dt = DecisionTree::get_from_xgboost(&node);
+    /// ```
     pub fn get_from_xgboost(node: &serde_json::Value) -> Result<Self, Box<Error>> {
         // Parameters are not used in prediction process, so we use default parameters.
         let mut tree = DecisionTree::new();
@@ -1501,6 +1752,7 @@ impl DecisionTree {
         Ok(tree)
     }
 
+    /// Recursively build the tree node from the JSON value.
     fn add_node_from_json(
         &mut self,
         index: TreeIndex,
@@ -1511,17 +1763,20 @@ impl DecisionTree {
                 .tree
                 .get_node_mut(index)
                 .expect("node should not be empty!");
+            // This is the leaf node
             if let serde_json::Value::Number(pred) = &node["leaf"] {
                 let leaf_value = pred.as_f64().ok_or("parse 'leaf' error")?;
                 node_ref.value.pred = leaf_value as ValueType;
                 node_ref.value.is_leaf = true;
                 return Ok(());
             } else {
+                // feature value
                 let feature_value = node["split_condition"]
                     .as_f64()
                     .ok_or("parse 'split condition' error")?;
                 node_ref.value.feature_value = feature_value as ValueType;
 
+                // feature index
                 let feature_index = match node["split"].as_i64() {
                     Some(v) => v,
                     None => {
@@ -1532,6 +1787,7 @@ impl DecisionTree {
                 };
                 node_ref.value.feature_index = feature_index as usize;
 
+                // handle unknown feature
                 let missing = node["missing"].as_i64().ok_or("parse 'missing' error")?;
                 let left_child = node["yes"].as_i64().ok_or("parse 'yes' error")?;
                 let right_child = node["no"].as_i64().ok_or("parse 'no' error")?;
@@ -1546,6 +1802,7 @@ impl DecisionTree {
             }
         }
 
+        // ids for children
         let left_child = node["yes"].as_i64().ok_or("parse 'yes' error")?;
         let right_child = node["no"].as_i64().ok_or("parse 'no' error")?;
         let children = node["children"]
@@ -1555,6 +1812,8 @@ impl DecisionTree {
         let mut find_right = false;
         for child in children.iter() {
             let node_id = child["nodeid"].as_i64().ok_or("parse 'nodeid' error")?;
+
+            // build left child
             if node_id == left_child {
                 find_left = true;
                 let left_index = self
@@ -1562,6 +1821,8 @@ impl DecisionTree {
                     .add_left_node(index, BinaryTreeNode::new(DTNode::new()));
                 self.add_node_from_json(left_index, child)?;
             }
+
+            // build right child
             if node_id == right_child {
                 find_right = true;
                 let right_index = self
@@ -1578,6 +1839,49 @@ impl DecisionTree {
         Ok(())
     }
 
+    /// For debug use. Return the number of nodes in current decision tree
+    ///
+    /// # Example
+    /// ```
+    /// use gbdt::config::Loss;
+    /// use gbdt::decision_tree::{Data, DecisionTree, TrainingCache};
+    /// // set up training data
+    /// let data1 = Data::new_training_data(
+    ///     vec![1.0, 2.0, 3.0],
+    ///     1.0,
+    ///     2.0,
+    ///     None
+    /// );
+    /// let data2 = Data::new_training_data(
+    ///     vec![1.1, 2.1, 3.1],
+    ///     1.0,
+    ///     1.0,
+    ///     None
+    /// );
+    /// let data3 = Data::new_training_data(
+    ///     vec![2.0, 2.0, 1.0],
+    ///     1.0,
+    ///     0.5,
+    ///     None
+    /// );
+    ///
+    /// let mut dv = Vec::new();
+    /// dv.push(data1.clone());
+    /// dv.push(data2.clone());
+    /// dv.push(data3.clone());
+    ///
+    ///
+    /// // train a decision tree
+    /// let mut tree = DecisionTree::new();
+    /// tree.set_feature_size(3);
+    /// tree.set_max_depth(2);
+    /// tree.set_min_leaf_size(1);
+    /// tree.set_loss(Loss::SquaredError);
+    /// let mut cache = TrainingCache::get_cache(3, &dv, 2);
+    /// let subset = [0, 1];
+    /// tree.fit_n(&dv, &subset, &mut cache);
+    ///
+    /// assert_eq!(tree.len(), 3)
     pub fn len(&self) -> usize {
         self.tree.len()
     }

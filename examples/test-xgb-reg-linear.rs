@@ -8,7 +8,7 @@ use time::PreciseTime;
 
 fn main() {
     let gbdt = GBDT::from_xgoost_dump("data/xgb_reg_linear/gbdt.model", "reg:linear").unwrap();
-    let test_file = "data/xgb_reg_linear/machine.txt.test";
+    let test_file = "data/xgb_rank_pairwise/machine.txt.test";
     let mut input_format = input::InputFormat::txt_format();
     input_format.set_feature_size(36);
     input_format.set_delimeter(' ');
