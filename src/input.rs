@@ -199,7 +199,7 @@ pub fn infer(file_name: &str) -> InputFormat {
     // check CSV or TXT
     let mut first_line = String::new();
     reader.read_line(&mut first_line).unwrap();
-    let mut input_format = if first_line.contains(":") {
+    let mut input_format = if first_line.contains(':') {
         InputFormat::txt_format()
     } else {
         InputFormat::csv_format()
@@ -223,7 +223,7 @@ pub fn infer(file_name: &str) -> InputFormat {
     };
     let mut flag = false;
     if let Some(value) = cnt.get(&default_delim) {
-        if value > &((caps as u32) - 2) {
+        if *value > ((caps as u32) - 2) {
             input_format.delimeter = default_delim;
             flag = true;
         }
@@ -232,7 +232,7 @@ pub fn infer(file_name: &str) -> InputFormat {
         let mut max_cnt: u32 = 0;
         let mut delim = '\t';
         for (k, v) in &cnt {
-            if v > &max_cnt {
+            if *v > max_cnt {
                 max_cnt = *v;
                 delim = *k;
             }
@@ -251,7 +251,7 @@ pub fn infer(file_name: &str) -> InputFormat {
             let letters = Regex::new(r"[a-zA-Z]").unwrap();
             match letters.captures(&first_line_after) {
                 Some(letter_caps) => {
-                    input_format.header = if letter_caps.len() > 0 { true } else { false };
+                    input_format.header = letter_caps.len() > 0;
                 }
                 None => {}
             }
@@ -312,7 +312,7 @@ pub fn load_csv(file: &mut File, input_format: InputFormat) -> Result<DataVec, B
 }
 
 /// Load txt file.
-/// Load csv file.
+///
 /// # Example
 /// ```rust
 /// use std::fs::File;
@@ -338,7 +338,7 @@ pub fn load_txt(file: &mut File, input_format: InputFormat) -> Result<DataVec, B
     for line in reader.lines() {
         let mut v: Vec<ValueType> = vec![VALUE_TYPE_UNKNOWN; input_format.feature_size];
         for token in line.unwrap().split(input_format.delimeter) {
-            let splited_token: Vec<&str> = token.split(":").collect();
+            let splited_token: Vec<&str> = token.split(':').collect();
             if splited_token.len() == 2 {
                 let mut err = false;
                 match splited_token[0 as usize].parse::<usize>() {
@@ -367,7 +367,7 @@ pub fn load_txt(file: &mut File, input_format: InputFormat) -> Result<DataVec, B
             }
         }
         dv.push(Data {
-            label: label,
+            label,
             feature: v,
             target: 0.0,
             weight: 1.0,

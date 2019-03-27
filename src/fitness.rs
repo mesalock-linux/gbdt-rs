@@ -87,14 +87,19 @@ pub fn RMSE(dv: &DataVec, predict: &PredVec, len: usize) -> ValueType {
     assert_eq!(dv.len(), predict.len());
     assert!(dv.len() >= len);
 
-    let mut s: ValueType = 0.0;
-    let mut c: ValueType = 0.0;
+    let mut s: f64 = 0.0;
+    let mut c: f64 = 0.0;
 
     for i in 0..dv.len() {
-        s += (predict[i] - dv[i].label).powf(2.0) * dv[i].weight;
-        c += dv[i].weight;
+        s += (f64::from(predict[i]) - f64::from(dv[i].label)).powf(2.0) * f64::from(dv[i].weight);
+        c += f64::from(dv[i].weight);
     }
-    s / c
+
+    if c.abs() < 1e-10 {
+        0.0
+    } else {
+        (s / c) as ValueType
+    }
 }
 
 /// MAE (Mean Absolute Error) calculation for first n element in data vector.
@@ -158,7 +163,7 @@ pub fn AUC(dv: &DataVec, predict: &PredVec, len: usize) -> ValueType {
     positive_scores.sort_by(|a, b| a.partial_cmp(b).unwrap());
     let p_size = positive_scores.len();
     negative_scores.sort_by(|a, b| a.partial_cmp(b).unwrap());
-    let n_size = positive_scores.len();
+    let n_size = negative_scores.len();
     if (p_size == 0) || (n_size == 0) {
         return 0.5;
     }
@@ -309,13 +314,17 @@ pub fn average(dv: &DataVec, len: usize) -> ValueType {
 /// If the specified length is greater than the length of data vector, it will panic.
 pub fn label_average(dv: &DataVec, len: usize) -> ValueType {
     assert!(dv.len() >= len);
-    let mut s: ValueType = 0.0;
-    let mut c: ValueType = 0.0;
+    let mut s: f64 = 0.0;
+    let mut c: f64 = 0.0;
     for d in dv {
-        s += d.label * d.weight;
-        c += d.weight;
+        s += f64::from(d.label) * f64::from(d.weight);
+        c += f64::from(d.weight);
     }
-    s / c
+    if c.abs() < 1e-10 {
+        0.0
+    } else {
+        (s / c) as ValueType
+    }
 }
 
 /// Return the weighted label median for first n data in data vector.
@@ -366,16 +375,16 @@ pub fn weighted_label_median(dv: &DataVec, len: usize) -> ValueType {
     assert!(dv.len() >= len);
     let mut dv_copy = dv.to_vec();
     dv_copy.sort_by(|a, b| a.label.partial_cmp(&b.label).unwrap());
-    let mut all_weight: ValueType = 0.0;
+    let mut all_weight: f64 = 0.0;
     for d in &dv_copy {
-        all_weight += d.weight;
+        all_weight += f64::from(d.weight);
     }
 
     let mut weighted_median: ValueType = 0.0;
-    let mut weight: ValueType = 0.0;
+    let mut weight: f64 = 0.0;
 
     for i in 0..len {
-        weight += dv_copy[i].weight;
+        weight += f64::from(dv_copy[i].weight);
         if weight * 2.0 > all_weight {
             if i - 1 > 0 {
                 weighted_median = (dv_copy[i].label + dv_copy[i - 1].label) / 2.0;

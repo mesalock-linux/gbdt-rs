@@ -336,7 +336,7 @@ impl TrainingCache {
             let item = CacheValue {
                 s: 0.0,
                 ss: 0.0,
-                c: elem.weight as f64,
+                c: f64::from(elem.weight),
             };
             cache_value.push(item);
         }
@@ -432,15 +432,15 @@ impl TrainingCache {
         for (index, data) in whole_data.iter().enumerate() {
             let target = data.target;
             self.cache_target[index] = target;
-            let weight = data.weight as f64;
-            let target = target as f64;
+            let weight = f64::from(data.weight);
+            let target = f64::from(target);
             let s = target * weight;
             self.cache_value[index].s = s;
             self.cache_value[index].ss = target * s;
             if let Loss::LogLikelyhood = loss {
                 let y = target.abs();
                 let c = y * (2.0 - y) * weight;
-                self.logit_c[index] = c as f32;
+                self.logit_c[index] = c as ValueType;
             }
         }
         // Compute the ordered_residual.
@@ -822,8 +822,8 @@ fn average(data: &[usize], cache: &TrainingCache) -> ValueType {
 
     for index in data.iter() {
         let cv: &CacheValue = &cache.cache_value[*index];
-        sum += cv.s as f64;
-        weight += cv.c as f64;
+        sum += cv.s;
+        weight += cv.c;
     }
     if weight.abs() < 1e-10 {
         0.0
@@ -839,8 +839,8 @@ fn logit_optimal_value(data: &[usize], cache: &TrainingCache) -> ValueType {
     let mut c: f64 = 0.0;
 
     for index in data.iter() {
-        s += cache.cache_value[*index].s as f64;
-        c += cache.logit_c[*index] as f64;
+        s += cache.cache_value[*index].s;
+        c += f64::from(cache.logit_c[*index]);
     }
 
     if c.abs() < 1e-10 {
@@ -857,17 +857,17 @@ fn lad_optimal_value(data: &[usize], cache: &TrainingCache, sub_cache: &SubCache
 
     let all_weight = sorted_data
         .iter()
-        .fold(0.0f64, |acc, x| acc + (cache.cache_value[x.0].c) as f64);
+        .fold(0.0f64, |acc, x| acc + cache.cache_value[x.0].c);
 
     let mut weighted_median: f64 = 0.0;
     let mut weight: f64 = 0.0;
     for (i, pair) in sorted_data.iter().enumerate() {
-        weight += cache.cache_value[pair.0].c as f64;
+        weight += cache.cache_value[pair.0].c;
         if (weight * 2.0) > all_weight {
             if i >= 1 {
-                weighted_median = ((pair.1 + sorted_data[i - 1].1) / 2.0) as f64;
+                weighted_median = f64::from((pair.1 + sorted_data[i - 1].1) / 2.0);
             } else {
-                weighted_median = pair.1 as f64;
+                weighted_median = f64::from(pair.1);
             }
 
             break;
@@ -1238,7 +1238,7 @@ impl DecisionTree {
 
     /// Inference the subset of the `test_data`. Return a vector of
     /// predicted values. If the `i` is in the subset, then output[i] is the prediction.
-    /// `i` is not in the subset, then output[i] is 0.0
+    /// If `i` is not in the subset, then output[i] is 0.0
     ///
     /// # Example
     /// ```
@@ -1590,9 +1590,9 @@ impl DecisionTree {
             let (index, feature_value) = *pair;
             if feature_value == VALUE_TYPE_UNKNOWN {
                 let cv: &CacheValue = &cache.cache_value[index];
-                s += cv.s as f64;
-                ss += cv.ss as f64;
-                c += cv.c as f64;
+                s += cv.s;
+                ss += cv.ss;
+                c += cv.c;
                 unknown += 1;
             } else {
                 break;

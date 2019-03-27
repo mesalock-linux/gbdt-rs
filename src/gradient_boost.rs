@@ -29,57 +29,53 @@
 //! let mut gbdt = GBDT::new(&cfg);
 //!
 //! // setup training data
-//! let data1 = Data {
-//!     feature: vec![1.0, 2.0, 3.0],
-//!     target: 2.0,
-//!     weight: 1.0,
-//!     label: 1.0,
-//!     residual: 1.0,
-//!     initial_guess: 1.0,
-//! };
-//! let data2 = Data {
-//!     feature: vec![1.1, 2.1, 3.1],
-//!     target: 1.0,
-//!     weight: 1.0,
-//!     label: 1.0,
-//!     residual: 1.0,
-//!     initial_guess: 1.0,
-//! };
-//! let data3 = Data {
-//!     feature: vec![2.0, 2.0, 1.0],
-//!     target: 0.5,
-//!     weight: 1.0,
-//!     label: 2.0,
-//!     residual: 2.0,
-//!     initial_guess: 2.0,
-//! };
-//! let data4 = Data {
-//!     feature: vec![2.0, 2.3, 1.2],
-//!     target: 3.0,
-//!     weight: 1.0,
-//!     label: 0.0,
-//!     residual: 0.0,
-//!     initial_guess: 1.0,
-//! };
+//! let data1 = Data::new_training_data (
+//!     vec![1.0, 2.0, 3.0],
+//!     1.0,
+//!     1.0,
+//!     None
+//! );
+//! let data2 = Data::new_training_data (
+//!     vec![1.1, 2.1, 3.1],
+//!     1.0,
+//!     1.0,
+//!     None
+//! );
+//! let data3 = Data::new_training_data (
+//!     vec![2.0, 2.0, 1.0],
+//!     1.0,
+//!     2.0,
+//!     None
+//! );
+//! let data4 = Data::new_training_data (
+//!     vec![2.0, 2.3, 1.2],
+//!     1.0,
+//!     0.0,
+//!     None
+//! );
 //!
-//! let mut dv: DataVec = Vec::new();
-//! dv.push(data1.clone());
-//! dv.push(data2.clone());
-//! dv.push(data3.clone());
-//! dv.push(data4.clone());
+//! let mut training_data: DataVec = Vec::new();
+//! training_data.push(data1.clone());
+//! training_data.push(data2.clone());
+//! training_data.push(data3.clone());
+//! training_data.push(data4.clone());
 //!
 //! // train the decision trees.
-//! gbdt.fit(&mut dv);
+//! gbdt.fit(&mut training_data);
 //!
 //! // setup the test data
 //!
-//! let mut dv: DataVec = Vec::new();
-//! dv.push(data1.clone());
-//! dv.push(data2.clone());
-//! dv.push(data3.clone());
-//! dv.push(data4.clone());
+//! let mut test_data: DataVec = Vec::new();
+//! test_data.push(data1.clone());
+//! test_data.push(data2.clone());
+//! test_data.push(Data::new_test_data(
+//!     vec![2.0, 2.0, 1.0],
+//!     None));
+//! test_data.push(Data::new_test_data(
+//!     vec![2.0, 2.3, 1.2],
+//!     None));
 //!
-//! println!("{:?}", gbdt.predict(&dv));
+//! println!("{:?}", gbdt.predict(&test_data));
 //!
 //! // output:
 //! // [1.0, 1.0, 2.0, 0.0]
@@ -90,7 +86,7 @@ use crate::decision_tree::DecisionTree;
 use crate::decision_tree::TrainingCache;
 use crate::decision_tree::{DataVec, PredVec, ValueType, VALUE_TYPE_MIN, VALUE_TYPE_UNKNOWN};
 #[cfg(feature = "enable_training")]
-use crate::fitness::*;
+use crate::fitness::{label_average, logit_loss_gradient, weighted_label_median, MAE, RMSE};
 #[cfg(feature = "enable_training")]
 use rand::prelude::SliceRandom;
 #[cfg(feature = "enable_training")]
@@ -114,8 +110,6 @@ pub struct GBDT {
     trees: Vec<DecisionTree>,
     /// The bias estimated.
     bias: ValueType,
-    /// The information gain for each feature.
-    pub gain: Vec<ValueType>,
 }
 
 impl GBDT {
@@ -142,7 +136,6 @@ impl GBDT {
             conf: conf.clone(),
             trees: Vec::new(),
             bias: 0.0,
-            gain: Vec::new(),
         }
     }
 
@@ -152,7 +145,7 @@ impl GBDT {
     /// We simply check whether the length of feature vector in each data
     /// equals to the specified feature size in config.
     #[cfg(feature = "enable_training")]
-    pub fn check_valid_data(&self, dv: &DataVec) -> bool {
+    fn check_valid_data(&self, dv: &DataVec) -> bool {
         dv.iter().all(|x| x.feature.len() == self.conf.feature_size)
     }
 
@@ -189,7 +182,7 @@ impl GBDT {
 
     /// Fit the train data.
     ///
-    /// First, initialize and configure decision trees. Then train the data for certain
+    /// First, initialize and configure decision trees. Then train the model with certain
     /// iterations set by config.
     ///
     /// # Example
@@ -210,51 +203,44 @@ impl GBDT {
     /// let mut gbdt = GBDT::new(&cfg);
     ///
     /// // setup training data
-    /// let data1 = Data {
-    ///     feature: vec![1.0, 2.0, 3.0],
-    ///     target: 2.0,
-    ///     weight: 1.0,
-    ///     label: 1.0,
-    ///     residual: 1.0,
-    ///     initial_guess: 1.0,
-    /// };
-    /// let data2 = Data {
-    ///     feature: vec![1.1, 2.1, 3.1],
-    ///     target: 1.0,
-    ///     weight: 1.0,
-    ///     label: 1.0,
-    ///     residual: 1.0,
-    ///     initial_guess: 1.0,
-    /// };
-    /// let data3 = Data {
-    ///     feature: vec![2.0, 2.0, 1.0],
-    ///     target: 0.5,
-    ///     weight: 1.0,
-    ///     label: 2.0,
-    ///     residual: 2.0,
-    ///     initial_guess: 2.0,
-    /// };
-    /// let data4 = Data {
-    ///     feature: vec![2.0, 2.3, 1.2],
-    ///     target: 3.0,
-    ///     weight: 1.0,
-    ///     label: 0.0,
-    ///     residual: 0.0,
-    ///     initial_guess: 1.0,
-    /// };
+    /// let data1 = Data::new_training_data (
+    ///     vec![1.0, 2.0, 3.0],
+    ///     1.0,
+    ///     1.0,
+    ///     None
+    /// );
+    /// let data2 = Data::new_training_data (
+    ///     vec![1.1, 2.1, 3.1],
+    ///     1.0,
+    ///     1.0,
+    ///     None
+    /// );
+    /// let data3 = Data::new_training_data (
+    ///     vec![2.0, 2.0, 1.0],
+    ///     1.0,
+    ///     2.0,
+    ///     None
+    /// );
+    /// let data4 = Data::new_training_data (
+    ///     vec![2.0, 2.3, 1.2],
+    ///     1.0,
+    ///     0.0,
+    ///     None
+    /// );
     ///
-    /// let mut dv: DataVec = Vec::new();
-    /// dv.push(data1.clone());
-    /// dv.push(data2.clone());
-    /// dv.push(data3.clone());
-    /// dv.push(data4.clone());
+    /// let mut training_data: DataVec = Vec::new();
+    /// training_data.push(data1.clone());
+    /// training_data.push(data2.clone());
+    /// training_data.push(data3.clone());
+    /// training_data.push(data4.clone());
     ///
     /// // train the decision trees.
-    /// gbdt.fit(&mut dv);
+    /// gbdt.fit(&mut training_data);
     /// ```
     #[cfg(feature = "enable_training")]
     pub fn fit(&mut self, train_data: &mut DataVec) {
         self.trees = Vec::with_capacity(self.conf.iterations);
+        // initialize each decision tree
         for i in 0..self.conf.iterations {
             self.trees.push(DecisionTree::new());
             self.trees[i].set_feature_size(self.conf.feature_size);
@@ -263,6 +249,8 @@ impl GBDT {
             self.trees[i].set_feature_sample_ratio(self.conf.feature_sample_ratio);
             self.trees[i].set_loss(self.conf.loss.clone());
         }
+
+        // number of samples for training
         let nr_samples: usize = if self.conf.data_sample_ratio < 1.0 {
             ((train_data.len() as f64) * self.conf.data_sample_ratio) as usize
         } else {
@@ -272,10 +260,13 @@ impl GBDT {
         self.init(train_data.len(), &train_data);
 
         let mut rng = thread_rng();
+        // initialize the predicted_cache, which records the predictions for training data
         let mut predicted_cache: PredVec = self.predict_n(train_data, 0, 0, train_data.len());
 
         #[cfg(feature = "profiling")]
         let t1 = PreciseTime::now();
+
+        // allocat the TrainingCache
         let mut cache = TrainingCache::get_cache(
             self.conf.feature_size,
             &train_data,
@@ -284,14 +275,17 @@ impl GBDT {
 
         #[cfg(feature = "profiling")]
         let t2 = PreciseTime::now();
+
         #[cfg(feature = "profiling")]
         println!("cache {}", t1.to(t2));
 
         for i in 0..self.conf.iterations {
             #[cfg(feature = "profiling")]
             let t1 = PreciseTime::now();
+
             let mut samples: Vec<usize> = (0..train_data.len()).collect();
-            let (subset, remain) = if nr_samples < train_data.len() {
+            // randomly select some data for training
+            let (subset, remaining) = if nr_samples < train_data.len() {
                 samples.shuffle(&mut rng);
                 let (left, right) = samples.split_at(nr_samples);
                 let mut left = left.to_vec();
@@ -303,28 +297,33 @@ impl GBDT {
                 (samples, Vec::new())
             };
 
+            // Update the target for training
             match self.conf.loss {
                 Loss::SquaredError => {
-                    self.square_loss_process(train_data, nr_samples, &predicted_cache)
+                    self.square_loss_process(train_data, train_data.len(), &predicted_cache)
                 }
                 Loss::LogLikelyhood => {
-                    self.log_loss_process(train_data, nr_samples, &predicted_cache)
+                    self.log_loss_process(train_data, train_data.len(), &predicted_cache)
                 }
-                Loss::LAD => self.lad_loss_process(train_data, nr_samples, &predicted_cache),
+                Loss::LAD => self.lad_loss_process(train_data, train_data.len(), &predicted_cache),
 
-                _ => self.square_loss_process(train_data, nr_samples, &predicted_cache),
+                _ => self.square_loss_process(train_data, train_data.len(), &predicted_cache),
             }
-
+            // train a new decision tree
             self.trees[i].fit_n(train_data, &subset, &mut cache);
+
+            // update the predicted_cache for the data in the `subset`
             let train_preds = cache.get_preds();
             for index in subset.iter() {
                 predicted_cache[*index] += train_preds[*index] * self.conf.shrinkage;
             }
-            let predicted_tmp = self.trees[i].predict_n(train_data, &remain);
-            for index in remain.iter() {
+            // update the predicted_cache for the data in the `remaining`
+            let predicted_tmp = self.trees[i].predict_n(train_data, &remaining);
+            for index in remaining.iter() {
                 predicted_cache[*index] += predicted_tmp[*index] * self.conf.shrinkage;
             }
 
+            //output elapsed time
             #[cfg(feature = "profiling")]
             let t2 = PreciseTime::now();
             #[cfg(feature = "profiling")]
@@ -337,86 +336,17 @@ impl GBDT {
         }
     }
 
-    /// Predicting the first `n` data in data vector with the first `iters` trees.
+    /// Predict the first `n` data in data vector with the [`begin`, `begin`+iters) trees.
+    ///
+    /// The output will be a vector, having same size as the `test_data`. The first n elements are the predicted values, the others are `VALUE_TYPE_UNKNOWN`
     ///
     /// Note that the result will not be normalized no matter what loss type is used.
-    ///
-    /// # Example
-    /// ```rust
-    /// use gbdt::config::Config;
-    /// use gbdt::gradient_boost::GBDT;
-    /// use gbdt::decision_tree::{Data, DataVec, PredVec, ValueType};
-    ///
-    /// // set config for algorithm
-    /// let mut cfg = Config::new();
-    /// cfg.set_feature_size(3);
-    /// cfg.set_max_depth(2);
-    /// cfg.set_min_leaf_size(1);
-    /// cfg.set_loss("SquaredError");
-    /// cfg.set_iterations(2);
-    ///
-    /// // initialize GBDT algorithm
-    /// let mut gbdt = GBDT::new(&cfg);
-    ///
-    /// // setup training data
-    /// let data1 = Data {
-    ///     feature: vec![1.0, 2.0, 3.0],
-    ///     target: 2.0,
-    ///     weight: 1.0,
-    ///     label: 1.0,
-    ///     residual: 1.0,
-    ///     initial_guess: 1.0,
-    /// };
-    /// let data2 = Data {
-    ///     feature: vec![1.1, 2.1, 3.1],
-    ///     target: 1.0,
-    ///     weight: 1.0,
-    ///     label: 1.0,
-    ///     residual: 1.0,
-    ///     initial_guess: 1.0,
-    /// };
-    /// let data3 = Data {
-    ///     feature: vec![2.0, 2.0, 1.0],
-    ///     target: 0.5,
-    ///     weight: 1.0,
-    ///     label: 2.0,
-    ///     residual: 2.0,
-    ///     initial_guess: 2.0,
-    /// };
-    /// let data4 = Data {
-    ///     feature: vec![2.0, 2.3, 1.2],
-    ///     target: 3.0,
-    ///     weight: 1.0,
-    ///     label: 0.0,
-    ///     residual: 0.0,
-    ///     initial_guess: 1.0,
-    /// };
-    ///
-    /// let mut dv: DataVec = Vec::new();
-    /// dv.push(data1.clone());
-    /// dv.push(data2.clone());
-    /// dv.push(data3.clone());
-    /// dv.push(data4.clone());
-    ///
-    /// // train the decision trees.
-    /// gbdt.fit(&mut dv);
-    ///
-    /// // setup the test data
-    ///
-    /// let mut dv: DataVec = Vec::new();
-    /// dv.push(data1.clone());
-    /// dv.push(data2.clone());
-    /// dv.push(data3.clone());
-    /// dv.push(data4.clone());
-    ///
-    /// println!("{:?}", gbdt.predict_n(&dv, 0, 2, dv.len()));
-    /// ```
     ///
     /// # Panic
     /// If n is greater than the length of test data vector, it will panic.
     ///
     /// If the iterations is greater than the number of trees that have been trained, it will panic.
-    pub fn predict_n(&self, test_data: &DataVec, begin: usize, iters: usize, n: usize) -> PredVec {
+    fn predict_n(&self, test_data: &DataVec, begin: usize, iters: usize, n: usize) -> PredVec {
         assert!((begin + iters) <= self.trees.len());
         assert!(n <= test_data.len());
 
@@ -424,12 +354,14 @@ impl GBDT {
             return vec![VALUE_TYPE_UNKNOWN; test_data.len()];
         }
 
+        // initialize the vector with bias/initial_guess
         let mut predicted: PredVec = if !self.conf.initial_guess_enabled {
             vec![self.bias; n]
         } else {
             test_data.iter().take(n).map(|x| x.initial_guess).collect()
         };
 
+        // inference the data with individual decision tree.
         let subset: Vec<usize> = (0..n).collect();
         for i in begin..(iters + begin) {
             let v: PredVec = self.trees[i].predict_n(&test_data, &subset);
@@ -440,10 +372,10 @@ impl GBDT {
         predicted
     }
 
-    /// Predicting the given data.
+    /// Predict the given data.
     ///
-    /// Note that when using log likelyhood loss type, the predicted value will be
-    /// normalized to 1.0 and -1.0 .
+    /// Note that for log likelyhood loss type, the predicted value will be
+    /// normalized between 0 and 1, which is the possibility of label 1
     ///
     /// # Example
     /// ```rust
@@ -463,57 +395,49 @@ impl GBDT {
     /// let mut gbdt = GBDT::new(&cfg);
     ///
     /// // setup training data
-    /// let data1 = Data {
-    ///     feature: vec![1.0, 2.0, 3.0],
-    ///     target: 2.0,
-    ///     weight: 1.0,
-    ///     label: 1.0,
-    ///     residual: 1.0,
-    ///     initial_guess: 1.0,
-    /// };
-    /// let data2 = Data {
-    ///     feature: vec![1.1, 2.1, 3.1],
-    ///     target: 1.0,
-    ///     weight: 1.0,
-    ///     label: 1.0,
-    ///     residual: 1.0,
-    ///     initial_guess: 1.0,
-    /// };
-    /// let data3 = Data {
-    ///     feature: vec![2.0, 2.0, 1.0],
-    ///     target: 0.5,
-    ///     weight: 1.0,
-    ///     label: 2.0,
-    ///     residual: 2.0,
-    ///     initial_guess: 2.0,
-    /// };
-    /// let data4 = Data {
-    ///     feature: vec![2.0, 2.3, 1.2],
-    ///     target: 3.0,
-    ///     weight: 1.0,
-    ///     label: 0.0,
-    ///     residual: 0.0,
-    ///     initial_guess: 1.0,
-    /// };
+    /// let data1 = Data::new_training_data (
+    ///     vec![1.0, 2.0, 3.0],
+    ///     1.0,
+    ///     1.0,
+    ///     None
+    /// );
+    /// let data2 = Data::new_training_data (
+    ///     vec![1.1, 2.1, 3.1],
+    ///     1.0,
+    ///     1.0,
+    ///     None
+    /// );
+    /// let data3 = Data::new_training_data (
+    ///     vec![2.0, 2.0, 1.0],
+    ///     1.0,
+    ///     2.0,
+    ///     None
+    /// );
+    /// let data4 = Data::new_training_data (
+    ///     vec![2.0, 2.3, 1.2],
+    ///     1.0,
+    ///     0.0,
+    ///     None
+    /// );
     ///
-    /// let mut dv: DataVec = Vec::new();
-    /// dv.push(data1.clone());
-    /// dv.push(data2.clone());
-    /// dv.push(data3.clone());
-    /// dv.push(data4.clone());
+    /// let mut training_data: DataVec = Vec::new();
+    /// training_data.push(data1.clone());
+    /// training_data.push(data2.clone());
+    /// training_data.push(data3.clone());
+    /// training_data.push(data4.clone());
     ///
     /// // train the decision trees.
-    /// gbdt.fit(&mut dv);
+    /// gbdt.fit(&mut training_data);
     ///
     /// // setup the test data
     ///
-    /// let mut dv: DataVec = Vec::new();
-    /// dv.push(data1.clone());
-    /// dv.push(data2.clone());
-    /// dv.push(data3.clone());
-    /// dv.push(data4.clone());
+    /// let mut test_data: DataVec = Vec::new();
+    /// test_data.push(data1.clone());
+    /// test_data.push(data2.clone());
+    /// test_data.push(data3.clone());
+    /// test_data.push(data4.clone());
     ///
-    /// println!("{:?}", gbdt.predict(&dv));
+    /// println!("{:?}", gbdt.predict(&test_data));
     /// ```
     ///
     /// # Panic
@@ -527,11 +451,12 @@ impl GBDT {
             Loss::LogLikelyhood => predicted
                 .iter()
                 .map(|x| {
-                    if (1.0 / (1.0 + ((-2.0 * x).exp()))) >= 0.5 {
-                        1.0
-                    } else {
-                        -1.0
-                    }
+                    //if (1.0 / (1.0 + ((-2.0 * x).exp()))) >= 0.5 {
+                    //    1.0
+                    //} else {
+                    //    -1.0
+                    //}
+                    1.0 / (1.0 + ((-2.0 * x).exp()))
                 })
                 .collect(),
             Loss::BinaryLogistic | Loss::RegLogistic => {
@@ -541,7 +466,13 @@ impl GBDT {
         }
     }
 
-    /// Predict multi class data and return the probabilities for each class.
+    /// Predict multi class data and return the probabilities for each class. The loss type should be "multi:softmax" or "multi:softprob"
+    ///
+    /// test_data: the test set
+    ///
+    /// class_num: the number of class
+    ///
+    /// output: the predicted class label, the predicted possiblity for each class
     ///
     /// # Example
     ///
@@ -566,10 +497,12 @@ impl GBDT {
         assert_eq!(self.trees.len() % class_num, 0);
 
         let mut probs: Vec<Vec<ValueType>> = Vec::with_capacity(test_data.len());
+        // initialize the vector with bias value
         for _index in 0..test_data.len() {
             probs.push(vec![self.bias; class_num]);
         }
 
+        // compute the raw predicted values for each class
         for (index, tree) in self.trees.iter().enumerate() {
             let preds = tree.predict(test_data);
             for (x, y) in probs.iter_mut().zip(preds.iter()) {
@@ -577,6 +510,7 @@ impl GBDT {
             }
         }
         let mut labels = vec![0; test_data.len()];
+        // normalize the predicted probilities and compute the label
         for (elem_index, elem) in probs.iter_mut().enumerate() {
             let mut sum: ValueType = 0.0;
             let mut max_value = VALUE_TYPE_MIN;
@@ -600,7 +534,7 @@ impl GBDT {
         (labels, probs)
     }
 
-    /// Predicting the given data.
+    /// Print the tress for debug
     ///
     /// # Example
     /// ```rust
@@ -620,38 +554,30 @@ impl GBDT {
     /// let mut gbdt = GBDT::new(&cfg);
     ///
     /// // setup training data
-    /// let data1 = Data {
-    ///     feature: vec![1.0, 2.0, 3.0],
-    ///     target: 2.0,
-    ///     weight: 1.0,
-    ///     label: 1.0,
-    ///     residual: 1.0,
-    ///     initial_guess: 1.0,
-    /// };
-    /// let data2 = Data {
-    ///     feature: vec![1.1, 2.1, 3.1],
-    ///     target: 1.0,
-    ///     weight: 1.0,
-    ///     label: 1.0,
-    ///     residual: 1.0,
-    ///     initial_guess: 1.0,
-    /// };
-    /// let data3 = Data {
-    ///     feature: vec![2.0, 2.0, 1.0],
-    ///     target: 0.5,
-    ///     weight: 1.0,
-    ///     label: 2.0,
-    ///     residual: 2.0,
-    ///     initial_guess: 2.0,
-    /// };
-    /// let data4 = Data {
-    ///     feature: vec![2.0, 2.3, 1.2],
-    ///     target: 3.0,
-    ///     weight: 1.0,
-    ///     label: 0.0,
-    ///     residual: 0.0,
-    ///     initial_guess: 1.0,
-    /// };
+    /// let data1 = Data::new_training_data (
+    ///     vec![1.0, 2.0, 3.0],
+    ///     1.0,
+    ///     1.0,
+    ///     None
+    /// );
+    /// let data2 = Data::new_training_data (
+    ///     vec![1.1, 2.1, 3.1],
+    ///     1.0,
+    ///     1.0,
+    ///     None
+    /// );
+    /// let data3 = Data::new_training_data (
+    ///     vec![2.0, 2.0, 1.0],
+    ///     1.0,
+    ///     2.0,
+    ///     None
+    /// );
+    /// let data4 = Data::new_training_data (
+    ///     vec![2.0, 2.3, 1.2],
+    ///     1.0,
+    ///     0.0,
+    ///     None
+    /// );
     ///
     /// let mut dv: DataVec = Vec::new();
     /// dv.push(data1.clone());
@@ -672,8 +598,7 @@ impl GBDT {
     }
 
     /// This is the process to calculate the residual as the target in next iteration
-    /// using squared error loss function. This is a private method that should not be
-    /// called manually.
+    /// for squared error loss.
     #[cfg(feature = "enable_training")]
     fn square_loss_process(&self, dv: &mut DataVec, samples: usize, predicted: &PredVec) {
         for i in 0..samples {
@@ -685,8 +610,7 @@ impl GBDT {
     }
 
     /// This is the process to calculate the residual as the target in next iteration
-    /// using negative binomial log-likehood loss function. This is a private method that should not be
-    /// called manually.
+    /// for negative binomial log-likehood loss.
     #[cfg(feature = "enable_training")]
     fn log_loss_process(&self, dv: &mut DataVec, samples: usize, predicted: &PredVec) {
         for i in 0..samples {
@@ -695,8 +619,7 @@ impl GBDT {
     }
 
     /// This is the process to calculate the residual as the target in next iteration
-    /// using LAD loss function. This is a private method that should not be
-    /// called manually.
+    /// for LAD loss.
     #[cfg(feature = "enable_training")]
     fn lad_loss_process(&self, dv: &mut DataVec, samples: usize, predicted: &PredVec) {
         for i in 0..samples {
@@ -708,7 +631,7 @@ impl GBDT {
         }
     }
 
-    /// Save gbdt-rs model to file.
+    /// Save the model to a file using serde.
     ///
     /// # Example
     /// ```rust
@@ -728,38 +651,30 @@ impl GBDT {
     /// let mut gbdt = GBDT::new(&cfg);
     ///
     /// // setup training data
-    /// let data1 = Data {
-    ///     feature: vec![1.0, 2.0, 3.0],
-    ///     target: 2.0,
-    ///     weight: 1.0,
-    ///     label: 1.0,
-    ///     residual: 1.0,
-    ///     initial_guess: 1.0,
-    /// };
-    /// let data2 = Data {
-    ///     feature: vec![1.1, 2.1, 3.1],
-    ///     target: 1.0,
-    ///     weight: 1.0,
-    ///     label: 1.0,
-    ///     residual: 1.0,
-    ///     initial_guess: 1.0,
-    /// };
-    /// let data3 = Data {
-    ///     feature: vec![2.0, 2.0, 1.0],
-    ///     target: 0.5,
-    ///     weight: 1.0,
-    ///     label: 2.0,
-    ///     residual: 2.0,
-    ///     initial_guess: 2.0,
-    /// };
-    /// let data4 = Data {
-    ///     feature: vec![2.0, 2.3, 1.2],
-    ///     target: 3.0,
-    ///     weight: 1.0,
-    ///     label: 0.0,
-    ///     residual: 0.0,
-    ///     initial_guess: 1.0,
-    /// };
+    /// let data1 = Data::new_training_data (
+    ///     vec![1.0, 2.0, 3.0],
+    ///     1.0,
+    ///     1.0,
+    ///     None
+    /// );
+    /// let data2 = Data::new_training_data (
+    ///     vec![1.1, 2.1, 3.1],
+    ///     1.0,
+    ///     1.0,
+    ///     None
+    /// );
+    /// let data3 = Data::new_training_data (
+    ///     vec![2.0, 2.0, 1.0],
+    ///     1.0,
+    ///     2.0,
+    ///     None
+    /// );
+    /// let data4 = Data::new_training_data (
+    ///     vec![2.0, 2.3, 1.2],
+    ///     1.0,
+    ///     0.0,
+    ///     None
+    /// );
     ///
     /// let mut dv: DataVec = Vec::new();
     /// dv.push(data1.clone());
@@ -771,7 +686,7 @@ impl GBDT {
     /// gbdt.fit(&mut dv);
     ///
     /// // Save model.
-    /// gbdt.save_model("gbdt.model");
+    /// // gbdt.save_model("gbdt.model");
     /// ```
     pub fn save_model(&self, filename: &str) -> Result<(), Box<Error>> {
         let mut file = File::create(filename)?;
@@ -781,7 +696,7 @@ impl GBDT {
         Ok(())
     }
 
-    /// Load GBDT model from saved gbdt-rs model.
+    /// Load the model from the file.
     ///
     /// # Example
     ///
@@ -800,7 +715,7 @@ impl GBDT {
         Ok(ret)
     }
 
-    /// Load GBDT model from xgboost saved model.
+    /// Load the model from xgboost's model. The xgboost's model should be converted by "convert_xgboost.py"
     ///
     /// # Example
     ///
@@ -819,12 +734,13 @@ impl GBDT {
         let mut has_read_score = false;
         let mut base_score: ValueType = 0.0;
         for line in reader.lines() {
+            // read base score
             if !has_read_score {
                 has_read_score = true;
                 base_score = line?.parse::<ValueType>()?;
                 continue;
             }
-
+            // read trees
             let value: String = line?;
             all_lines.push(value);
         }
@@ -840,6 +756,7 @@ impl GBDT {
         let mut gbdt = GBDT::new(&cfg);
         gbdt.bias = base_score;
 
+        // load trees
         for node in nodes.iter() {
             let tree = DecisionTree::get_from_xgboost(node)?;
             gbdt.trees.push(tree);
