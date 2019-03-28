@@ -124,6 +124,12 @@ pub fn MAE(dv: &DataVec, predict: &PredVec, len: usize) -> ValueType {
     s / c
 }
 
+struct AucPred {
+    idx: usize,
+    sorted_idx: ValueType,
+    value: ValueType,
+}
+
 /// AUC (Area Under the Curve) calculation for first n element in data vector.
 /// See [wikipedia](https://en.wikipedia.org/wiki/Receiver_operating_characteristic#Area_under_the_curve) for detailed algorithm.
 ///
@@ -131,81 +137,56 @@ pub fn MAE(dv: &DataVec, predict: &PredVec, len: usize) -> ValueType {
 /// If the specified length is greater than the length of data vector, it will panic.
 ///
 /// If the length of data vector and predicted vector is not same, it will panic.
+/// 
+/// If the data vector contains only one class or more than two classes, it will panic.
 #[allow(non_snake_case)]
 pub fn AUC(dv: &DataVec, predict: &PredVec, len: usize) -> ValueType {
     assert_eq!(dv.len(), predict.len());
     assert!(dv.len() >= len);
 
-    let mut confusion_table: Vec<i32> = vec![0; 4];
-    let threshold: ValueType = 0.5;
-    let mut positive_scores: Vec<ValueType> = Vec::with_capacity(dv.len());
-    let mut negative_scores: Vec<ValueType> = Vec::with_capacity(dv.len());
-
-    // insert into confusion table
+    let mut classes: Vec<ValueType> = Vec::new();
     for i in 0..dv.len() {
-        if dv[i].label > 0.0 {
-            positive_scores.push(predict[i]);
-            if predict[i] >= threshold {
-                confusion_table[3] += 1
-            } else {
-                confusion_table[2] += 1
-            }
-        } else {
-            negative_scores.push(predict[i]);
-            if predict[i] >= threshold {
-                confusion_table[1] += 1
-            } else {
-                confusion_table[0] += 1
-            }
+        if !classes.contains(&dv[i].label) {
+            classes.push(dv[i].label);
         }
     }
+    assert!(classes.len() == 2);
 
-    positive_scores.sort_by(|a, b| a.partial_cmp(b).unwrap());
-    let p_size = positive_scores.len();
-    negative_scores.sort_by(|a, b| a.partial_cmp(b).unwrap());
-    let n_size = negative_scores.len();
-    if (p_size == 0) || (n_size == 0) {
-        return 0.5;
+    let mut preds: Vec<AucPred> = Vec::new();
+    for i in 0..predict.len() {
+        preds.push(AucPred {idx: i, sorted_idx: 0.0, value: predict[i]});
     }
 
-    let mut rank: ValueType = 1.0;
-    let mut rank_sum: ValueType = 0.0;
-    let mut pptr: usize = 0;
-    let mut nptr: usize = 0;
+    preds.sort_by(|a, b| a.value.partial_cmp(&b.value).unwrap());
 
-    while pptr < p_size && nptr < n_size {
-        let vp: ValueType = positive_scores[pptr];
-        let vn: ValueType = negative_scores[nptr];
-        if vn < vp {
-            nptr += 1;
-            rank += 1.0;
-        } else if vp < vn {
+    let mut ptr: usize = 0;
+    let mut pptr: usize;
+
+    while ptr < preds.len() {
+        pptr = ptr;
+        let mut sum = 0;
+        while pptr < preds.len() && almost_equal(preds[pptr].value, preds[ptr].value) {
+            sum += pptr;
             pptr += 1;
-            rank += 1.0;
-            rank_sum += rank;
-        } else {
-            let tie_score = vn;
-            let mut kn: usize = 0;
-            while nptr < n_size && almost_equal(negative_scores[nptr], tie_score) {
-                kn += 1;
-                nptr += 1;
-            }
-            let mut kp: usize = 0;
-            while pptr < p_size && almost_equal(positive_scores[pptr], tie_score) {
-                kp += 1;
-                pptr += 1;
-            }
-            rank_sum += rank + ((kp + kn - 1) as ValueType) / 2.0;
-            rank += (kp + kn) as ValueType;
+        }
+        for i in ptr..pptr {
+            preds[i].sorted_idx = sum as ValueType / (pptr - ptr) as ValueType;
+        }
+        ptr = pptr;
+    }
+
+    let mut cnt_pos: ValueType = 0.0;
+    let mut ret: ValueType = 0.0;
+    for i in 0..preds.len() {
+        if dv[preds[i].idx].label == 1.0 {
+            cnt_pos += 1.0;
+            ret += preds[i].sorted_idx;
         }
     }
-    if pptr < p_size {
-        rank_sum +=
-            (rank + ((p_size - pptr - 1) as ValueType) / 2.0) * ((p_size - pptr) as ValueType);
-        // TODO: double check if this is needed
-        //rank += (p_size - pptr) as f64;
-    }
-    (rank_sum / (p_size as ValueType) - ((p_size as ValueType) + 1.0)) / (n_size as ValueType)
+
+    ret = (ret - (cnt_pos-1.0)*cnt_pos/2.0) / (cnt_pos * (dv.len() as ValueType - cnt_pos));
+
+    ret
 }
 
 /// Return the weighted target average for first n data in data vector.
