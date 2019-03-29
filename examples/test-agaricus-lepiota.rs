@@ -52,11 +52,11 @@ fn main() {
         else {
             wrong += 1;
         };
-        println!("[{}]  {}  {}", i, test_dv[i].label, predicted[i]);
+        //println!("[{}]  {}  {}", i, test_dv[i].label, predicted[i]);
 
     }
 
     println!("correct: {}", correct);
     println!("wrong:   {}", wrong);
-    //println!("AUC: {}", AUC(&test_dv, &predicted, test_dv.len()));
+    println!("AUC: {}", AUC(&test_dv, &predicted, test_dv.len()));
 }

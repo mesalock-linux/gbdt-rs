@@ -86,7 +86,7 @@ use crate::decision_tree::DecisionTree;
 use crate::decision_tree::TrainingCache;
 use crate::decision_tree::{DataVec, PredVec, ValueType, VALUE_TYPE_MIN, VALUE_TYPE_UNKNOWN};
 #[cfg(feature = "enable_training")]
-use crate::fitness::{label_average, logit_loss_gradient, weighted_label_median, MAE, RMSE};
+use crate::fitness::{label_average, logit_loss_gradient, weighted_label_median, MAE, RMSE, AUC};
 #[cfg(feature = "enable_training")]
 use rand::prelude::SliceRandom;
 #[cfg(feature = "enable_training")]
@@ -496,6 +496,8 @@ impl GBDT {
         assert_eq!(self.conf.iterations, self.trees.len());
         assert_eq!(self.trees.len() % class_num, 0);
 
+        // this api is used for xgboost's model, so shrinkage is 1.0
+        // and config.initial_guess is false
         let mut probs: Vec<Vec<ValueType>> = Vec::with_capacity(test_data.len());
         // initialize the vector with bias value
         for _index in 0..test_data.len() {
@@ -615,6 +617,15 @@ impl GBDT {
     fn log_loss_process(&self, dv: &mut DataVec, samples: usize, predicted: &PredVec) {
         for i in 0..samples {
             dv[i].target = logit_loss_gradient(dv[i].label, predicted[i]);
+        }
+        if self.conf.debug {
+            let normalized_preds = predicted
+                .iter()
+                .map(|x| {
+                    1.0 / (1.0 + ((-2.0 * x).exp()))
+                })
+                .collect();
+            println!("AUC = {}", AUC(&dv, &normalized_preds, dv.len()));
         }
     }
 
