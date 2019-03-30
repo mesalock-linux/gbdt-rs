@@ -125,9 +125,8 @@ pub fn MAE(dv: &DataVec, predict: &PredVec, len: usize) -> ValueType {
 }
 
 struct AucPred {
-    idx: usize,
-    sorted_idx: ValueType,
-    value: ValueType,
+    score: ValueType,
+    label: ValueType,
 }
 
 /// AUC (Area Under the Curve) calculation for first n element in data vector.
@@ -137,7 +136,7 @@ struct AucPred {
 /// If the specified length is greater than the length of data vector, it will panic.
 ///
 /// If the length of data vector and predicted vector is not same, it will panic.
-/// 
+///
 /// If the data vector contains only one class or more than two classes, it will panic.
 #[allow(non_snake_case)]
 pub fn AUC(dv: &DataVec, predict: &PredVec, len: usize) -> ValueType {
@@ -154,39 +153,49 @@ pub fn AUC(dv: &DataVec, predict: &PredVec, len: usize) -> ValueType {
 
     let mut preds: Vec<AucPred> = Vec::new();
     for i in 0..predict.len() {
-        preds.push(AucPred {idx: i, sorted_idx: 0.0, value: predict[i]});
+        preds.push(AucPred {
+            score: predict[i],
+            label: dv[i].label,
+        });
     }
+    preds.sort_by(|a, b| b.score.partial_cmp(&a.score).unwrap());
 
-    preds.sort_by(|a, b| a.value.partial_cmp(&b.value).unwrap());
-
-    let mut ptr: usize = 0;
-    let mut pptr: usize;
-
-    while ptr < preds.len() {
-        pptr = ptr;
-        let mut sum = 0;
-        while pptr < preds.len() && almost_equal(preds[pptr].value, preds[ptr].value) {
-            sum += pptr;
-            pptr += 1;
-        }
-        for i in ptr..pptr {
-            preds[i].sorted_idx = sum as ValueType / (pptr - ptr) as ValueType;
-        }
-        ptr = pptr;
-    }
-
-    let mut cnt_pos: ValueType = 0.0;
-    let mut ret: ValueType = 0.0;
-    for i in 0..preds.len() {
-        if dv[preds[i].idx].label == 1.0 {
-            cnt_pos += 1.0;
-            ret += preds[i].sorted_idx;
+    let mut tp: ValueType = 0.0;
+    let mut fp: ValueType = 0.0;
+    let (mut tps, mut fps) = (vec![], vec![]);
+    for x in preds.iter() {
+        tps.push(tp);
+        fps.push(fp);
+        if x.label == 1.0 {
+            tp += 1.0;
+        } else {
+            fp += 1.0;
         }
     }
+    tps.push(tp);
+    fps.push(fp);
+    let true_positives = tps[tps.len() - 1];
+    let false_positives = fps[fps.len() - 1];
+    // println!("tps={}, fps={}", true_positives, false_positives);
 
-    ret = (ret - (cnt_pos-1.0)*cnt_pos/2.0) / (cnt_pos * (dv.len() as ValueType - cnt_pos));
+    for (tp, fp) in tps.iter_mut().zip(fps.iter_mut()) {
+        *tp /= true_positives;
+        *fp /= false_positives;
+        // println!("fp={}, tp={}", fp, tp);
+    }
 
-    ret
+    let mut prev_y: ValueType = *tps.first().unwrap();
+    let mut prev_x: ValueType = *fps.first().unwrap();
+
+    let mut auc: ValueType = 0.0;
+
+    for (&x, &y) in fps.iter().skip(1).zip(tps.iter().skip(1)) {
+        auc += (x - prev_x) * (prev_y + y) / 2.0;
+        prev_x = x;
+        prev_y = y;
+    }
+
+    auc
 }
 
 /// Return the weighted target average for first n data in data vector.
