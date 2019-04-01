@@ -317,7 +317,7 @@ pub fn load_csv(file: &mut File, input_format: InputFormat) -> Result<DataVec, B
 /// ```rust
 /// use std::fs::File;
 /// use gbdt::input::{InputFormat, load_txt};
-/// let test_file = "data/xgb_binary_logistic/agaricus.txt.test";
+/// let test_file = "xgb-data/xgb_binary_logistic/agaricus.txt.test";
 /// let mut file = File::open(test_file.to_string()).unwrap();
 /// let mut fmt = InputFormat::csv_format();
 /// fmt.set_feature_size(126);

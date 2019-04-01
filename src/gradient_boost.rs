@@ -481,8 +481,8 @@ impl GBDT {
     /// use gbdt::input::{load, InputFormat};
     /// use gbdt::decision_tree::DataVec;
     /// let gbdt =
-    ///     GBDT::from_xgoost_dump("data/xgb_multi_softmax/gbdt.model", "multi:softmax").unwrap();
-    /// let test_file = "data/xgb_multi_softmax/dermatology.data.test";
+    ///     GBDT::from_xgoost_dump("xgb-data/xgb_multi_softmax/gbdt.model", "multi:softmax").unwrap();
+    /// let test_file = "xgb-data/xgb_multi_softmax/dermatology.data.test";
     /// let mut fmt = InputFormat::csv_format();
     /// fmt.set_label_index(34);
     /// let test_data: DataVec = load(test_file, fmt).unwrap();
@@ -733,7 +733,7 @@ impl GBDT {
     /// ```rust
     /// use gbdt::gradient_boost::GBDT;
     /// let gbdt =
-    ///     GBDT::from_xgoost_dump("data/xgb_binary_logistic/gbdt.model", "binary:logistic").unwrap();
+    ///     GBDT::from_xgoost_dump("xgb-data/xgb_binary_logistic/gbdt.model", "binary:logistic").unwrap();
     /// ```
     ///
     /// # Error
