@@ -62,9 +62,14 @@ impl<T> Default for BinaryTree<T> {
 }
 
 impl<T> BinaryTree<T> {
-    /// build a new empty binary tree
+    /// Build a new empty binary tree
     pub fn new() -> Self {
         BinaryTree { tree: Vec::new() }
+    }
+
+    /// Returns true when the binary tree is empty
+    pub fn is_empty(&self) -> bool {
+        self.tree.is_empty()
     }
 
     /// Add a node as the root node. Return the index of the root node.

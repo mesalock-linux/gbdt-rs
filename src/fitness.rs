@@ -144,9 +144,9 @@ pub fn AUC(dv: &DataVec, predict: &PredVec, len: usize) -> ValueType {
     assert!(dv.len() >= len);
 
     let mut classes: Vec<ValueType> = Vec::new();
-    for i in 0..dv.len() {
-        if !classes.contains(&dv[i].label) {
-            classes.push(dv[i].label);
+    for i in dv {
+        if !classes.contains(&i.label) {
+            classes.push(i.label);
         }
     }
     assert!(classes.len() == 2);
@@ -166,7 +166,7 @@ pub fn AUC(dv: &DataVec, predict: &PredVec, len: usize) -> ValueType {
     for x in preds.iter() {
         tps.push(tp);
         fps.push(fp);
-        if x.label == 1.0 {
+        if almost_equal(x.label, 1.0) {
             tp += 1.0;
         } else {
             fp += 1.0;

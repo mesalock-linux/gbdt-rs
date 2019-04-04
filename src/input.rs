@@ -245,19 +245,14 @@ pub fn infer(file_name: &str) -> InputFormat {
 
     // if CSV, check header
     // use the first value as label or target value by default
-    match input_format.ftype {
-        FileFormat::CSV => {
-            let first_line_after = reg.replace_all(&first_line, "");
-            let letters = Regex::new(r"[a-zA-Z]").unwrap();
-            match letters.captures(&first_line_after) {
-                Some(letter_caps) => {
-                    input_format.header = letter_caps.len() > 0;
-                }
-                None => {}
-            }
-        }
-        _ => {}
-    };
+
+    if let FileFormat::CSV = input_format.ftype {
+       let first_line_after = reg.replace_all(&first_line, "");
+       let letters = Regex::new(r"[a-zA-Z]").unwrap();
+       if let Some(letter_caps) = letters.captures(&first_line_after) {
+           input_format.header = letter_caps.len() > 0;
+       }
+    }
 
     input_format
 }

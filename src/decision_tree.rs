@@ -117,7 +117,7 @@ macro_rules! def_value_type {
     };
 }
 
-/// use continous variables for decision tree
+// use continous variables for decision tree
 def_value_type!(f32);
 
 /// A training sample or a test sample. You can call `new_training_data` to generate a training sample, and call `new_test_data` to generate a test sample.
@@ -464,14 +464,16 @@ impl TrainingCache {
 
         // Put data
         for (i, item) in whole_data.iter().enumerate() {
-            for index in 0..feature_size {
-                ordered_features[index].push((i, item.feature[index]));
+            for (index, ordered_item) in ordered_features.iter_mut()
+                                                         .enumerate()
+                                                         .take(feature_size) {
+                ordered_item.push((i, item.feature[index]));
             }
         }
 
         // Sort all the vectors
-        for index in 0..feature_size {
-            ordered_features[index].sort_unstable_by(|a, b| {
+        for item in ordered_features.iter_mut().take(feature_size) {
+            item.sort_unstable_by(|a, b| {
                 let v1 = a.1;
                 let v2 = b.1;
                 v1.partial_cmp(&v2).unwrap()
@@ -529,12 +531,10 @@ impl TrainingCache {
             } else {
                 &sub_cache.ordered_residual
             }
+        } else if (self.cache_level == 0) || sub_cache.lazy {
+            &self.ordered_features[feature_index]
         } else {
-            if (self.cache_level == 0) || sub_cache.lazy {
-                &self.ordered_features[feature_index]
-            } else {
-                &sub_cache.ordered_features[feature_index]
-            }
+            &sub_cache.ordered_features[feature_index]
         };
 
         // The whole_data_sorted_index.len() is greater than or equal to to_sort_size. If they are equal, then whole_data_sorted_index is what we want.
@@ -1884,5 +1884,10 @@ impl DecisionTree {
     /// assert_eq!(tree.len(), 3)
     pub fn len(&self) -> usize {
         self.tree.len()
+    }
+
+    /// Returns true if the current decision tree is empty
+    pub fn is_empty(&self) -> bool {
+        self.tree.is_empty()
     }
 }

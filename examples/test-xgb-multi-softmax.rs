@@ -1,6 +1,6 @@
 extern crate gbdt;
 
-use gbdt::decision_tree::{PredVec, ValueType, };
+use gbdt::decision_tree::ValueType;
 use gbdt::gradient_boost::GBDT;
 use gbdt::input;
 use std::fs::File;
@@ -23,7 +23,7 @@ fn main() {
 
     // inference
     println!("start prediction");
-    let (labels, probs) = gbdt.predict_multiclass(&test_data, 6);
+    let (labels, _probs) = gbdt.predict_multiclass(&test_data, 6);
     assert_eq!(labels.len(), test_data.len());
     
     // compare to xgboost prediction results
@@ -42,7 +42,7 @@ fn main() {
     for (value1, value2) in labels.iter().zip(xgb_results.iter()) {
         println!("{} {}", value1, value2);
         let diff = (*value1 as ValueType - *value2).abs();
-        if (diff > max_diff) {
+        if diff > max_diff {
             max_diff = diff;
         }
     }

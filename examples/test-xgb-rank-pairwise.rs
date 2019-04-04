@@ -42,7 +42,7 @@ fn main() {
     for (value1, value2) in predicted.iter().zip(xgb_results.iter()) {
         println!("{} {}", value1, value2);
         let diff = (value1 - value2).abs();
-        if (diff > max_diff) {
+        if diff > max_diff {
             max_diff = diff;
         }
     }

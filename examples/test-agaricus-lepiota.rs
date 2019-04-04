@@ -2,7 +2,7 @@ extern crate gbdt;
 
 use gbdt::config::Config;
 use gbdt::decision_tree::{DataVec, PredVec};
-use gbdt::fitness::{almost_equal_thrs, AUC};
+use gbdt::fitness::AUC;
 use gbdt::gradient_boost::GBDT;
 use gbdt::input::{InputFormat, load};
 
@@ -41,7 +41,7 @@ fn main() {
     let mut correct = 0;
     let mut wrong = 0;
     for i in 0..predicted.len() {
-        let label = if (predicted[i] > 0.5) {
+        let label = if predicted[i] > 0.5 {
             1.0
         } else {
             -1.0
