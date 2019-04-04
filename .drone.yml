@@ -1,0 +1,102 @@
+kind: pipeline
+name: centos6
+
+steps:
+- name: centos6-nightly-debug
+  image: baiduxlab/useful-docker:centos.6.nightly
+  commands:
+  - cargo test
+
+- name: centos6-nightly-release
+  image: baiduxlab/useful-docker:centos.6.nightly
+  commands:
+  - cargo test --release
+
+- name: centos6-stable-debug
+  image: baiduxlab/useful-docker:centos.6.stable
+  commands:
+  - cargo test
+
+- name: centos6-stable-release
+  image: baiduxlab/useful-docker:centos.6.stable
+  commands:
+  - cargo test --release
+
+---
+
+kind: pipeline
+name: centos7
+
+steps:
+- name: centos7-nightly-debug
+  image: baiduxlab/useful-docker:centos.6.nightly
+  commands:
+  - cargo test
+
+- name: centos7-nightly-release
+  image: baiduxlab/useful-docker:centos.6.nightly
+  commands:
+  - cargo test --release
+
+- name: centos7-stable-debug
+  image: baiduxlab/useful-docker:centos.6.stable
+  commands:
+  - cargo test
+
+- name: centos7-stable-release
+  image: baiduxlab/useful-docker:centos.6.stable
+  commands:
+  - cargo test --release
+
+---
+
+kind: pipeline
+name: ubuntu1604
+
+steps:
+- name: ubuntu1604-nightly-debug
+  image: baiduxlab/useful-docker:ubuntu.1604.nightly
+  commands:
+  - cargo test
+
+- name: ubuntu1604-nightly-release
+  image: baiduxlab/useful-docker:ubuntu.1604.nightly
+  commands:
+  - cargo test --release
+
+- name: ubuntu1604-stable-debug
+  image: baiduxlab/useful-docker:ubuntu.1604.stable
+  commands:
+  - cargo test
+
+- name: ubuntu1604-stable-release
+  image: baiduxlab/useful-docker:ubuntu.1604.stable
+  commands:
+  - cargo test --release
+
+---
+
+kind: pipeline
+name: ubuntu1804
+
+steps:
+- name: ubuntu1804-nightly-debug
+  image: baiduxlab/useful-docker:ubuntu.1804.nightly
+  commands:
+  - cargo test
+
+- name: ubuntu1804-nightly-release
+  image: baiduxlab/useful-docker:ubuntu.1804.nightly
+  commands:
+  - cargo test --release
+
+- name: ubuntu1804-stable-debug
+  image: baiduxlab/useful-docker:ubuntu.1804.stable
+  commands:
+  - cargo test
+
+- name: ubuntu1804-stable-release
+  image: baiduxlab/useful-docker:ubuntu.1804.stable
+  commands:
+  - cargo test --release
+
