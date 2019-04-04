@@ -1,5 +1,5 @@
 kind: pipeline
-name: centos6
+name: centos6-nightly-debug
 
 steps:
 - name: centos6-nightly-debug
@@ -18,6 +18,11 @@ steps:
   - cargo run --example test-xgb-reg-linear
   - cargo run --example test-xgb-reg-logistic
 
+---
+kind: pipeline
+name: centos6-nightly-release
+
+steps:
 - name: centos6-nightly-release
   image: baiduxlab/useful-docker:centos.6.nightly
   commands:
@@ -34,6 +39,11 @@ steps:
   - cargo run --release --example test-xgb-reg-linear
   - cargo run --release --example test-xgb-reg-logistic
 
+---
+kind: pipeline
+name: centos6-stable-debug
+
+steps:
 - name: centos6-stable-debug
   image: baiduxlab/useful-docker:centos.6.stable
   commands:
@@ -50,6 +60,11 @@ steps:
   - cargo run --example test-xgb-reg-linear
   - cargo run --example test-xgb-reg-logistic
 
+---
+kind: pipeline
+name: centos6-stable-release
+
+steps:
 - name: centos6-stable-release
   image: baiduxlab/useful-docker:centos.6.stable
   commands:
@@ -69,7 +84,7 @@ steps:
 ---
 
 kind: pipeline
-name: centos7
+name: centos7-nightly-debug
 
 steps:
 - name: centos7-nightly-debug
@@ -88,6 +103,11 @@ steps:
   - cargo run --example test-xgb-reg-linear
   - cargo run --example test-xgb-reg-logistic
 
+---
+kind: pipeline
+name: centos7-nightly-release
+
+steps:
 - name: centos7-nightly-release
   image: baiduxlab/useful-docker:centos.6.nightly
   commands:
@@ -104,6 +124,11 @@ steps:
   - cargo run --release --example test-xgb-reg-linear
   - cargo run --release --example test-xgb-reg-logistic
 
+---
+kind: pipeline
+name: centos7-stable-debug
+
+steps:
 - name: centos7-stable-debug
   image: baiduxlab/useful-docker:centos.6.stable
   commands:
@@ -120,6 +145,11 @@ steps:
   - cargo run --example test-xgb-reg-linear
   - cargo run --example test-xgb-reg-logistic
 
+---
+kind: pipeline
+name: centos7-stable-release
+
+steps:
 - name: centos7-stable-release
   image: baiduxlab/useful-docker:centos.6.stable
   commands:
@@ -139,7 +169,7 @@ steps:
 ---
 
 kind: pipeline
-name: ubuntu1604
+name: ubuntu1604-nightly-debug
 
 steps:
 - name: ubuntu1604-nightly-debug
@@ -158,6 +188,11 @@ steps:
   - cargo run --example test-xgb-reg-linear
   - cargo run --example test-xgb-reg-logistic
 
+---
+kind: pipeline
+name: ubuntu1604-nightly-release
+
+steps:
 - name: ubuntu1604-nightly-release
   image: baiduxlab/useful-docker:ubuntu.1604.nightly
   commands:
@@ -174,6 +209,11 @@ steps:
   - cargo run --release --example test-xgb-reg-linear
   - cargo run --release --example test-xgb-reg-logistic
 
+---
+kind: pipeline
+name: ubuntu1604-stable-debug
+
+steps:
 - name: ubuntu1604-stable-debug
   image: baiduxlab/useful-docker:ubuntu.1604.stable
   commands:
@@ -190,6 +230,11 @@ steps:
   - cargo run --example test-xgb-reg-linear
   - cargo run --example test-xgb-reg-logistic
 
+---
+kind: pipeline
+name: ubuntu1604-stable-release
+
+steps:
 - name: ubuntu1604-stable-release
   image: baiduxlab/useful-docker:ubuntu.1604.stable
   commands:
@@ -209,7 +254,7 @@ steps:
 ---
 
 kind: pipeline
-name: ubuntu1804
+name: ubuntu1804-nightly-debug
 
 steps:
 - name: ubuntu1804-nightly-debug
@@ -228,6 +273,11 @@ steps:
   - cargo run --example test-xgb-reg-linear
   - cargo run --example test-xgb-reg-logistic
 
+---
+kind: pipeline
+name: ubuntu1804-nightly-release
+
+steps:
 - name: ubuntu1804-nightly-release
   image: baiduxlab/useful-docker:ubuntu.1804.nightly
   commands:
@@ -244,6 +294,11 @@ steps:
   - cargo run --release --example test-xgb-reg-linear
   - cargo run --release --example test-xgb-reg-logistic
 
+---
+kind: pipeline
+name: ubuntu1804-stable-debug
+
+steps:
 - name: ubuntu1804-stable-debug
   image: baiduxlab/useful-docker:ubuntu.1804.stable
   commands:
@@ -260,6 +315,11 @@ steps:
   - cargo run --example test-xgb-reg-linear
   - cargo run --example test-xgb-reg-logistic
 
+---
+kind: pipeline
+name: ubuntu1804-stable-release
+
+steps:
 - name: ubuntu1804-stable-release
   image: baiduxlab/useful-docker:ubuntu.1804.stable
   commands:
