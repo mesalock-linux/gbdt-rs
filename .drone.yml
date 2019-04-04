@@ -7,24 +7,64 @@ steps:
   commands:
   - source /root/.profile
   - cargo test
+  - cargo run --example test-agaricus-lepiota
+  - cargo run --example test-iris
+  - cargo run --example test-multithreads
+  - cargo run --example test-xgb-binary-logistic
+  - cargo run --example test-xgb-binary-logitraw
+  - cargo run --example test-xgb-multi-softmax
+  - cargo run --example test-xgb-multi-softprob
+  - cargo run --example test-xgb-rank-pairwise
+  - cargo run --example test-xgb-reg-linear
+  - cargo run --example test-xgb-reg-logistic
 
 - name: centos6-nightly-release
   image: baiduxlab/useful-docker:centos.6.nightly
   commands:
   - source /root/.profile
   - cargo test --release
+  - cargo run --release --example test-agaricus-lepiota
+  - cargo run --release --example test-iris
+  - cargo run --release --example test-multithreads
+  - cargo run --release --example test-xgb-binary-logistic
+  - cargo run --release --example test-xgb-binary-logitraw
+  - cargo run --release --example test-xgb-multi-softmax
+  - cargo run --release --example test-xgb-multi-softprob
+  - cargo run --release --example test-xgb-rank-pairwise
+  - cargo run --release --example test-xgb-reg-linear
+  - cargo run --release --example test-xgb-reg-logistic
 
 - name: centos6-stable-debug
   image: baiduxlab/useful-docker:centos.6.stable
   commands:
   - source /root/.profile
   - cargo test
+  - cargo run --example test-agaricus-lepiota
+  - cargo run --example test-iris
+  - cargo run --example test-multithreads
+  - cargo run --example test-xgb-binary-logistic
+  - cargo run --example test-xgb-binary-logitraw
+  - cargo run --example test-xgb-multi-softmax
+  - cargo run --example test-xgb-multi-softprob
+  - cargo run --example test-xgb-rank-pairwise
+  - cargo run --example test-xgb-reg-linear
+  - cargo run --example test-xgb-reg-logistic
 
 - name: centos6-stable-release
   image: baiduxlab/useful-docker:centos.6.stable
   commands:
   - source /root/.profile
   - cargo test --release
+  - cargo run --release --example test-agaricus-lepiota
+  - cargo run --release --example test-iris
+  - cargo run --release --example test-multithreads
+  - cargo run --release --example test-xgb-binary-logistic
+  - cargo run --release --example test-xgb-binary-logitraw
+  - cargo run --release --example test-xgb-multi-softmax
+  - cargo run --release --example test-xgb-multi-softprob
+  - cargo run --release --example test-xgb-rank-pairwise
+  - cargo run --release --example test-xgb-reg-linear
+  - cargo run --release --example test-xgb-reg-logistic
 
 ---
 
@@ -37,24 +77,64 @@ steps:
   commands:
   - source /root/.profile
   - cargo test
+  - cargo run --example test-agaricus-lepiota
+  - cargo run --example test-iris
+  - cargo run --example test-multithreads
+  - cargo run --example test-xgb-binary-logistic
+  - cargo run --example test-xgb-binary-logitraw
+  - cargo run --example test-xgb-multi-softmax
+  - cargo run --example test-xgb-multi-softprob
+  - cargo run --example test-xgb-rank-pairwise
+  - cargo run --example test-xgb-reg-linear
+  - cargo run --example test-xgb-reg-logistic
 
 - name: centos7-nightly-release
   image: baiduxlab/useful-docker:centos.6.nightly
   commands:
   - source /root/.profile
   - cargo test --release
+  - cargo run --release --example test-agaricus-lepiota
+  - cargo run --release --example test-iris
+  - cargo run --release --example test-multithreads
+  - cargo run --release --example test-xgb-binary-logistic
+  - cargo run --release --example test-xgb-binary-logitraw
+  - cargo run --release --example test-xgb-multi-softmax
+  - cargo run --release --example test-xgb-multi-softprob
+  - cargo run --release --example test-xgb-rank-pairwise
+  - cargo run --release --example test-xgb-reg-linear
+  - cargo run --release --example test-xgb-reg-logistic
 
 - name: centos7-stable-debug
   image: baiduxlab/useful-docker:centos.6.stable
   commands:
   - source /root/.profile
   - cargo test
+  - cargo run --example test-agaricus-lepiota
+  - cargo run --example test-iris
+  - cargo run --example test-multithreads
+  - cargo run --example test-xgb-binary-logistic
+  - cargo run --example test-xgb-binary-logitraw
+  - cargo run --example test-xgb-multi-softmax
+  - cargo run --example test-xgb-multi-softprob
+  - cargo run --example test-xgb-rank-pairwise
+  - cargo run --example test-xgb-reg-linear
+  - cargo run --example test-xgb-reg-logistic
 
 - name: centos7-stable-release
   image: baiduxlab/useful-docker:centos.6.stable
   commands:
   - source /root/.profile
   - cargo test --release
+  - cargo run --release --example test-agaricus-lepiota
+  - cargo run --release --example test-iris
+  - cargo run --release --example test-multithreads
+  - cargo run --release --example test-xgb-binary-logistic
+  - cargo run --release --example test-xgb-binary-logitraw
+  - cargo run --release --example test-xgb-multi-softmax
+  - cargo run --release --example test-xgb-multi-softprob
+  - cargo run --release --example test-xgb-rank-pairwise
+  - cargo run --release --example test-xgb-reg-linear
+  - cargo run --release --example test-xgb-reg-logistic
 
 ---
 
@@ -67,24 +147,64 @@ steps:
   commands:
   - . /root/.profile
   - cargo test
+  - cargo run --example test-agaricus-lepiota
+  - cargo run --example test-iris
+  - cargo run --example test-multithreads
+  - cargo run --example test-xgb-binary-logistic
+  - cargo run --example test-xgb-binary-logitraw
+  - cargo run --example test-xgb-multi-softmax
+  - cargo run --example test-xgb-multi-softprob
+  - cargo run --example test-xgb-rank-pairwise
+  - cargo run --example test-xgb-reg-linear
+  - cargo run --example test-xgb-reg-logistic
 
 - name: ubuntu1604-nightly-release
   image: baiduxlab/useful-docker:ubuntu.1604.nightly
   commands:
   - . /root/.profile
   - cargo test --release
+  - cargo run --release --example test-agaricus-lepiota
+  - cargo run --release --example test-iris
+  - cargo run --release --example test-multithreads
+  - cargo run --release --example test-xgb-binary-logistic
+  - cargo run --release --example test-xgb-binary-logitraw
+  - cargo run --release --example test-xgb-multi-softmax
+  - cargo run --release --example test-xgb-multi-softprob
+  - cargo run --release --example test-xgb-rank-pairwise
+  - cargo run --release --example test-xgb-reg-linear
+  - cargo run --release --example test-xgb-reg-logistic
 
 - name: ubuntu1604-stable-debug
   image: baiduxlab/useful-docker:ubuntu.1604.stable
   commands:
   - . /root/.profile
   - cargo test
+  - cargo run --example test-agaricus-lepiota
+  - cargo run --example test-iris
+  - cargo run --example test-multithreads
+  - cargo run --example test-xgb-binary-logistic
+  - cargo run --example test-xgb-binary-logitraw
+  - cargo run --example test-xgb-multi-softmax
+  - cargo run --example test-xgb-multi-softprob
+  - cargo run --example test-xgb-rank-pairwise
+  - cargo run --example test-xgb-reg-linear
+  - cargo run --example test-xgb-reg-logistic
 
 - name: ubuntu1604-stable-release
   image: baiduxlab/useful-docker:ubuntu.1604.stable
   commands:
   - . /root/.profile
   - cargo test --release
+  - cargo run --release --example test-agaricus-lepiota
+  - cargo run --release --example test-iris
+  - cargo run --release --example test-multithreads
+  - cargo run --release --example test-xgb-binary-logistic
+  - cargo run --release --example test-xgb-binary-logitraw
+  - cargo run --release --example test-xgb-multi-softmax
+  - cargo run --release --example test-xgb-multi-softprob
+  - cargo run --release --example test-xgb-rank-pairwise
+  - cargo run --release --example test-xgb-reg-linear
+  - cargo run --release --example test-xgb-reg-logistic
 
 ---
 
@@ -97,22 +217,62 @@ steps:
   commands:
   - . /root/.profile
   - cargo test
+  - cargo run --example test-agaricus-lepiota
+  - cargo run --example test-iris
+  - cargo run --example test-multithreads
+  - cargo run --example test-xgb-binary-logistic
+  - cargo run --example test-xgb-binary-logitraw
+  - cargo run --example test-xgb-multi-softmax
+  - cargo run --example test-xgb-multi-softprob
+  - cargo run --example test-xgb-rank-pairwise
+  - cargo run --example test-xgb-reg-linear
+  - cargo run --example test-xgb-reg-logistic
 
 - name: ubuntu1804-nightly-release
   image: baiduxlab/useful-docker:ubuntu.1804.nightly
   commands:
   - . /root/.profile
   - cargo test --release
+  - cargo run --release --example test-agaricus-lepiota
+  - cargo run --release --example test-iris
+  - cargo run --release --example test-multithreads
+  - cargo run --release --example test-xgb-binary-logistic
+  - cargo run --release --example test-xgb-binary-logitraw
+  - cargo run --release --example test-xgb-multi-softmax
+  - cargo run --release --example test-xgb-multi-softprob
+  - cargo run --release --example test-xgb-rank-pairwise
+  - cargo run --release --example test-xgb-reg-linear
+  - cargo run --release --example test-xgb-reg-logistic
 
 - name: ubuntu1804-stable-debug
   image: baiduxlab/useful-docker:ubuntu.1804.stable
   commands:
   - . /root/.profile
   - cargo test
+  - cargo run --example test-agaricus-lepiota
+  - cargo run --example test-iris
+  - cargo run --example test-multithreads
+  - cargo run --example test-xgb-binary-logistic
+  - cargo run --example test-xgb-binary-logitraw
+  - cargo run --example test-xgb-multi-softmax
+  - cargo run --example test-xgb-multi-softprob
+  - cargo run --example test-xgb-rank-pairwise
+  - cargo run --example test-xgb-reg-linear
+  - cargo run --example test-xgb-reg-logistic
 
 - name: ubuntu1804-stable-release
   image: baiduxlab/useful-docker:ubuntu.1804.stable
   commands:
   - . /root/.profile
   - cargo test --release
+  - cargo run --release --example test-agaricus-lepiota
+  - cargo run --release --example test-iris
+  - cargo run --release --example test-multithreads
+  - cargo run --release --example test-xgb-binary-logistic
+  - cargo run --release --example test-xgb-binary-logitraw
+  - cargo run --release --example test-xgb-multi-softmax
+  - cargo run --release --example test-xgb-multi-softprob
+  - cargo run --release --example test-xgb-rank-pairwise
+  - cargo run --release --example test-xgb-reg-linear
+  - cargo run --release --example test-xgb-reg-logistic
 

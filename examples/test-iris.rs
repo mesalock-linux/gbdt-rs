@@ -49,4 +49,6 @@ fn main() {
 
     println!("correct: {}", correct);
     println!("wrong:   {}", wrong);
+
+    assert!(wrong <= 2);
 }

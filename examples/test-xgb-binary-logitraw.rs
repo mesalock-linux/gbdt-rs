@@ -49,5 +49,6 @@ fn main() {
     }
 
     println!("Compared to results from xgboost, max error is: {:.10}", max_diff);
+    assert!(max_diff < 0.01);
 
 }

@@ -58,5 +58,11 @@ fn main() {
 
     println!("correct: {}", correct);
     println!("wrong:   {}", wrong);
-    println!("AUC: {}", AUC(&test_dv, &predicted, test_dv.len()));
+
+    let auc = AUC(&test_dv, &predicted, test_dv.len());
+    println!("AUC: {}", auc);
+
+    use gbdt::fitness::almost_equal;
+    assert_eq!(wrong, 0);
+    assert!(almost_equal(auc,1.0));
 }
