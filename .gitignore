@@ -12,3 +12,6 @@ Cargo.lock
 # ignore files
 .vscode/*
 .DS_Store
+
+# Automatically generated during cargo test
+gbdt.model
