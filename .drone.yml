@@ -65,25 +65,25 @@ steps:
 - name: ubuntu1604-nightly-debug
   image: baiduxlab/useful-docker:ubuntu.1604.nightly
   commands:
-  - source /root/.profile
+  - . /root/.profile
   - cargo test
 
 - name: ubuntu1604-nightly-release
   image: baiduxlab/useful-docker:ubuntu.1604.nightly
   commands:
-  - source /root/.profile
+  - . /root/.profile
   - cargo test --release
 
 - name: ubuntu1604-stable-debug
   image: baiduxlab/useful-docker:ubuntu.1604.stable
   commands:
-  - source /root/.profile
+  - . /root/.profile
   - cargo test
 
 - name: ubuntu1604-stable-release
   image: baiduxlab/useful-docker:ubuntu.1604.stable
   commands:
-  - source /root/.profile
+  - . /root/.profile
   - cargo test --release
 
 ---
@@ -95,24 +95,24 @@ steps:
 - name: ubuntu1804-nightly-debug
   image: baiduxlab/useful-docker:ubuntu.1804.nightly
   commands:
-  - source /root/.profile
+  - . /root/.profile
   - cargo test
 
 - name: ubuntu1804-nightly-release
   image: baiduxlab/useful-docker:ubuntu.1804.nightly
   commands:
-  - source /root/.profile
+  - . /root/.profile
   - cargo test --release
 
 - name: ubuntu1804-stable-debug
   image: baiduxlab/useful-docker:ubuntu.1804.stable
   commands:
-  - source /root/.profile
+  - . /root/.profile
   - cargo test
 
 - name: ubuntu1804-stable-release
   image: baiduxlab/useful-docker:ubuntu.1804.stable
   commands:
-  - source /root/.profile
+  - . /root/.profile
   - cargo test --release
 
