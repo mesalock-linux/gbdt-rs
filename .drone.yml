@@ -7,16 +7,16 @@ steps:
   commands:
   - source /root/.profile
   - cargo test
-  - cargo run --example test-agaricus-lepiota
-  - cargo run --example test-iris
-  - cargo run --example test-multithreads
-  - cargo run --example test-xgb-binary-logistic
-  - cargo run --example test-xgb-binary-logitraw
-  - cargo run --example test-xgb-multi-softmax
-  - cargo run --example test-xgb-multi-softprob
-  - cargo run --example test-xgb-rank-pairwise
-  - cargo run --example test-xgb-reg-linear
-  - cargo run --example test-xgb-reg-logistic
+  - cargo run --example test-agaricus-lepiota 1>/dev/null
+  - cargo run --example test-iris 1>/dev/null
+  - cargo run --example test-multithreads 1>/dev/null
+  - cargo run --example test-xgb-binary-logistic 1>/dev/null
+  - cargo run --example test-xgb-binary-logitraw 1>/dev/null
+  - cargo run --example test-xgb-multi-softmax 1>/dev/null
+  - cargo run --example test-xgb-multi-softprob 1>/dev/null
+  - cargo run --example test-xgb-rank-pairwise 1>/dev/null
+  - cargo run --example test-xgb-reg-linear 1>/dev/null
+  - cargo run --example test-xgb-reg-logistic 1>/dev/null
 
 ---
 kind: pipeline
@@ -28,16 +28,16 @@ steps:
   commands:
   - source /root/.profile
   - cargo test --release
-  - cargo run --release --example test-agaricus-lepiota
-  - cargo run --release --example test-iris
-  - cargo run --release --example test-multithreads
-  - cargo run --release --example test-xgb-binary-logistic
-  - cargo run --release --example test-xgb-binary-logitraw
-  - cargo run --release --example test-xgb-multi-softmax
-  - cargo run --release --example test-xgb-multi-softprob
-  - cargo run --release --example test-xgb-rank-pairwise
-  - cargo run --release --example test-xgb-reg-linear
-  - cargo run --release --example test-xgb-reg-logistic
+  - cargo run --release --example test-agaricus-lepiota 1>/dev/null
+  - cargo run --release --example test-iris 1>/dev/null
+  - cargo run --release --example test-multithreads 1>/dev/null
+  - cargo run --release --example test-xgb-binary-logistic 1>/dev/null
+  - cargo run --release --example test-xgb-binary-logitraw 1>/dev/null
+  - cargo run --release --example test-xgb-multi-softmax 1>/dev/null
+  - cargo run --release --example test-xgb-multi-softprob 1>/dev/null
+  - cargo run --release --example test-xgb-rank-pairwise 1>/dev/null
+  - cargo run --release --example test-xgb-reg-linear 1>/dev/null
+  - cargo run --release --example test-xgb-reg-logistic 1>/dev/null
 
 ---
 kind: pipeline
@@ -49,16 +49,16 @@ steps:
   commands:
   - source /root/.profile
   - cargo test
-  - cargo run --example test-agaricus-lepiota
-  - cargo run --example test-iris
-  - cargo run --example test-multithreads
-  - cargo run --example test-xgb-binary-logistic
-  - cargo run --example test-xgb-binary-logitraw
-  - cargo run --example test-xgb-multi-softmax
-  - cargo run --example test-xgb-multi-softprob
-  - cargo run --example test-xgb-rank-pairwise
-  - cargo run --example test-xgb-reg-linear
-  - cargo run --example test-xgb-reg-logistic
+  - cargo run --example test-agaricus-lepiota 1>/dev/null
+  - cargo run --example test-iris 1>/dev/null
+  - cargo run --example test-multithreads 1>/dev/null
+  - cargo run --example test-xgb-binary-logistic 1>/dev/null
+  - cargo run --example test-xgb-binary-logitraw 1>/dev/null
+  - cargo run --example test-xgb-multi-softmax 1>/dev/null
+  - cargo run --example test-xgb-multi-softprob 1>/dev/null
+  - cargo run --example test-xgb-rank-pairwise 1>/dev/null
+  - cargo run --example test-xgb-reg-linear 1>/dev/null
+  - cargo run --example test-xgb-reg-logistic 1>/dev/null
 
 ---
 kind: pipeline
@@ -70,16 +70,16 @@ steps:
   commands:
   - source /root/.profile
   - cargo test --release
-  - cargo run --release --example test-agaricus-lepiota
-  - cargo run --release --example test-iris
-  - cargo run --release --example test-multithreads
-  - cargo run --release --example test-xgb-binary-logistic
-  - cargo run --release --example test-xgb-binary-logitraw
-  - cargo run --release --example test-xgb-multi-softmax
-  - cargo run --release --example test-xgb-multi-softprob
-  - cargo run --release --example test-xgb-rank-pairwise
-  - cargo run --release --example test-xgb-reg-linear
-  - cargo run --release --example test-xgb-reg-logistic
+  - cargo run --release --example test-agaricus-lepiota 1>/dev/null
+  - cargo run --release --example test-iris 1>/dev/null
+  - cargo run --release --example test-multithreads 1>/dev/null
+  - cargo run --release --example test-xgb-binary-logistic 1>/dev/null
+  - cargo run --release --example test-xgb-binary-logitraw 1>/dev/null
+  - cargo run --release --example test-xgb-multi-softmax 1>/dev/null
+  - cargo run --release --example test-xgb-multi-softprob 1>/dev/null
+  - cargo run --release --example test-xgb-rank-pairwise 1>/dev/null
+  - cargo run --release --example test-xgb-reg-linear 1>/dev/null
+  - cargo run --release --example test-xgb-reg-logistic 1>/dev/null
 
 ---
 
@@ -92,16 +92,16 @@ steps:
   commands:
   - source /root/.profile
   - cargo test
-  - cargo run --example test-agaricus-lepiota
-  - cargo run --example test-iris
-  - cargo run --example test-multithreads
-  - cargo run --example test-xgb-binary-logistic
-  - cargo run --example test-xgb-binary-logitraw
-  - cargo run --example test-xgb-multi-softmax
-  - cargo run --example test-xgb-multi-softprob
-  - cargo run --example test-xgb-rank-pairwise
-  - cargo run --example test-xgb-reg-linear
-  - cargo run --example test-xgb-reg-logistic
+  - cargo run --example test-agaricus-lepiota 1>/dev/null
+  - cargo run --example test-iris 1>/dev/null
+  - cargo run --example test-multithreads 1>/dev/null
+  - cargo run --example test-xgb-binary-logistic 1>/dev/null
+  - cargo run --example test-xgb-binary-logitraw 1>/dev/null
+  - cargo run --example test-xgb-multi-softmax 1>/dev/null
+  - cargo run --example test-xgb-multi-softprob 1>/dev/null
+  - cargo run --example test-xgb-rank-pairwise 1>/dev/null
+  - cargo run --example test-xgb-reg-linear 1>/dev/null
+  - cargo run --example test-xgb-reg-logistic 1>/dev/null
 
 ---
 kind: pipeline
@@ -113,16 +113,16 @@ steps:
   commands:
   - source /root/.profile
   - cargo test --release
-  - cargo run --release --example test-agaricus-lepiota
-  - cargo run --release --example test-iris
-  - cargo run --release --example test-multithreads
-  - cargo run --release --example test-xgb-binary-logistic
-  - cargo run --release --example test-xgb-binary-logitraw
-  - cargo run --release --example test-xgb-multi-softmax
-  - cargo run --release --example test-xgb-multi-softprob
-  - cargo run --release --example test-xgb-rank-pairwise
-  - cargo run --release --example test-xgb-reg-linear
-  - cargo run --release --example test-xgb-reg-logistic
+  - cargo run --release --example test-agaricus-lepiota 1>/dev/null
+  - cargo run --release --example test-iris 1>/dev/null
+  - cargo run --release --example test-multithreads 1>/dev/null
+  - cargo run --release --example test-xgb-binary-logistic 1>/dev/null
+  - cargo run --release --example test-xgb-binary-logitraw 1>/dev/null
+  - cargo run --release --example test-xgb-multi-softmax 1>/dev/null
+  - cargo run --release --example test-xgb-multi-softprob 1>/dev/null
+  - cargo run --release --example test-xgb-rank-pairwise 1>/dev/null
+  - cargo run --release --example test-xgb-reg-linear 1>/dev/null
+  - cargo run --release --example test-xgb-reg-logistic 1>/dev/null
 
 ---
 kind: pipeline
@@ -134,16 +134,16 @@ steps:
   commands:
   - source /root/.profile
   - cargo test
-  - cargo run --example test-agaricus-lepiota
-  - cargo run --example test-iris
-  - cargo run --example test-multithreads
-  - cargo run --example test-xgb-binary-logistic
-  - cargo run --example test-xgb-binary-logitraw
-  - cargo run --example test-xgb-multi-softmax
-  - cargo run --example test-xgb-multi-softprob
-  - cargo run --example test-xgb-rank-pairwise
-  - cargo run --example test-xgb-reg-linear
-  - cargo run --example test-xgb-reg-logistic
+  - cargo run --example test-agaricus-lepiota 1>/dev/null
+  - cargo run --example test-iris 1>/dev/null
+  - cargo run --example test-multithreads 1>/dev/null
+  - cargo run --example test-xgb-binary-logistic 1>/dev/null
+  - cargo run --example test-xgb-binary-logitraw 1>/dev/null
+  - cargo run --example test-xgb-multi-softmax 1>/dev/null
+  - cargo run --example test-xgb-multi-softprob 1>/dev/null
+  - cargo run --example test-xgb-rank-pairwise 1>/dev/null
+  - cargo run --example test-xgb-reg-linear 1>/dev/null
+  - cargo run --example test-xgb-reg-logistic 1>/dev/null
 
 ---
 kind: pipeline
@@ -155,16 +155,16 @@ steps:
   commands:
   - source /root/.profile
   - cargo test --release
-  - cargo run --release --example test-agaricus-lepiota
-  - cargo run --release --example test-iris
-  - cargo run --release --example test-multithreads
-  - cargo run --release --example test-xgb-binary-logistic
-  - cargo run --release --example test-xgb-binary-logitraw
-  - cargo run --release --example test-xgb-multi-softmax
-  - cargo run --release --example test-xgb-multi-softprob
-  - cargo run --release --example test-xgb-rank-pairwise
-  - cargo run --release --example test-xgb-reg-linear
-  - cargo run --release --example test-xgb-reg-logistic
+  - cargo run --release --example test-agaricus-lepiota 1>/dev/null
+  - cargo run --release --example test-iris 1>/dev/null
+  - cargo run --release --example test-multithreads 1>/dev/null
+  - cargo run --release --example test-xgb-binary-logistic 1>/dev/null
+  - cargo run --release --example test-xgb-binary-logitraw 1>/dev/null
+  - cargo run --release --example test-xgb-multi-softmax 1>/dev/null
+  - cargo run --release --example test-xgb-multi-softprob 1>/dev/null
+  - cargo run --release --example test-xgb-rank-pairwise 1>/dev/null
+  - cargo run --release --example test-xgb-reg-linear 1>/dev/null
+  - cargo run --release --example test-xgb-reg-logistic 1>/dev/null
 
 ---
 
@@ -177,16 +177,16 @@ steps:
   commands:
   - . /root/.profile
   - cargo test
-  - cargo run --example test-agaricus-lepiota
-  - cargo run --example test-iris
-  - cargo run --example test-multithreads
-  - cargo run --example test-xgb-binary-logistic
-  - cargo run --example test-xgb-binary-logitraw
-  - cargo run --example test-xgb-multi-softmax
-  - cargo run --example test-xgb-multi-softprob
-  - cargo run --example test-xgb-rank-pairwise
-  - cargo run --example test-xgb-reg-linear
-  - cargo run --example test-xgb-reg-logistic
+  - cargo run --example test-agaricus-lepiota 1>/dev/null
+  - cargo run --example test-iris 1>/dev/null
+  - cargo run --example test-multithreads 1>/dev/null
+  - cargo run --example test-xgb-binary-logistic 1>/dev/null
+  - cargo run --example test-xgb-binary-logitraw 1>/dev/null
+  - cargo run --example test-xgb-multi-softmax 1>/dev/null
+  - cargo run --example test-xgb-multi-softprob 1>/dev/null
+  - cargo run --example test-xgb-rank-pairwise 1>/dev/null
+  - cargo run --example test-xgb-reg-linear 1>/dev/null
+  - cargo run --example test-xgb-reg-logistic 1>/dev/null
 
 ---
 kind: pipeline
@@ -198,16 +198,16 @@ steps:
   commands:
   - . /root/.profile
   - cargo test --release
-  - cargo run --release --example test-agaricus-lepiota
-  - cargo run --release --example test-iris
-  - cargo run --release --example test-multithreads
-  - cargo run --release --example test-xgb-binary-logistic
-  - cargo run --release --example test-xgb-binary-logitraw
-  - cargo run --release --example test-xgb-multi-softmax
-  - cargo run --release --example test-xgb-multi-softprob
-  - cargo run --release --example test-xgb-rank-pairwise
-  - cargo run --release --example test-xgb-reg-linear
-  - cargo run --release --example test-xgb-reg-logistic
+  - cargo run --release --example test-agaricus-lepiota 1>/dev/null
+  - cargo run --release --example test-iris 1>/dev/null
+  - cargo run --release --example test-multithreads 1>/dev/null
+  - cargo run --release --example test-xgb-binary-logistic 1>/dev/null
+  - cargo run --release --example test-xgb-binary-logitraw 1>/dev/null
+  - cargo run --release --example test-xgb-multi-softmax 1>/dev/null
+  - cargo run --release --example test-xgb-multi-softprob 1>/dev/null
+  - cargo run --release --example test-xgb-rank-pairwise 1>/dev/null
+  - cargo run --release --example test-xgb-reg-linear 1>/dev/null
+  - cargo run --release --example test-xgb-reg-logistic 1>/dev/null
 
 ---
 kind: pipeline
@@ -219,16 +219,16 @@ steps:
   commands:
   - . /root/.profile
   - cargo test
-  - cargo run --example test-agaricus-lepiota
-  - cargo run --example test-iris
-  - cargo run --example test-multithreads
-  - cargo run --example test-xgb-binary-logistic
-  - cargo run --example test-xgb-binary-logitraw
-  - cargo run --example test-xgb-multi-softmax
-  - cargo run --example test-xgb-multi-softprob
-  - cargo run --example test-xgb-rank-pairwise
-  - cargo run --example test-xgb-reg-linear
-  - cargo run --example test-xgb-reg-logistic
+  - cargo run --example test-agaricus-lepiota 1>/dev/null
+  - cargo run --example test-iris 1>/dev/null
+  - cargo run --example test-multithreads 1>/dev/null
+  - cargo run --example test-xgb-binary-logistic 1>/dev/null
+  - cargo run --example test-xgb-binary-logitraw 1>/dev/null
+  - cargo run --example test-xgb-multi-softmax 1>/dev/null
+  - cargo run --example test-xgb-multi-softprob 1>/dev/null
+  - cargo run --example test-xgb-rank-pairwise 1>/dev/null
+  - cargo run --example test-xgb-reg-linear 1>/dev/null
+  - cargo run --example test-xgb-reg-logistic 1>/dev/null
 
 ---
 kind: pipeline
@@ -240,16 +240,16 @@ steps:
   commands:
   - . /root/.profile
   - cargo test --release
-  - cargo run --release --example test-agaricus-lepiota
-  - cargo run --release --example test-iris
-  - cargo run --release --example test-multithreads
-  - cargo run --release --example test-xgb-binary-logistic
-  - cargo run --release --example test-xgb-binary-logitraw
-  - cargo run --release --example test-xgb-multi-softmax
-  - cargo run --release --example test-xgb-multi-softprob
-  - cargo run --release --example test-xgb-rank-pairwise
-  - cargo run --release --example test-xgb-reg-linear
-  - cargo run --release --example test-xgb-reg-logistic
+  - cargo run --release --example test-agaricus-lepiota 1>/dev/null
+  - cargo run --release --example test-iris 1>/dev/null
+  - cargo run --release --example test-multithreads 1>/dev/null
+  - cargo run --release --example test-xgb-binary-logistic 1>/dev/null
+  - cargo run --release --example test-xgb-binary-logitraw 1>/dev/null
+  - cargo run --release --example test-xgb-multi-softmax 1>/dev/null
+  - cargo run --release --example test-xgb-multi-softprob 1>/dev/null
+  - cargo run --release --example test-xgb-rank-pairwise 1>/dev/null
+  - cargo run --release --example test-xgb-reg-linear 1>/dev/null
+  - cargo run --release --example test-xgb-reg-logistic 1>/dev/null
 
 ---
 
@@ -262,16 +262,16 @@ steps:
   commands:
   - . /root/.profile
   - cargo test
-  - cargo run --example test-agaricus-lepiota
-  - cargo run --example test-iris
-  - cargo run --example test-multithreads
-  - cargo run --example test-xgb-binary-logistic
-  - cargo run --example test-xgb-binary-logitraw
-  - cargo run --example test-xgb-multi-softmax
-  - cargo run --example test-xgb-multi-softprob
-  - cargo run --example test-xgb-rank-pairwise
-  - cargo run --example test-xgb-reg-linear
-  - cargo run --example test-xgb-reg-logistic
+  - cargo run --example test-agaricus-lepiota 1>/dev/null
+  - cargo run --example test-iris 1>/dev/null
+  - cargo run --example test-multithreads 1>/dev/null
+  - cargo run --example test-xgb-binary-logistic 1>/dev/null
+  - cargo run --example test-xgb-binary-logitraw 1>/dev/null
+  - cargo run --example test-xgb-multi-softmax 1>/dev/null
+  - cargo run --example test-xgb-multi-softprob 1>/dev/null
+  - cargo run --example test-xgb-rank-pairwise 1>/dev/null
+  - cargo run --example test-xgb-reg-linear 1>/dev/null
+  - cargo run --example test-xgb-reg-logistic 1>/dev/null
 
 ---
 kind: pipeline
@@ -283,16 +283,16 @@ steps:
   commands:
   - . /root/.profile
   - cargo test --release
-  - cargo run --release --example test-agaricus-lepiota
-  - cargo run --release --example test-iris
-  - cargo run --release --example test-multithreads
-  - cargo run --release --example test-xgb-binary-logistic
-  - cargo run --release --example test-xgb-binary-logitraw
-  - cargo run --release --example test-xgb-multi-softmax
-  - cargo run --release --example test-xgb-multi-softprob
-  - cargo run --release --example test-xgb-rank-pairwise
-  - cargo run --release --example test-xgb-reg-linear
-  - cargo run --release --example test-xgb-reg-logistic
+  - cargo run --release --example test-agaricus-lepiota 1>/dev/null
+  - cargo run --release --example test-iris 1>/dev/null
+  - cargo run --release --example test-multithreads 1>/dev/null
+  - cargo run --release --example test-xgb-binary-logistic 1>/dev/null
+  - cargo run --release --example test-xgb-binary-logitraw 1>/dev/null
+  - cargo run --release --example test-xgb-multi-softmax 1>/dev/null
+  - cargo run --release --example test-xgb-multi-softprob 1>/dev/null
+  - cargo run --release --example test-xgb-rank-pairwise 1>/dev/null
+  - cargo run --release --example test-xgb-reg-linear 1>/dev/null
+  - cargo run --release --example test-xgb-reg-logistic 1>/dev/null
 
 ---
 kind: pipeline
@@ -304,16 +304,16 @@ steps:
   commands:
   - . /root/.profile
   - cargo test
-  - cargo run --example test-agaricus-lepiota
-  - cargo run --example test-iris
-  - cargo run --example test-multithreads
-  - cargo run --example test-xgb-binary-logistic
-  - cargo run --example test-xgb-binary-logitraw
-  - cargo run --example test-xgb-multi-softmax
-  - cargo run --example test-xgb-multi-softprob
-  - cargo run --example test-xgb-rank-pairwise
-  - cargo run --example test-xgb-reg-linear
-  - cargo run --example test-xgb-reg-logistic
+  - cargo run --example test-agaricus-lepiota 1>/dev/null
+  - cargo run --example test-iris 1>/dev/null
+  - cargo run --example test-multithreads 1>/dev/null
+  - cargo run --example test-xgb-binary-logistic 1>/dev/null
+  - cargo run --example test-xgb-binary-logitraw 1>/dev/null
+  - cargo run --example test-xgb-multi-softmax 1>/dev/null
+  - cargo run --example test-xgb-multi-softprob 1>/dev/null
+  - cargo run --example test-xgb-rank-pairwise 1>/dev/null
+  - cargo run --example test-xgb-reg-linear 1>/dev/null
+  - cargo run --example test-xgb-reg-logistic 1>/dev/null
 
 ---
 kind: pipeline
@@ -325,14 +325,14 @@ steps:
   commands:
   - . /root/.profile
   - cargo test --release
-  - cargo run --release --example test-agaricus-lepiota
-  - cargo run --release --example test-iris
-  - cargo run --release --example test-multithreads
-  - cargo run --release --example test-xgb-binary-logistic
-  - cargo run --release --example test-xgb-binary-logitraw
-  - cargo run --release --example test-xgb-multi-softmax
-  - cargo run --release --example test-xgb-multi-softprob
-  - cargo run --release --example test-xgb-rank-pairwise
-  - cargo run --release --example test-xgb-reg-linear
-  - cargo run --release --example test-xgb-reg-logistic
+  - cargo run --release --example test-agaricus-lepiota 1>/dev/null
+  - cargo run --release --example test-iris 1>/dev/null
+  - cargo run --release --example test-multithreads 1>/dev/null
+  - cargo run --release --example test-xgb-binary-logistic 1>/dev/null
+  - cargo run --release --example test-xgb-binary-logitraw 1>/dev/null
+  - cargo run --release --example test-xgb-multi-softmax 1>/dev/null
+  - cargo run --release --example test-xgb-multi-softprob 1>/dev/null
+  - cargo run --release --example test-xgb-rank-pairwise 1>/dev/null
+  - cargo run --release --example test-xgb-reg-linear 1>/dev/null
+  - cargo run --release --example test-xgb-reg-logistic 1>/dev/null
 
