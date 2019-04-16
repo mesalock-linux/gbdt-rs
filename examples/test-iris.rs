@@ -4,7 +4,7 @@ use gbdt::config::Config;
 use gbdt::decision_tree::{DataVec, PredVec};
 use gbdt::fitness::almost_equal_thrs;
 use gbdt::gradient_boost::GBDT;
-use gbdt::input::{InputFormat, load};
+use gbdt::input::{load, InputFormat};
 
 fn main() {
     let mut cfg = Config::new();
@@ -12,7 +12,7 @@ fn main() {
     cfg.set_max_depth(4);
     cfg.set_iterations(100);
     cfg.set_shrinkage(0.1);
-    cfg.set_loss("LAD"); 
+    cfg.set_loss("LAD");
     cfg.set_debug(true);
     cfg.set_training_optimization_level(2);
 
@@ -23,13 +23,15 @@ fn main() {
     let mut input_format = InputFormat::csv_format();
     input_format.set_feature_size(4);
     input_format.set_label_index(4);
-    let mut train_dv: DataVec = load(train_file, input_format).expect("failed to load training data");
+    let mut train_dv: DataVec =
+        load(train_file, input_format).expect("failed to load training data");
     let test_dv: DataVec = load(test_file, input_format).expect("failed to load test data");
 
     // train and save the model
     let mut gbdt = GBDT::new(&cfg);
     gbdt.fit(&mut train_dv);
-    gbdt.save_model("gbdt.model").expect("failed to save the model");
+    gbdt.save_model("gbdt.model")
+        .expect("failed to save the model");
 
     // load the model and do inference
     let model = GBDT::load_model("gbdt.model").expect("failed to load the model");

@@ -464,9 +464,8 @@ impl TrainingCache {
 
         // Put data
         for (i, item) in whole_data.iter().enumerate() {
-            for (index, ordered_item) in ordered_features.iter_mut()
-                                                         .enumerate()
-                                                         .take(feature_size) {
+            for (index, ordered_item) in ordered_features.iter_mut().enumerate().take(feature_size)
+            {
                 ordered_item.push((i, item.feature[index]));
             }
         }

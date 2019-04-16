@@ -86,7 +86,7 @@ use crate::decision_tree::DecisionTree;
 use crate::decision_tree::TrainingCache;
 use crate::decision_tree::{DataVec, PredVec, ValueType, VALUE_TYPE_MIN, VALUE_TYPE_UNKNOWN};
 #[cfg(feature = "enable_training")]
-use crate::fitness::{label_average, logit_loss_gradient, weighted_label_median, MAE, RMSE, AUC};
+use crate::fitness::{label_average, logit_loss_gradient, weighted_label_median, AUC, MAE, RMSE};
 #[cfg(feature = "enable_training")]
 use rand::prelude::SliceRandom;
 #[cfg(feature = "enable_training")]
@@ -621,9 +621,7 @@ impl GBDT {
         if self.conf.debug {
             let normalized_preds = predicted
                 .iter()
-                .map(|x| {
-                    1.0 / (1.0 + ((-2.0 * x).exp()))
-                })
+                .map(|x| 1.0 / (1.0 + ((-2.0 * x).exp())))
                 .collect();
             println!("AUC = {}", AUC(&dv, &normalized_preds, dv.len()));
         }

@@ -247,11 +247,11 @@ pub fn infer(file_name: &str) -> InputFormat {
     // use the first value as label or target value by default
 
     if let FileFormat::CSV = input_format.ftype {
-       let first_line_after = reg.replace_all(&first_line, "");
-       let letters = Regex::new(r"[a-zA-Z]").unwrap();
-       if let Some(letter_caps) = letters.captures(&first_line_after) {
-           input_format.header = letter_caps.len() > 0;
-       }
+        let first_line_after = reg.replace_all(&first_line, "");
+        let letters = Regex::new(r"[a-zA-Z]").unwrap();
+        if let Some(letter_caps) = letters.captures(&first_line_after) {
+            input_format.header = letter_caps.len() > 0;
+        }
     }
 
     input_format

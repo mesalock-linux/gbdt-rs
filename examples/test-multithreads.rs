@@ -23,7 +23,7 @@ fn main() {
     fmt.set_delimeter(' ');
     let mut test_data = input::load(test_file, fmt).unwrap();
 
-    // split test data to `thread_num` vectors. 
+    // split test data to `thread_num` vectors.
     let t1 = PreciseTime::now();
     let mut handles = vec![];
     let mut test_data_vec = vec![];

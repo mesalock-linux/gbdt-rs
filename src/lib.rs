@@ -36,6 +36,10 @@ pub mod config;
 pub mod decision_tree;
 pub mod fitness;
 pub mod gradient_boost;
+
+
+// Input heavily depends on I/O and may not be required in SGX
+#[cfg(feature = "input")]
 pub mod input;
 
 #[cfg(test)]
