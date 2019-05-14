@@ -17,6 +17,7 @@ steps:
   - cargo run --example test-xgb-rank-pairwise 1>/dev/null
   - cargo run --example test-xgb-reg-linear 1>/dev/null
   - cargo run --example test-xgb-reg-logistic 1>/dev/null
+  - cargo run --example test-batch 1>/dev/null
 
 ---
 kind: pipeline
@@ -38,6 +39,7 @@ steps:
   - cargo run --release --example test-xgb-rank-pairwise 1>/dev/null
   - cargo run --release --example test-xgb-reg-linear 1>/dev/null
   - cargo run --release --example test-xgb-reg-logistic 1>/dev/null
+  - cargo run --release --example test-batch 1>/dev/null
 
 ---
 kind: pipeline
@@ -59,6 +61,7 @@ steps:
   - cargo run --example test-xgb-rank-pairwise 1>/dev/null
   - cargo run --example test-xgb-reg-linear 1>/dev/null
   - cargo run --example test-xgb-reg-logistic 1>/dev/null
+  - cargo run --example test-batch 1>/dev/null
 
 ---
 kind: pipeline
@@ -80,6 +83,7 @@ steps:
   - cargo run --release --example test-xgb-rank-pairwise 1>/dev/null
   - cargo run --release --example test-xgb-reg-linear 1>/dev/null
   - cargo run --release --example test-xgb-reg-logistic 1>/dev/null
+  - cargo run --release --example test-batch 1>/dev/null
 
 ---
 
@@ -102,6 +106,7 @@ steps:
   - cargo run --example test-xgb-rank-pairwise 1>/dev/null
   - cargo run --example test-xgb-reg-linear 1>/dev/null
   - cargo run --example test-xgb-reg-logistic 1>/dev/null
+  - cargo run --example test-batch 1>/dev/null
 
 ---
 kind: pipeline
@@ -123,6 +128,7 @@ steps:
   - cargo run --release --example test-xgb-rank-pairwise 1>/dev/null
   - cargo run --release --example test-xgb-reg-linear 1>/dev/null
   - cargo run --release --example test-xgb-reg-logistic 1>/dev/null
+  - cargo run --release --example test-batch 1>/dev/null
 
 ---
 kind: pipeline
@@ -144,6 +150,7 @@ steps:
   - cargo run --example test-xgb-rank-pairwise 1>/dev/null
   - cargo run --example test-xgb-reg-linear 1>/dev/null
   - cargo run --example test-xgb-reg-logistic 1>/dev/null
+  - cargo run --example test-batch 1>/dev/null
 
 ---
 kind: pipeline
@@ -165,6 +172,7 @@ steps:
   - cargo run --release --example test-xgb-rank-pairwise 1>/dev/null
   - cargo run --release --example test-xgb-reg-linear 1>/dev/null
   - cargo run --release --example test-xgb-reg-logistic 1>/dev/null
+  - cargo run --release --example test-batch 1>/dev/null
 
 ---
 
@@ -187,6 +195,7 @@ steps:
   - cargo run --example test-xgb-rank-pairwise 1>/dev/null
   - cargo run --example test-xgb-reg-linear 1>/dev/null
   - cargo run --example test-xgb-reg-logistic 1>/dev/null
+  - cargo run --example test-batch 1>/dev/null
 
 ---
 kind: pipeline
@@ -208,6 +217,7 @@ steps:
   - cargo run --release --example test-xgb-rank-pairwise 1>/dev/null
   - cargo run --release --example test-xgb-reg-linear 1>/dev/null
   - cargo run --release --example test-xgb-reg-logistic 1>/dev/null
+  - cargo run --release --example test-batch 1>/dev/null
 
 ---
 kind: pipeline
@@ -229,6 +239,7 @@ steps:
   - cargo run --example test-xgb-rank-pairwise 1>/dev/null
   - cargo run --example test-xgb-reg-linear 1>/dev/null
   - cargo run --example test-xgb-reg-logistic 1>/dev/null
+  - cargo run --example test-batch 1>/dev/null
 
 ---
 kind: pipeline
@@ -250,6 +261,7 @@ steps:
   - cargo run --release --example test-xgb-rank-pairwise 1>/dev/null
   - cargo run --release --example test-xgb-reg-linear 1>/dev/null
   - cargo run --release --example test-xgb-reg-logistic 1>/dev/null
+  - cargo run --release --example test-batch 1>/dev/null
 
 ---
 
@@ -272,6 +284,7 @@ steps:
   - cargo run --example test-xgb-rank-pairwise 1>/dev/null
   - cargo run --example test-xgb-reg-linear 1>/dev/null
   - cargo run --example test-xgb-reg-logistic 1>/dev/null
+  - cargo run --example test-batch 1>/dev/null
 
 ---
 kind: pipeline
@@ -293,6 +306,7 @@ steps:
   - cargo run --release --example test-xgb-rank-pairwise 1>/dev/null
   - cargo run --release --example test-xgb-reg-linear 1>/dev/null
   - cargo run --release --example test-xgb-reg-logistic 1>/dev/null
+  - cargo run --release --example test-batch 1>/dev/null
 
 ---
 kind: pipeline
@@ -314,6 +328,7 @@ steps:
   - cargo run --example test-xgb-rank-pairwise 1>/dev/null
   - cargo run --example test-xgb-reg-linear 1>/dev/null
   - cargo run --example test-xgb-reg-logistic 1>/dev/null
+  - cargo run --example test-batch 1>/dev/null
 
 ---
 kind: pipeline
@@ -335,6 +350,7 @@ steps:
   - cargo run --release --example test-xgb-rank-pairwise 1>/dev/null
   - cargo run --release --example test-xgb-reg-linear 1>/dev/null
   - cargo run --release --example test-xgb-reg-logistic 1>/dev/null
+  - cargo run --release --example test-batch 1>/dev/null
 
 ---
 
