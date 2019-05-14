@@ -1,5 +1,7 @@
 # gbdt-rs
 
+[![Build Status](https://ci.mesalock-linux.org/api/badges/mesalock-linux/gbdt-rs/status.svg)](https://ci.mesalock-linux.org/mesalock-linux/gbdt-rs)
+
 gbdt-rs is a gradient boost decision tree library written in Safe Rust. There is no unsafe rust code in the library. 
 
 gbdt-rs provides the training and inference capabilities. And it can use the models trained by [xgboost](https://xgboost.readthedocs.io/en/latest/) to do inference tasks.
