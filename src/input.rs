@@ -38,7 +38,10 @@ cfg_if! {
     } else {
         use std::collections::HashMap;
         use std::error::Error;
+        #[cfg(not(feature = "mesalock_sgx"))]
         use std::fs::File;
+        #[cfg(feature = "mesalock_sgx")]
+        use std::untrusted::fs::File;
         use std::io::{BufRead, BufReader, Seek, SeekFrom};
     }
 }
