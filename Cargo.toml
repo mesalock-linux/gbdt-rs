@@ -4,7 +4,7 @@ version = "0.1.0"
 authors = ["Tongxin Li <litongxin@baidu.com>", "Tianyi Li <n0b0dypku@gmail.com>", "Yu Ding <dingyu02@baidu.com>"]
 homepage = "https://github.com/mesalock-linux/gbdt-rs"
 repository = "https://github.com/mesalock-linux/gbdt-rs"
-license = "BSD-3-Clause"
+license = "Apache-2.0"
 description = "A implementation of Gradient Boosting Regression Tree in Rust programming language"
 edition = "2018"
 

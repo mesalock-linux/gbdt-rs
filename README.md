@@ -1,4 +1,5 @@
 # gbdt-rs
+
 gbdt-rs is a gradient boost decision tree library written in Safe Rust. There is no unsafe rust code in the library. 
 
 gbdt-rs provides the training and inference capabilities. And it can use the models trained by [xgboost](https://xgboost.readthedocs.io/en/latest/) to do inference tasks.
@@ -97,4 +98,10 @@ At this time, training in gbdt-rs is single-threaded.
 The related inference functions are single-threaded. But they are thread-safe. We provide an inference example using multi threads in example/test-multithreads.rs
 
 # SGX usage
-Because gbdt-rs is written in pure rust, with the help of [rust-sgx-sdk](https://github.com/baidu/rust-sgx-sdk), it can be used in sgx enclave easily
+Because gbdt-rs is written in pure rust, with the help of [rust-sgx-sdk](https://github.com/baidu/rust-sgx-sdk), it can be used in sgx enclave easily as:
+
+```
+gbdt_sgx = { git = "https://github.com/mesalock-linux/gbdt-rs" }
+```
+
+For more information and concret examples, please look at directory `sgx/gbdt-sgx-test`.
