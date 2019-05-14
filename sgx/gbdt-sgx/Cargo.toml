@@ -1,0 +1,36 @@
+[package]
+name = "gbdt_sgx"
+version = "0.1.0"
+authors = ["Tongxin Li <litongxin@baidu.com>", "Tianyi Li <n0b0dypku@gmail.com>", "Yu Ding <dingyu02@baidu.com>"]
+homepage = "https://github.com/mesalock-linux/gbdt-rs"
+repository = "https://github.com/mesalock-linux/gbdt-rs"
+license = "Apache-2.0"
+description = "A implementation of Gradient Boosting Regression Tree in Rust programming language"
+edition = "2018"
+
+[features]
+default = ["mesalock_sgx"]
+enable_training = ["rand"]
+profiling = ["time"]
+input = ["regex"]
+mesalock_sgx = ["sgx_tstd"]
+
+[badges]
+
+[lib]
+name = "gbdt_sgx"
+path = "../../src/lib.rs"
+crate-type = ["rlib", "staticlib"]
+
+[dependencies]
+serde = { git = "https://github.com/mesalock-linux/serde-sgx.git" }
+serde_derive = { git = "https://github.com/mesalock-linux/serde-sgx.git" }
+serde_json = { git = "https://github.com/mesalock-linux/serde-json-sgx.git" }
+rand={ version = "0.6", optional = true, git = "https://github.com/mesalock-linux/rand-sgx.git" }
+regex = { version = "1", git = "https://github.com/mesalock-linux/regex-sgx", optional = true }
+time = { version = "0.1", optional = true }
+sgx_tstd = { version = "1.0", git = "https://github.com/baidu/rust-sgx-sdk.git", optional = true }
+cfg-if = "0.1"
+
+[dev-dependencies]
+time = "0.1"

@@ -24,12 +24,24 @@
 //! let test_data = input::load(test_file, fmt);
 //! ```
 
+#[cfg(all(feature = "mesalock_sgx", not(target_env = "sgx")))]
+use std::prelude::v1::*;
+
 use crate::decision_tree::{Data, DataVec, ValueType, VALUE_TYPE_UNKNOWN};
 
-use std::collections::HashMap;
-use std::error::Error;
-use std::fs::File;
-use std::io::{BufRead, BufReader, Seek, SeekFrom};
+cfg_if! {
+    if #[cfg(all(feature = "mesalock_sgx", not(target_env = "sgx")))] {
+        use std::collections::HashMap;
+        use std::error::Error;
+        use std::untrusted::fs::File;
+        use std::io::{BufRead, BufReader, Seek, SeekFrom};
+    } else {
+        use std::collections::HashMap;
+        use std::error::Error;
+        use std::fs::File;
+        use std::io::{BufRead, BufReader, Seek, SeekFrom};
+    }
+}
 
 use regex::Regex;
 use serde_derive::{Deserialize, Serialize};

@@ -336,3 +336,242 @@ steps:
   - cargo run --release --example test-xgb-reg-linear 1>/dev/null
   - cargo run --release --example test-xgb-reg-logistic 1>/dev/null
 
+---
+
+kind: pipeline
+name: gbdt-sgx-xargo-1604-sw
+
+steps:
+- name: sim-compile
+  image: baiduxlab/sgx-rust:1604-1.0.7
+  commands:
+  - . /opt/sgxsdk/environment
+  - . /root/.cargo/env
+  - cd sgx && SGX_MODE=SW XARGO_SGX=1 make -C gbdt-sgx-test
+
+- name: sim-test
+  image: baiduxlab/sgx-rust:1604-1.0.7
+  commands:
+  - . /opt/sgxsdk/environment
+  - cd sgx/gbdt-sgx-test/bin && ./app | tee result.txt && grep " 0 failed" result.txt
+
+node:
+  instance: sgx
+
+---
+
+kind: pipeline
+name: gbdt-sgx-xargo-1604-hw
+
+steps:
+- name: hw-compile
+  image: baiduxlab/sgx-rust:1604-1.0.7
+  commands:
+  - . /opt/sgxsdk/environment
+  - . /root/.cargo/env
+  - cd sgx && XARGO_SGX=1 make -C gbdt-sgx-test
+
+- name: hw-test
+  image: baiduxlab/sgx-rust:1604-1.0.7
+  privileged: true
+  volumes:
+  - name: isgx
+    path: /dev/isgx
+  - name: aesmd
+    path: /var/run/aesmd/aesm.socket
+  commands:
+  - . /opt/sgxsdk/environment
+  - ls -l /dev/isgx
+  - ls -l /var/run/aesmd/aesm.socket
+  - cd sgx/gbdt-sgx-test/bin && ./app | tee result.txt && grep " 0 failed" result.txt
+
+volumes:
+- name: isgx
+  host:
+    path: /dev/isgx
+- name: aesmd
+  host:
+    path: /var/run/aesmd/aesm.socket
+
+node:
+  instance: sgx
+
+---
+
+kind: pipeline
+name: gbdt-sgx-xargo-1804-sw
+
+steps:
+- name: sim-compile
+  image: baiduxlab/sgx-rust:1804-1.0.7
+  commands:
+  - . /opt/sgxsdk/environment
+  - . /root/.cargo/env
+  - cd sgx && SGX_MODE=SW XARGO_SGX=1 make -C gbdt-sgx-test
+
+- name: sim-test
+  image: baiduxlab/sgx-rust:1804-1.0.7
+  commands:
+  - . /opt/sgxsdk/environment
+  - cd sgx/gbdt-sgx-test/bin && ./app | tee result.txt && grep " 0 failed" result.txt
+
+node:
+  instance: sgx
+
+---
+
+kind: pipeline
+name: gbdt-sgx-xargo-1804-hw
+
+steps:
+- name: hw-compile
+  image: baiduxlab/sgx-rust:1804-1.0.7
+  commands:
+  - . /opt/sgxsdk/environment
+  - . /root/.cargo/env
+  - cd sgx && XARGO_SGX=1 make -C gbdt-sgx-test
+
+- name: hw-test
+  image: baiduxlab/sgx-rust:1804-1.0.7
+  privileged: true
+  volumes:
+  - name: isgx
+    path: /dev/isgx
+  - name: aesmd
+    path: /var/run/aesmd/aesm.socket
+  commands:
+  - . /opt/sgxsdk/environment
+  - ls -l /dev/isgx
+  - ls -l /var/run/aesmd/aesm.socket
+  - cd sgx/gbdt-sgx-test/bin && ./app | tee result.txt && grep " 0 failed" result.txt
+
+volumes:
+- name: isgx
+  host:
+    path: /dev/isgx
+- name: aesmd
+  host:
+    path: /var/run/aesmd/aesm.socket
+
+node:
+  instance: sgx
+
+---
+
+kind: pipeline
+name: gbdt-sgx-1604-sw
+
+steps:
+- name: sim-compile
+  image: baiduxlab/sgx-rust:1604-1.0.7
+  commands:
+  - . /opt/sgxsdk/environment
+  - . /root/.cargo/env
+  - SGX_MODE=SW make -C sgx/gbdt-sgx-test
+
+- name: sim-test
+  image: baiduxlab/sgx-rust:1604-1.0.7
+  commands:
+  - . /opt/sgxsdk/environment
+  - cd sgx/gbdt-sgx-test/bin && ./app | tee result.txt && grep " 0 failed" result.txt
+
+node:
+  instance: sgx
+
+---
+
+kind: pipeline
+name: gbdt-sgx-1604-hw
+
+steps:
+- name: hw-compile
+  image: baiduxlab/sgx-rust:1604-1.0.7
+  commands:
+  - . /opt/sgxsdk/environment
+  - . /root/.cargo/env
+  - make -C sgx/gbdt-sgx-test
+
+- name: hw-test
+  image: baiduxlab/sgx-rust:1604-1.0.7
+  privileged: true
+  volumes:
+  - name: isgx
+    path: /dev/isgx
+  - name: aesmd
+    path: /var/run/aesmd/aesm.socket
+  commands:
+  - . /opt/sgxsdk/environment
+  - ls -l /dev/isgx
+  - ls -l /var/run/aesmd/aesm.socket
+  - cd sgx/gbdt-sgx-test/bin && ./app | tee result.txt && grep " 0 failed" result.txt
+
+volumes:
+- name: isgx
+  host:
+    path: /dev/isgx
+- name: aesmd
+  host:
+    path: /var/run/aesmd/aesm.socket
+
+node:
+  instance: sgx
+
+---
+
+kind: pipeline
+name: gbdt-sgx-1804-sw
+
+steps:
+- name: sim-compile
+  image: baiduxlab/sgx-rust:1804-1.0.7
+  commands:
+  - . /opt/sgxsdk/environment
+  - . /root/.cargo/env
+  - SGX_MODE=SW make -C sgx/gbdt-sgx-test
+
+- name: sim-test
+  image: baiduxlab/sgx-rust:1804-1.0.7
+  commands:
+  - . /opt/sgxsdk/environment
+  - cd sgx/gbdt-sgx-test/bin && ./app | tee result.txt && grep " 0 failed" result.txt
+
+node:
+  instance: sgx
+
+---
+
+kind: pipeline
+name: gbdt-sgx-1804-hw
+
+steps:
+- name: hw-compile
+  image: baiduxlab/sgx-rust:1804-1.0.7
+  commands:
+  - . /opt/sgxsdk/environment
+  - . /root/.cargo/env
+  - make -C sgx/gbdt-sgx-test
+
+- name: hw-test
+  image: baiduxlab/sgx-rust:1804-1.0.7
+  privileged: true
+  volumes:
+  - name: isgx
+    path: /dev/isgx
+  - name: aesmd
+    path: /var/run/aesmd/aesm.socket
+  commands:
+  - . /opt/sgxsdk/environment
+  - ls -l /dev/isgx
+  - ls -l /var/run/aesmd/aesm.socket
+  - cd sgx/gbdt-sgx-test/bin && ./app | tee result.txt && grep " 0 failed" result.txt
+
+volumes:
+- name: isgx
+  host:
+    path: /dev/isgx
+- name: aesmd
+  host:
+    path: /var/run/aesmd/aesm.socket
+
+node:
+  instance: sgx

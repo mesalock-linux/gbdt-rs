@@ -1,0 +1,12 @@
+[dependencies]
+alloc = {}
+panic_unwind = {}
+panic_abort = {}
+
+[dependencies.std]
+git = "https://github.com/baidu/rust-sgx-sdk"
+stage = 1
+
+[dependencies.sgx_tunittest]
+git = "https://github.com/baidu/rust-sgx-sdk"
+stage = 2

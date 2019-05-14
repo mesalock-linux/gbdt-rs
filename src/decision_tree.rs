@@ -92,10 +92,14 @@
 //! // [2.0, 0.75, 0.75, 3.0]
 //! ```
 
+#[cfg(all(feature = "mesalock_sgx", not(target_env = "sgx")))]
+use std::prelude::v1::*;
+
 use crate::binary_tree::BinaryTree;
 use crate::binary_tree::BinaryTreeNode;
 use crate::binary_tree::TreeIndex;
 use crate::config::Loss;
+#[cfg(feature = "enable_training")]
 use crate::fitness::almost_equal;
 use std::error::Error;
 
@@ -1139,7 +1143,6 @@ impl DecisionTree {
     #[cfg(feature = "enable_training")]
     pub fn fit(&mut self, train_data: &DataVec, cache: &mut TrainingCache) {
         //let mut gain: Vec<ValueType> = vec![0.0; self.feature_size];
-
         assert!(
             self.feature_size == cache.feature_size,
             "Decision_tree and TrainingCache should have same feature size"

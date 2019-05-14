@@ -56,6 +56,9 @@
 //! // initial guess enabled = false
 //! ```
 
+#[cfg(all(feature = "mesalock_sgx", not(target_env = "sgx")))]
+use std::prelude::v1::*;
+
 use crate::decision_tree::ValueType;
 use serde_derive::{Deserialize, Serialize};
 

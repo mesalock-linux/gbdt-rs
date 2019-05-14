@@ -1,5 +1,8 @@
 //! This module implements some math functions used for gradient boosting process.
 
+#[cfg(all(feature = "mesalock_sgx", not(target_env = "sgx")))]
+use std::prelude::v1::*;
+
 use crate::decision_tree::{DataVec, PredVec, ValueType};
 
 /// Comparing two number with a costomized floating error threshold.

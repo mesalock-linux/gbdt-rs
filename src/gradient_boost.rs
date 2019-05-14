@@ -80,6 +80,10 @@
 //! // output:
 //! // [1.0, 1.0, 2.0, 0.0]
 //! ```
+
+#[cfg(all(feature = "mesalock_sgx", not(target_env = "sgx")))]
+use std::prelude::v1::*;
+
 use crate::config::{Config, Loss};
 use crate::decision_tree::DecisionTree;
 #[cfg(feature = "enable_training")]
@@ -92,7 +96,13 @@ use rand::prelude::SliceRandom;
 #[cfg(feature = "enable_training")]
 use rand::thread_rng;
 use std::error::Error;
+
+#[cfg(not(feature = "mesalock_sgx"))]
 use std::fs::File;
+
+#[cfg(feature = "mesalock_sgx")]
+use std::untrusted::fs::File;
+
 use std::io::prelude::*;
 use std::io::{BufRead, BufReader};
 
