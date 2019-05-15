@@ -106,4 +106,10 @@ Because gbdt-rs is written in pure rust, with the help of [rust-sgx-sdk](https:/
 gbdt_sgx = { git = "https://github.com/mesalock-linux/gbdt-rs" }
 ```
 
+This would import a crate named `gbdt_sgx`. If you prefer `gbdt` as normal:
+
+```
+gbdt = { package = "gbdt_sgx", git = "https://github.com/mesalock-linux/gbdt-rs" }
+```
+
 For more information and concret examples, please look at directory `sgx/gbdt-sgx-test`.
