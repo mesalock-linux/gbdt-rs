@@ -26,7 +26,7 @@ cargo clean
 # integration tests
 export RUSTC_WRAPPER="./ci/gbdt-cov-rustc"
 cargo rustc --all-features --examples
-find target/debug/examples -executable -type f -exec ./{} \;
+find target/debug/examples -executable -type f -exec ./{} \; > /dev/null
 ${LCOV} ${LCOVOPT} --capture --directory . --base-directory . -o examples.info
 
 # combining and filtering
