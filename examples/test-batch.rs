@@ -1,6 +1,6 @@
 extern crate gbdt;
 
-use gbdt::decision_tree::{PredVec, ValueType};
+use gbdt::decision_tree::ValueType;
 use gbdt::gradient_boost::GBDT;
 use gbdt::input;
 use std::fs::File;
