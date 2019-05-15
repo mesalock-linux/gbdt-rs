@@ -1,0 +1,26 @@
+#!/bin/bash -e
+
+get_crate_name()
+{
+  while [[ $# -gt 1 ]] ; do
+    v=$1
+    case $v in
+      --crate-name)
+        echo $2
+        return
+        ;;
+    esac
+    shift
+  done
+}
+
+case $(get_crate_name "$@") in
+    gbdt | convert_xgboost | test-agaricus-lepiota | test-batch | test-iris | test-multithreads | test-xgb-binary-logistic | test-xgb-binary-logitraw | test-xgb-multi-softmax | test-xgb-multi-softprob | test-xgb-rank-pairwise | test-xgb-reg-linear | test-xgb-reg-logistic)
+    EXTRA=$COVERAGE_OPTIONS
+    ;;
+  *)
+    EXTRA=$OPTIONS
+    ;;
+esac
+
+exec "$@" $EXTRA

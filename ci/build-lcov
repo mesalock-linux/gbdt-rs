@@ -1,0 +1,6 @@
+#!/bin/sh -e
+
+if [ ! -e lcov/ ] ; then
+  git clone https://github.com/linux-test-project/lcov.git
+  cd lcov && make install
+fi

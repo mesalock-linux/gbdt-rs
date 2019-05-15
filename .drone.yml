@@ -592,3 +592,20 @@ volumes:
 node:
   instance: sgx
 
+---
+
+kind: pipeline
+name: coverage
+
+steps:
+- name: coverage
+  image: baiduxlab/useful-docker:ubuntu.1604.nightly
+  commands:
+  - apt-get update && apt-get install -qq libclang-common-3.9-dev llvm-3.9-dev git llvm curl
+  - . /root/.profile
+  - ./ci/build-lcov
+  - ./ci/run-cov
+  - bash -c "bash <(curl -s https://codecov.io/bash) -f final.info"
+  environment:
+    CODECOV_TOKEN:
+      from_secret: CODECOV_TOKEN
