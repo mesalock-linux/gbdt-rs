@@ -114,3 +114,20 @@ gbdt = { package = "gbdt_sgx", git = "https://github.com/mesalock-linux/gbdt-rs"
 ```
 
 For more information and concret examples, please look at directory `sgx/gbdt-sgx-test`.
+
+# License
+
+Apache 2.0
+
+# Authors
+
+Tianyi Li @n0b0dyCN <n0b0dypku@gmail.com>
+Tongxin Li @litongxin1991 <litongxin1991@gmail.com>
+Yu Ding @dingelish <dingelish@gmail.com>
+
+# Steering Committee
+Tao Wei, Yulong Zhang
+
+# Acknowledgment
+
+Thanks to @qiyiping for his/her great previous work [gbdt](https://github.com/qiyiping/gbdt). We read his/her code before starting this project.
