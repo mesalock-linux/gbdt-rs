@@ -122,7 +122,9 @@ Apache 2.0
 # Authors
 
 Tianyi Li @n0b0dyCN <n0b0dypku@gmail.com>
+
 Tongxin Li @litongxin1991 <litongxin1991@gmail.com>
+
 Yu Ding @dingelish <dingelish@gmail.com>
 
 # Steering Committee
