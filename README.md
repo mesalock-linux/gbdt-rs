@@ -7,6 +7,7 @@ gbdt-rs is a gradient boost decision tree library written in Safe Rust. There is
 
 gbdt-rs provides the training and inference capabilities. And it can use the models trained by [xgboost](https://xgboost.readthedocs.io/en/latest/) to do inference tasks.
 
+New! The gbdt-rs [paper](gbdt.pdf) has been [accepted by IEEE S&P'19](https://www.ieee-security.org/TC/SP2019/program-posters.html)!
 
 
 # Supported Task
