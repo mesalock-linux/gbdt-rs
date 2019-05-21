@@ -4,6 +4,8 @@ name: centos6-nightly-debug
 steps:
 - name: centos6-nightly-debug
   image: baiduxlab/useful-docker:centos.6.nightly
+  environment:
+    CARGO_BUILD_PIPELINING: true
   commands:
   - source /root/.profile
   - cargo test
@@ -26,6 +28,8 @@ name: centos6-nightly-release
 steps:
 - name: centos6-nightly-release
   image: baiduxlab/useful-docker:centos.6.nightly
+  environment:
+    CARGO_BUILD_PIPELINING: true
   commands:
   - source /root/.profile
   - cargo test --release
@@ -48,6 +52,8 @@ name: centos6-stable-debug
 steps:
 - name: centos6-stable-debug
   image: baiduxlab/useful-docker:centos.6.stable
+  environment:
+    CARGO_BUILD_PIPELINING: true
   commands:
   - source /root/.profile
   - cargo test
@@ -70,6 +76,8 @@ name: centos6-stable-release
 steps:
 - name: centos6-stable-release
   image: baiduxlab/useful-docker:centos.6.stable
+  environment:
+    CARGO_BUILD_PIPELINING: true
   commands:
   - source /root/.profile
   - cargo test --release
@@ -93,6 +101,8 @@ name: centos7-nightly-debug
 steps:
 - name: centos7-nightly-debug
   image: baiduxlab/useful-docker:centos.6.nightly
+  environment:
+    CARGO_BUILD_PIPELINING: true
   commands:
   - source /root/.profile
   - cargo test
@@ -115,6 +125,8 @@ name: centos7-nightly-release
 steps:
 - name: centos7-nightly-release
   image: baiduxlab/useful-docker:centos.6.nightly
+  environment:
+    CARGO_BUILD_PIPELINING: true
   commands:
   - source /root/.profile
   - cargo test --release
@@ -137,6 +149,8 @@ name: centos7-stable-debug
 steps:
 - name: centos7-stable-debug
   image: baiduxlab/useful-docker:centos.6.stable
+  environment:
+    CARGO_BUILD_PIPELINING: true
   commands:
   - source /root/.profile
   - cargo test
@@ -159,6 +173,8 @@ name: centos7-stable-release
 steps:
 - name: centos7-stable-release
   image: baiduxlab/useful-docker:centos.6.stable
+  environment:
+    CARGO_BUILD_PIPELINING: true
   commands:
   - source /root/.profile
   - cargo test --release
@@ -182,6 +198,8 @@ name: ubuntu1604-nightly-debug
 steps:
 - name: ubuntu1604-nightly-debug
   image: baiduxlab/useful-docker:ubuntu.1604.nightly
+  environment:
+    CARGO_BUILD_PIPELINING: true
   commands:
   - . /root/.profile
   - cargo test
@@ -204,6 +222,8 @@ name: ubuntu1604-nightly-release
 steps:
 - name: ubuntu1604-nightly-release
   image: baiduxlab/useful-docker:ubuntu.1604.nightly
+  environment:
+    CARGO_BUILD_PIPELINING: true
   commands:
   - . /root/.profile
   - cargo test --release
@@ -226,6 +246,8 @@ name: ubuntu1604-stable-debug
 steps:
 - name: ubuntu1604-stable-debug
   image: baiduxlab/useful-docker:ubuntu.1604.stable
+  environment:
+    CARGO_BUILD_PIPELINING: true
   commands:
   - . /root/.profile
   - cargo test
@@ -248,6 +270,8 @@ name: ubuntu1604-stable-release
 steps:
 - name: ubuntu1604-stable-release
   image: baiduxlab/useful-docker:ubuntu.1604.stable
+  environment:
+    CARGO_BUILD_PIPELINING: true
   commands:
   - . /root/.profile
   - cargo test --release
@@ -271,6 +295,8 @@ name: ubuntu1804-nightly-debug
 steps:
 - name: ubuntu1804-nightly-debug
   image: baiduxlab/useful-docker:ubuntu.1804.nightly
+  environment:
+    CARGO_BUILD_PIPELINING: true
   commands:
   - . /root/.profile
   - cargo test
@@ -293,6 +319,8 @@ name: ubuntu1804-nightly-release
 steps:
 - name: ubuntu1804-nightly-release
   image: baiduxlab/useful-docker:ubuntu.1804.nightly
+  environment:
+    CARGO_BUILD_PIPELINING: true
   commands:
   - . /root/.profile
   - cargo test --release
@@ -315,6 +343,8 @@ name: ubuntu1804-stable-debug
 steps:
 - name: ubuntu1804-stable-debug
   image: baiduxlab/useful-docker:ubuntu.1804.stable
+  environment:
+    CARGO_BUILD_PIPELINING: true
   commands:
   - . /root/.profile
   - cargo test
@@ -337,6 +367,8 @@ name: ubuntu1804-stable-release
 steps:
 - name: ubuntu1804-stable-release
   image: baiduxlab/useful-docker:ubuntu.1804.stable
+  environment:
+    CARGO_BUILD_PIPELINING: true
   commands:
   - . /root/.profile
   - cargo test --release
@@ -360,10 +392,14 @@ name: gbdt-sgx-xargo-1604-sw
 steps:
 - name: sim-compile
   image: baiduxlab/sgx-rust:1604-1.0.8
+  environment:
+    SGX_MODE: SW
+    XARGO_SGX: 1
+    CARGO_BUILD_PIPELINING: true
   commands:
   - . /opt/sgxsdk/environment
   - . /root/.cargo/env
-  - cd sgx && SGX_MODE=SW XARGO_SGX=1 make -C gbdt-sgx-test
+  - cd sgx && make -C gbdt-sgx-test
 
 - name: sim-test
   image: baiduxlab/sgx-rust:1604-1.0.8
@@ -382,10 +418,14 @@ name: gbdt-sgx-xargo-1604-hw
 steps:
 - name: hw-compile
   image: baiduxlab/sgx-rust:1604-1.0.8
+  environment:
+    SGX_MODE: HW
+    XARGO_SGX: 1
+    CARGO_BUILD_PIPELINING: true
   commands:
   - . /opt/sgxsdk/environment
   - . /root/.cargo/env
-  - cd sgx && XARGO_SGX=1 make -C gbdt-sgx-test
+  - cd sgx && make -C gbdt-sgx-test
 
 - name: hw-test
   image: baiduxlab/sgx-rust:1604-1.0.8
@@ -420,10 +460,14 @@ name: gbdt-sgx-xargo-1804-sw
 steps:
 - name: sim-compile
   image: baiduxlab/sgx-rust:1804-1.0.8
+  environment:
+    SGX_MODE: SW
+    XARGO_SGX: 1
+    CARGO_BUILD_PIPELINING: true
   commands:
   - . /opt/sgxsdk/environment
   - . /root/.cargo/env
-  - cd sgx && SGX_MODE=SW XARGO_SGX=1 make -C gbdt-sgx-test
+  - cd sgx && make -C gbdt-sgx-test
 
 - name: sim-test
   image: baiduxlab/sgx-rust:1804-1.0.8
@@ -442,10 +486,14 @@ name: gbdt-sgx-xargo-1804-hw
 steps:
 - name: hw-compile
   image: baiduxlab/sgx-rust:1804-1.0.8
+  environment:
+    SGX_MODE: HW
+    XARGO_SGX: 1
+    CARGO_BUILD_PIPELINING: true
   commands:
   - . /opt/sgxsdk/environment
   - . /root/.cargo/env
-  - cd sgx && XARGO_SGX=1 make -C gbdt-sgx-test
+  - cd sgx && make -C gbdt-sgx-test
 
 - name: hw-test
   image: baiduxlab/sgx-rust:1804-1.0.8
@@ -480,10 +528,14 @@ name: gbdt-sgx-1604-sw
 steps:
 - name: sim-compile
   image: baiduxlab/sgx-rust:1604-1.0.8
+  environment:
+    SGX_MODE: SW
+    XARGO_SGX: 0
+    CARGO_BUILD_PIPELINING: true
   commands:
   - . /opt/sgxsdk/environment
   - . /root/.cargo/env
-  - SGX_MODE=SW make -C sgx/gbdt-sgx-test
+  - make -C sgx/gbdt-sgx-test
 
 - name: sim-test
   image: baiduxlab/sgx-rust:1604-1.0.8
@@ -502,6 +554,10 @@ name: gbdt-sgx-1604-hw
 steps:
 - name: hw-compile
   image: baiduxlab/sgx-rust:1604-1.0.8
+  environment:
+    SGX_MODE: HW
+    XARGO_SGX: 0
+    CARGO_BUILD_PIPELINING: true
   commands:
   - . /opt/sgxsdk/environment
   - . /root/.cargo/env
@@ -540,10 +596,14 @@ name: gbdt-sgx-1804-sw
 steps:
 - name: sim-compile
   image: baiduxlab/sgx-rust:1804-1.0.8
+  environment:
+    SGX_MODE: SW
+    XARGO_SGX: 0
+    CARGO_BUILD_PIPELINING: true
   commands:
   - . /opt/sgxsdk/environment
   - . /root/.cargo/env
-  - SGX_MODE=SW make -C sgx/gbdt-sgx-test
+  - make -C sgx/gbdt-sgx-test
 
 - name: sim-test
   image: baiduxlab/sgx-rust:1804-1.0.8
@@ -562,6 +622,10 @@ name: gbdt-sgx-1804-hw
 steps:
 - name: hw-compile
   image: baiduxlab/sgx-rust:1804-1.0.8
+  environment:
+    SGX_MODE: HW
+    XARGO_SGX: 0
+    CARGO_BUILD_PIPELINING: true
   commands:
   - . /opt/sgxsdk/environment
   - . /root/.cargo/env
