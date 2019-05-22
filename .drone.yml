@@ -395,7 +395,7 @@ steps:
   environment:
     SGX_MODE: SW
     XARGO_SGX: 1
-    CARGO_BUILD_PIPELINING: true
+    CARGO_BUILD_PIPELINING: false
   commands:
   - . /opt/sgxsdk/environment
   - . /root/.cargo/env
@@ -421,7 +421,7 @@ steps:
   environment:
     SGX_MODE: HW
     XARGO_SGX: 1
-    CARGO_BUILD_PIPELINING: true
+    CARGO_BUILD_PIPELINING: false
   commands:
   - . /opt/sgxsdk/environment
   - . /root/.cargo/env
@@ -463,7 +463,7 @@ steps:
   environment:
     SGX_MODE: SW
     XARGO_SGX: 1
-    CARGO_BUILD_PIPELINING: true
+    CARGO_BUILD_PIPELINING: false
   commands:
   - . /opt/sgxsdk/environment
   - . /root/.cargo/env
@@ -489,7 +489,7 @@ steps:
   environment:
     SGX_MODE: HW
     XARGO_SGX: 1
-    CARGO_BUILD_PIPELINING: true
+    CARGO_BUILD_PIPELINING: false
   commands:
   - . /opt/sgxsdk/environment
   - . /root/.cargo/env
