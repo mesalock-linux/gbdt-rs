@@ -4,7 +4,7 @@ version = "1.0.0"
 authors = ["Baidu"]
 
 [lib]
-name = "helloworldsampleenclave"
+name = "gbdtenclave"
 crate-type = ["staticlib"]
 
 [features]
