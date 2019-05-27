@@ -665,7 +665,7 @@ steps:
 - name: coverage
   image: baiduxlab/useful-docker:ubuntu.1604.nightly
   commands:
-  - apt-get update && apt-get install -qq libclang-common-3.9-dev llvm-3.9-dev git llvm curl
+  - apt-get update && apt-get install -qq libclang-common-3.9-dev llvm-3.9-dev git llvm curl libperlio-gzip-perl libjson-perl
   - . /root/.profile
   - ./ci/build-lcov
   - ./ci/run-cov
