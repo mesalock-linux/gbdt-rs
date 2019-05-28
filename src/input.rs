@@ -421,3 +421,159 @@ pub fn load(file_name: &str, input_format: InputFormat) -> Result<DataVec, Box<E
         FileFormat::TXT => load_txt(&mut file, input_format),
     }
 }
+
+#[cfg(test)]
+mod tests {
+    use crate::input::{self, FileFormat, InputFormat};
+    #[test]
+    fn doc_test_libsvm_format() {
+        let test_file = "xgb-data/xgb_binary_logistic/agaricus.txt.test";
+        let mut fmt = InputFormat::txt_format();
+        fmt.set_feature_size(126);
+        fmt.set_delimeter(' ');
+        let test_data = input::load(test_file, fmt);
+
+        assert!(test_data.is_ok());
+    }
+
+    #[test]
+    fn doc_test_libsvm_format_csv() {
+        let test_file = "xgb-data/xgb_multi_softmax/dermatology.data.test";
+        let mut fmt = InputFormat::csv_format();
+        fmt.set_feature_size(34);
+        let test_data = input::load(test_file, fmt);
+
+        assert!(test_data.is_ok());
+    }
+
+    #[test]
+    fn doc_test_inputformat_csv_format() {
+        let fmt = InputFormat::csv_format();
+        assert_eq!(fmt.ftype, FileFormat::CSV);
+        assert_eq!(fmt.header, false);
+        assert_eq!(fmt.label_idx, 0);
+        assert_eq!(fmt.enable_unknown_value, false);
+        assert_eq!(fmt.delimeter, ',');
+        assert_eq!(fmt.feature_size, 0);
+    }
+
+    #[test]
+    fn doc_test_inputformat_txt_format() {
+        let fmt = InputFormat::txt_format();
+        assert_eq!(fmt.ftype, FileFormat::TXT);
+        assert_eq!(fmt.header, false);
+        assert_eq!(fmt.label_idx, 0);
+        assert_eq!(fmt.enable_unknown_value, false);
+        assert_eq!(fmt.delimeter, '\t');
+        assert_eq!(fmt.feature_size, 0);
+    }
+
+    #[test]
+    fn doc_test_inputformat_to_string() {
+        let fmt = InputFormat::txt_format();
+        assert_eq!(
+            fmt.to_string(),
+            "File type: TXT\nFeature size: 0\nDelemeter: [\t]"
+        );
+        let fmt = InputFormat::csv_format();
+        assert_eq!(
+            fmt.to_string(),
+            "File type: CSV\nHas header: false\nLabel index: 0\nDelemeter: [,]"
+        );
+    }
+
+    #[test]
+    fn doc_test_inputformat_set_feature_size() {
+        let mut fmt = InputFormat::txt_format();
+        fmt.set_feature_size(10);
+        assert_eq!(fmt.feature_size, 10);
+        fmt.set_feature_size(20);
+        assert_eq!(fmt.feature_size, 20);
+        let mut fmt = InputFormat::csv_format();
+        fmt.set_feature_size(10);
+        assert_eq!(fmt.feature_size, 10);
+        fmt.set_feature_size(20);
+        assert_eq!(fmt.feature_size, 20);
+    }
+
+    #[test]
+    fn doc_test_inputformat_set_label_index() {
+        let mut fmt = InputFormat::txt_format();
+        fmt.set_label_index(10);
+        assert_eq!(fmt.label_idx, 10);
+        fmt.set_label_index(20);
+        assert_eq!(fmt.label_idx, 20);
+        let mut fmt = InputFormat::csv_format();
+        fmt.set_label_index(10);
+        assert_eq!(fmt.label_idx, 10);
+        fmt.set_label_index(20);
+        assert_eq!(fmt.label_idx, 20);
+    }
+
+    #[test]
+    fn doc_test_inputformat_set_delimeter() {
+        let mut fmt = InputFormat::txt_format();
+        fmt.set_delimeter('\n');
+        assert_eq!(fmt.delimeter, '\n');
+        fmt.set_delimeter(':');
+        assert_eq!(fmt.delimeter, ':');
+        let mut fmt = InputFormat::csv_format();
+        fmt.set_delimeter('\n');
+        assert_eq!(fmt.delimeter, '\n');
+        fmt.set_delimeter(':');
+        assert_eq!(fmt.delimeter, ':');
+    }
+
+    #[test]
+    fn doc_test_test_infer() {
+        use crate::input::infer;
+        let train_file = "dataset/iris/train.txt";
+        let fmt = infer(train_file);
+        assert_eq!(
+            fmt.to_string(),
+            "File type: CSV\nHas header: false\nLabel index: 0\nDelemeter: [,]"
+        );
+    }
+
+    #[test]
+    fn doc_test_load_csv() {
+        use std::fs::File;
+        let train_file = "dataset/iris/train.txt";
+        let mut file = File::open(train_file.to_string()).unwrap();
+        let mut fmt = InputFormat::csv_format();
+        fmt.set_label_index(4);
+        let train_dv = input::load_csv(&mut file, fmt);
+        assert!(train_dv.is_ok());
+    }
+
+    #[test]
+    fn doc_test_load_txt() {
+        use std::fs::File;
+        let test_file = "xgb-data/xgb_binary_logistic/agaricus.txt.test";
+        let mut file = File::open(test_file.to_string()).unwrap();
+        let mut fmt = InputFormat::csv_format();
+        fmt.set_feature_size(126);
+        fmt.set_delimeter(' ');
+        let test_dv = input::load_txt(&mut file, fmt);
+        assert!(test_dv.is_ok());
+    }
+
+    #[test]
+    fn doc_test_load_1() {
+        let test_file = "xgb-data/xgb_binary_logistic/agaricus.txt.test";
+        let mut fmt = InputFormat::txt_format();
+        fmt.set_feature_size(126);
+        fmt.set_delimeter(' ');
+        let test_data = input::load(test_file, fmt);
+        assert!(test_data.is_ok());
+    }
+
+    #[test]
+    fn doc_test_load_2() {
+        let test_file = "xgb-data/xgb_multi_softmax/dermatology.data.test";
+        let mut fmt = InputFormat::csv_format();
+        fmt.set_feature_size(34);
+        let test_data = input::load(test_file, fmt);
+        assert!(test_data.is_ok());
+    }
+}

@@ -30,10 +30,11 @@
 
 #![allow(clippy::ptr_arg)]
 #![allow(clippy::type_complexity)]
-
-#![cfg_attr(all(feature = "mesalock_sgx",
-                not(target_env = "sgx")), no_std)]
-#![cfg_attr(all(target_env = "sgx", target_vendor = "mesalock"), feature(rustc_private))]
+#![cfg_attr(all(feature = "mesalock_sgx", not(target_env = "sgx")), no_std)]
+#![cfg_attr(
+    all(target_env = "sgx", target_vendor = "mesalock"),
+    feature(rustc_private)
+)]
 
 #[cfg(all(feature = "mesalock_sgx", not(target_env = "sgx")))]
 #[macro_use]
@@ -52,7 +53,6 @@ extern crate cfg_if;
 // Input heavily depends on I/O and may not be required in SGX
 #[cfg(feature = "input")]
 pub mod input;
-
 
 #[cfg(test)]
 mod tests {

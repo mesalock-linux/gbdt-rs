@@ -154,8 +154,7 @@ pub fn fitness() {
     });
 
     use gbdt_sgx::fitness::{
-        almost_equal, average, label_average, same, weighted_label_median,
-        weighted_residual_median,
+        almost_equal, average, label_average, same, weighted_label_median, weighted_residual_median,
     };
     assert_eq!(true, almost_equal(0.1, 0.100000000001));
     assert_eq!(false, same(&dv, dv.len()));
