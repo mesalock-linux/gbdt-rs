@@ -406,3 +406,167 @@ impl Config {
         s
     }
 }
+
+#[cfg(test)]
+mod tests {
+    use crate::config::{loss2string, string2loss, Config, Loss};
+
+    const STRINGLOSS: [(&'static str, Loss); 11] = [
+        ("LogLikelyhood", Loss::LogLikelyhood),
+        ("SquaredError", Loss::SquaredError),
+        ("LAD", Loss::LAD),
+        ("reg:linear", Loss::RegLinear),
+        ("binary:logistic", Loss::BinaryLogistic),
+        ("reg:logistic", Loss::RegLogistic),
+        ("binary:logitraw", Loss::BinaryLogitraw),
+        ("multi:softprob", Loss::MultiSoftprob),
+        ("multi:softmax", Loss::MultiSoftmax),
+        ("rank:pairwise", Loss::RankPairwise),
+        ("unknown", Loss::SquaredError),
+    ];
+
+    #[test]
+    fn doc_test_config_head() {
+        let mut cfg = Config::new();
+        cfg.set_feature_size(4);
+        cfg.set_max_depth(3);
+        cfg.set_iterations(3);
+        cfg.set_loss("LAD");
+
+        assert_eq!(cfg.feature_size, 4);
+        assert_eq!(cfg.max_depth, 3);
+        assert_eq!(cfg.iterations, 3);
+        assert_eq!(cfg.loss, Loss::LAD);
+    }
+
+    #[test]
+    fn doc_test_string2loss() {
+        for (s, l) in &STRINGLOSS {
+            assert_eq!(string2loss(s), *l);
+        }
+    }
+
+    #[test]
+    fn doc_test_loss2string() {
+        for (s, l) in &STRINGLOSS[..10] {
+            assert_eq!(loss2string(l), *s);
+        }
+    }
+
+    #[test]
+    fn doc_test_config_new() {
+        let cfg = Config::new();
+        assert_eq!(cfg.feature_size, 1);
+        assert_eq!(cfg.max_depth, 2);
+        assert_eq!(cfg.iterations, 2);
+        assert_eq!(cfg.shrinkage, 1.0);
+        assert_eq!(cfg.feature_sample_ratio, 1.0);
+        assert_eq!(cfg.data_sample_ratio, 1.0);
+        assert_eq!(cfg.min_leaf_size, 1);
+        assert_eq!(cfg.loss, Loss::SquaredError);
+        assert_eq!(cfg.debug, false);
+        assert_eq!(cfg.initial_guess_enabled, false);
+        assert_eq!(cfg.training_optimization_level, 2);
+    }
+
+    #[test]
+    fn doc_test_set_feature_size() {
+        let mut cfg = Config::new();
+        cfg.set_feature_size(10);
+        assert_eq!(cfg.feature_size, 10);
+        cfg.set_feature_size(20);
+        assert_eq!(cfg.feature_size, 20);
+    }
+
+    #[test]
+    fn doc_test_set_shrinkage() {
+        let mut cfg = Config::new();
+        cfg.set_shrinkage(3.0);
+        assert_eq!(cfg.shrinkage, 3.0);
+        cfg.set_shrinkage(5.0);
+        assert_eq!(cfg.shrinkage, 5.0);
+    }
+
+    #[test]
+    fn doc_test_set_training_optimization_level() {
+        let mut cfg = Config::new();
+        cfg.set_training_optimization_level(0);
+        assert_eq!(cfg.training_optimization_level, 0);
+        cfg.set_training_optimization_level(1);
+        assert_eq!(cfg.training_optimization_level, 1);
+        cfg.set_training_optimization_level(2);
+        assert_eq!(cfg.training_optimization_level, 2);
+        cfg.set_training_optimization_level(3);
+        assert_eq!(cfg.training_optimization_level, 2);
+        cfg.set_training_optimization_level(100);
+        assert_eq!(cfg.training_optimization_level, 2);
+    }
+
+    #[test]
+    fn doc_test_set_iterations() {
+        let mut cfg = Config::new();
+        cfg.set_iterations(1);
+        assert_eq!(cfg.iterations, 1);
+        cfg.set_iterations(10);
+        assert_eq!(cfg.iterations, 10);
+        cfg.set_iterations(100);
+        assert_eq!(cfg.iterations, 100);
+    }
+
+    #[test]
+    fn doc_test_set_feature_sample_ratio() {
+        let mut cfg = Config::new();
+        cfg.set_feature_sample_ratio(1.0);
+        assert_eq!(cfg.feature_sample_ratio, 1.0);
+        cfg.set_feature_sample_ratio(0.9);
+        assert_eq!(cfg.feature_sample_ratio, 0.9);
+        cfg.set_feature_sample_ratio(1.8);
+        assert_eq!(cfg.feature_sample_ratio, 1.8);
+    }
+
+    #[test]
+    fn doc_test_set_data_sample_ratio() {
+        let mut cfg = Config::new();
+        cfg.set_data_sample_ratio(1.0);
+        assert_eq!(cfg.data_sample_ratio, 1.0);
+        cfg.set_data_sample_ratio(0.9);
+        assert_eq!(cfg.data_sample_ratio, 0.9);
+        cfg.set_data_sample_ratio(1.8);
+        assert_eq!(cfg.data_sample_ratio, 1.8);
+    }
+
+    #[test]
+    fn doc_test_min_leaf_size() {
+        let mut cfg = Config::new();
+        cfg.set_min_leaf_size(1);
+        assert_eq!(cfg.min_leaf_size, 1);
+        cfg.set_min_leaf_size(10);
+        assert_eq!(cfg.min_leaf_size, 10);
+        cfg.set_min_leaf_size(100);
+        assert_eq!(cfg.min_leaf_size, 100);
+    }
+
+    #[test]
+    fn doc_test_set_loss() {
+        let mut cfg = Config::new();
+        for (s, l) in &STRINGLOSS {
+            cfg.set_loss(s);
+            assert_eq!(cfg.loss, *l);
+        }
+    }
+
+    #[test]
+    fn doc_test_set_debug() {
+        let mut cfg = Config::new();
+        cfg.set_debug(true);
+        assert_eq!(cfg.debug, true);
+        cfg.set_debug(false);
+        assert_eq!(cfg.debug, false);
+    }
+
+    #[test]
+    fn doc_test_to_string() {
+        let cfg = Config::new();
+        assert_eq!(cfg.to_string(), "number of features = 1\nmin leaf size = 1\nmaximum depth = 2\niterations = 2\nshrinkage = 1\nfeature sample ratio = 1\ndata sample ratio = 1\ndebug enabled = false\nloss type = SquaredError\ninitial guess enabled = false\n");
+    }
+}
