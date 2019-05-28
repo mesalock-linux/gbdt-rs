@@ -326,7 +326,171 @@ impl<T> BinaryTree<T> {
     /// let n2_index = tree.add_right_node(root_index, n2);
     ///
     /// assert_eq!(3, tree.len());
+    /// ```
     pub fn len(&self) -> usize {
         self.tree.len()
+    }
+}
+
+#[cfg(test)]
+mod tests {
+    use crate::binary_tree::{BinaryTree, BinaryTreeNode};
+
+    #[test]
+    fn doc_test_binarytreenode_new() {
+        let root = BinaryTreeNode::new(10);
+        assert_eq!(root.value, 10);
+        assert_eq!(root.index, 0);
+        assert_eq!(root.left, 0);
+        assert_eq!(root.right, 0);
+    }
+
+    #[test]
+    fn binarytree_default() {
+        let bt: BinaryTree<i32> = BinaryTree::default();
+        assert_eq!(bt.len(), 0);
+    }
+
+    #[test]
+    fn binarytree_new() {
+        let bt: BinaryTree<i32> = BinaryTree::new();
+        assert_eq!(bt.len(), 0);
+    }
+
+    #[test]
+    fn binarytree_is_empty() {
+        let mut bt: BinaryTree<f32> = BinaryTree::new();
+        assert!(bt.is_empty());
+        let root = BinaryTreeNode::new(10.0);
+        bt.add_root(root);
+        assert_eq!(bt.is_empty(), false);
+    }
+
+    #[test]
+    fn doc_test_binarytree_add_root() {
+        let mut tree: BinaryTree<f32> = BinaryTree::new();
+        let root = BinaryTreeNode::new(10.0);
+        let root_index = tree.add_root(root);
+        assert_eq!(0, root_index);
+    }
+
+    #[test]
+    fn doc_test_binarytree_get_root_index() {
+        let mut tree: BinaryTree<f32> = BinaryTree::new();
+        let root = BinaryTreeNode::new(10.0);
+        let _ = tree.add_root(root);
+        let root_index = tree.get_root_index();
+        assert_eq!(0, root_index);
+    }
+
+    #[test]
+    fn doc_test_binarytree_get_left_child() {
+        let mut tree: BinaryTree<f32> = BinaryTree::new();
+        let root = BinaryTreeNode::new(10.0);
+        let root_index = tree.add_root(root);
+        let left_node = BinaryTreeNode::new(5.0);
+        let _ = tree.add_left_node(root_index, left_node);
+        let root = tree.get_node(root_index).unwrap();
+        let left_node = tree.get_left_child(root).unwrap();
+        assert_eq!(left_node.value, 5.0);
+    }
+
+    #[test]
+    fn doc_test_binarytree_get_right_child() {
+        let mut tree: BinaryTree<f32> = BinaryTree::new();
+        let root = BinaryTreeNode::new(10.0);
+        let root_index = tree.add_root(root);
+        let right_node = BinaryTreeNode::new(5.0);
+        let _ = tree.add_right_node(root_index, right_node);
+        let root = tree.get_node(root_index).unwrap();
+        let right_node = tree.get_right_child(root).unwrap();
+        assert_eq!(right_node.value, 5.0);
+    }
+
+    #[test]
+    fn doc_test_get_node() {
+        let mut tree: BinaryTree<i32> = BinaryTree::new();
+        let root = BinaryTreeNode::new(10);
+        let _ = tree.add_root(root);
+        let root_index = tree.get_root_index();
+        let root = tree.get_node(root_index).unwrap();
+        assert_eq!(10, root.value)
+    }
+
+    #[test]
+    fn doc_test_get_node_mut() {
+        let mut tree: BinaryTree<i32> = BinaryTree::new();
+        let root = BinaryTreeNode::new(10);
+        let _ = tree.add_root(root);
+        let root_index = tree.get_root_index();
+        let root = tree.get_node_mut(root_index).unwrap();
+        root.value = 11;
+        assert_eq!(11, root.value);
+    }
+
+    #[test]
+    fn doc_test_add_left_node() {
+        let mut tree: BinaryTree<f32> = BinaryTree::new();
+        let root = BinaryTreeNode::new(10.0);
+        let root_index = tree.add_root(root);
+        let left_node = BinaryTreeNode::new(5.0);
+        let _ = tree.add_left_node(root_index, left_node);
+        let root = tree.get_node(root_index).unwrap();
+        let left_node = tree.get_left_child(root).unwrap();
+        assert_eq!(left_node.value, 5.0);
+    }
+
+    #[test]
+    fn doc_test_add_right_node() {
+        let mut tree: BinaryTree<f32> = BinaryTree::new();
+        let root = BinaryTreeNode::new(10.0);
+        let root_index = tree.add_root(root);
+        let right_node = BinaryTreeNode::new(5.0);
+        let _ = tree.add_right_node(root_index, right_node);
+        let root = tree.get_node(root_index).unwrap();
+        let right_node = tree.get_right_child(root).unwrap();
+        assert_eq!(right_node.value, 5.0);
+    }
+
+    #[test]
+    fn doc_test_print() {
+        let mut tree: BinaryTree<f32> = BinaryTree::new();
+        let root = BinaryTreeNode::new(10.0);
+        
+        let root_index = tree.add_root(root);
+        
+        let n1 = BinaryTreeNode::new(5.0);
+        let n2 = BinaryTreeNode::new(6.0);
+        
+        let n1_index = tree.add_left_node(root_index, n1);
+        let n2_index = tree.add_right_node(root_index, n2);
+        
+        let n3 = BinaryTreeNode::new(7.0);
+        let n4 = BinaryTreeNode::new(8.0);
+        
+        tree.add_left_node(n2_index, n3);
+        tree.add_right_node(n2_index, n4);
+        
+        let n5 = BinaryTreeNode::new(9.0);
+        
+        tree.add_left_node(n1_index, n5);
+        
+        tree.print();
+    }
+
+    #[test]
+    fn doc_test_tree_len() {
+        let mut tree: BinaryTree<f32> = BinaryTree::new();
+        let root = BinaryTreeNode::new(10.0);
+        
+        let root_index = tree.add_root(root);
+        
+        let n1 = BinaryTreeNode::new(5.0);
+        let n2 = BinaryTreeNode::new(6.0);
+        
+        let _n1_index = tree.add_left_node(root_index, n1);
+        let _n2_index = tree.add_right_node(root_index, n2);
+        
+        assert_eq!(3, tree.len());
     }
 }
