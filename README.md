@@ -1,4 +1,4 @@
-# MesaTEE GBDT-RS : a fast and secure GBDT library, supporting SGX enclaves and Trustzones
+# MesaTEE GBDT-RS : a fast and secure GBDT library, supporting TEEs such as Intel SGX and ARM TrustZone
 
 [![Build Status](https://ci.mesalock-linux.org/api/badges/mesalock-linux/gbdt-rs/status.svg)](https://ci.mesalock-linux.org/mesalock-linux/gbdt-rs)
 [![codecov](https://codecov.io/gh/mesalock-linux/gbdt-rs/branch/master/graph/badge.svg)](https://codecov.io/gh/mesalock-linux/gbdt-rs)
