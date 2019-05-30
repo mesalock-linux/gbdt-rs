@@ -1,13 +1,13 @@
-# gbdt-rs
+# MesaTEE GBDT-RS
 
 [![Build Status](https://ci.mesalock-linux.org/api/badges/mesalock-linux/gbdt-rs/status.svg)](https://ci.mesalock-linux.org/mesalock-linux/gbdt-rs)
 [![codecov](https://codecov.io/gh/mesalock-linux/gbdt-rs/branch/master/graph/badge.svg)](https://codecov.io/gh/mesalock-linux/gbdt-rs)
 
-gbdt-rs is a gradient boost decision tree library written in Safe Rust. There is no unsafe rust code in the library. 
+MesaTEE GBDT-RS is a gradient boost decision tree library written in Safe Rust. There is no unsafe rust code in the library. 
 
-gbdt-rs provides the training and inference capabilities. And it can use the models trained by [xgboost](https://xgboost.readthedocs.io/en/latest/) to do inference tasks.
+MesaTEE GBDT-RS provides the training and inference capabilities. And it can use the models trained by [xgboost](https://xgboost.readthedocs.io/en/latest/) to do inference tasks.
 
-New! The gbdt-rs [paper](gbdt.pdf) has been [accepted by IEEE S&P'19](https://www.ieee-security.org/TC/SP2019/program-posters.html)!
+New! The MesaTEE GBDT-RS [paper](gbdt.pdf) has been [accepted by IEEE S&P'19](https://www.ieee-security.org/TC/SP2019/program-posters.html)!
 
 
 # Supported Task
@@ -15,12 +15,12 @@ New! The gbdt-rs [paper](gbdt.pdf) has been [accepted by IEEE S&P'19](https://ww
 1. Linear regression: use SquaredError and LAD loss types 
 2. Binary classification (labeled with 1 and -1): use LogLikelyhood loss type
 ## Compatibility with xgboost 
-At this time, gbdt-rs support to use model trained by xgboost to do inference.  The model should be trained by xgboost with following configruation:
+At this time, MesaTEE GBDT-RS support to use model trained by xgboost to do inference.  The model should be trained by xgboost with following configruation:
 
 1. booster: gbtree
 2. objective: "reg:linear", "reg:logistic", "binary:logistic", "binary:logitraw", "multi:softprob", "multi:softmax" or "rank:pairwise".
 
-We have tested that gbdt-rs is compatible with xgboost 0.81 and 0.82
+We have tested that MesaTEE GBDT-RS is compatible with xgboost 0.81 and 0.82
 
 # Quick Start
 ## Training Steps
@@ -84,7 +84,7 @@ We have tested that gbdt-rs is compatible with xgboost 0.81 and 0.82
     * Note convert_xgboost.py depends on xgboost python libraries. The converted model can be used on machines without xgboost
 3. In rust code, call GBDT::load_from_xgboost(model_path, objective) to load the model
 4. Do inference
-5. (optional) Call GBDT::save_model to save the model to gbdt-rs native format. 
+5. (optional) Call GBDT::save_model to save the model to MesaTEE GBDT-RS native format. 
 
 ## Example code
 * "reg:linear": examples/test-xgb-reg-linear.rs
@@ -97,12 +97,12 @@ We have tested that gbdt-rs is compatible with xgboost 0.81 and 0.82
 
 # Multi-threading
 ## Training:
-At this time, training in gbdt-rs is single-threaded.
+At this time, training in MesaTEE GBDT-RS is single-threaded.
 ## Inference:
 The related inference functions are single-threaded. But they are thread-safe. We provide an inference example using multi threads in example/test-multithreads.rs
 
 # SGX usage
-Because gbdt-rs is written in pure rust, with the help of [rust-sgx-sdk](https://github.com/baidu/rust-sgx-sdk), it can be used in sgx enclave easily as:
+Because MesaTEE GBDT-RS is written in pure rust, with the help of [rust-sgx-sdk](https://github.com/baidu/rust-sgx-sdk), it can be used in sgx enclave easily as:
 
 ```
 gbdt_sgx = { git = "https://github.com/mesalock-linux/gbdt-rs" }
