@@ -1746,7 +1746,7 @@ impl DecisionTree {
     /// let node: Value = serde_json::from_str(data).unwrap();
     /// let dt = DecisionTree::get_from_xgboost(&node);
     /// ```
-    pub fn get_from_xgboost(node: &serde_json::Value) -> Result<Self, Box<Error>> {
+    pub fn get_from_xgboost(node: &serde_json::Value) -> Result<Self, Box<dyn Error>> {
         // Parameters are not used in prediction process, so we use default parameters.
         let mut tree = DecisionTree::new();
         let index = tree.tree.add_root(BinaryTreeNode::new(DTNode::new()));
@@ -1759,7 +1759,7 @@ impl DecisionTree {
         &mut self,
         index: TreeIndex,
         node: &serde_json::Value,
-    ) -> Result<(), Box<Error>> {
+    ) -> Result<(), Box<dyn Error>> {
         {
             let node_ref = self
                 .tree
@@ -1798,7 +1798,7 @@ impl DecisionTree {
                 } else if missing == right_child {
                     node_ref.value.missing = 1;
                 } else {
-                    let err: Box<Error> = From::from("not support extra missing node".to_string());
+                    let err: Box<dyn Error> = From::from("not support extra missing node".to_string());
                     return Err(err);
                 }
             }
@@ -1835,7 +1835,7 @@ impl DecisionTree {
         }
 
         if (!find_left) || (!find_right) {
-            let err: Box<Error> = From::from("children not found".to_string());
+            let err: Box<dyn Error> = From::from("children not found".to_string());
             return Err(err);
         }
         Ok(())
