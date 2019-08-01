@@ -6,7 +6,6 @@ steps:
   image: baiduxlab/useful-docker:centos.6.nightly
   pull: always
   environment:
-    CARGO_BUILD_PIPELINING: true
   commands:
   - source /root/.profile
   - cargo test
@@ -31,7 +30,6 @@ steps:
   image: baiduxlab/useful-docker:centos.6.nightly
   pull: always
   environment:
-    CARGO_BUILD_PIPELINING: true
   commands:
   - source /root/.profile
   - cargo test --release
@@ -103,7 +101,6 @@ steps:
   image: baiduxlab/useful-docker:centos.6.nightly
   pull: always
   environment:
-    CARGO_BUILD_PIPELINING: true
   commands:
   - source /root/.profile
   - cargo test
@@ -128,7 +125,6 @@ steps:
   image: baiduxlab/useful-docker:centos.6.nightly
   pull: always
   environment:
-    CARGO_BUILD_PIPELINING: true
   commands:
   - source /root/.profile
   - cargo test --release
@@ -200,7 +196,6 @@ steps:
   image: baiduxlab/useful-docker:ubuntu.1604.nightly
   pull: always
   environment:
-    CARGO_BUILD_PIPELINING: true
   commands:
   - . /root/.profile
   - cargo test
@@ -225,7 +220,6 @@ steps:
   image: baiduxlab/useful-docker:ubuntu.1604.nightly
   pull: always
   environment:
-    CARGO_BUILD_PIPELINING: true
   commands:
   - . /root/.profile
   - cargo test --release
@@ -297,7 +291,6 @@ steps:
   image: baiduxlab/useful-docker:ubuntu.1804.nightly
   pull: always
   environment:
-    CARGO_BUILD_PIPELINING: true
   commands:
   - . /root/.profile
   - cargo test
@@ -322,7 +315,6 @@ steps:
   image: baiduxlab/useful-docker:ubuntu.1804.nightly
   pull: always
   environment:
-    CARGO_BUILD_PIPELINING: true
   commands:
   - . /root/.profile
   - cargo test --release
