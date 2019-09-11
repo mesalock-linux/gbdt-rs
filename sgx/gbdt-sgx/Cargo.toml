@@ -26,10 +26,10 @@ crate-type = ["rlib", "staticlib"]
 serde = { git = "https://github.com/mesalock-linux/serde-sgx.git" }
 serde_derive = { git = "https://github.com/mesalock-linux/serde-sgx.git" }
 serde_json = { git = "https://github.com/mesalock-linux/serde-json-sgx.git" }
-rand={ version = "0.6", optional = true, git = "https://github.com/mesalock-linux/rand-sgx.git", tag = "v0.6.5_sgx1.0.8" }
+rand={ version = "0.6", optional = true, git = "https://github.com/mesalock-linux/rand-sgx.git", tag = "v0.6.5_sgx1.0.9" }
 regex = { version = "1", git = "https://github.com/mesalock-linux/regex-sgx", optional = true }
 time = { version = "0.1", optional = true }
-sgx_tstd = { rev = "v1.0.8", git = "https://github.com/baidu/rust-sgx-sdk.git", optional = true }
+sgx_tstd = { rev = "v1.0.9", git = "https://github.com/baidu/rust-sgx-sdk.git", optional = true }
 cfg-if = "0.1"
 
 [dev-dependencies]

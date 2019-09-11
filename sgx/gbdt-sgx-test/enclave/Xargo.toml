@@ -1,9 +1,15 @@
 [dependencies]
 alloc = {}
-panic_unwind = {}
-panic_abort = {}
 
 [dependencies.sgx_types]
+git = "https://github.com/baidu/rust-sgx-sdk.git"
+stage = 1
+
+[dependencies.sgx_demangle]
+git = "https://github.com/baidu/rust-sgx-sdk.git"
+stage = 1
+
+[dependencies.panic_abort]
 git = "https://github.com/baidu/rust-sgx-sdk.git"
 stage = 1
 
@@ -31,6 +37,14 @@ stage = 2
 git = "https://github.com/baidu/rust-sgx-sdk.git"
 stage = 3
 
+[dependencies.sgx_backtrace_sys]
+git = "https://github.com/baidu/rust-sgx-sdk.git"
+stage = 3
+
+[dependencies.sgx_unwind]
+git = "https://github.com/baidu/rust-sgx-sdk.git"
+stage = 4
+
 [dependencies.sgx_tdh]
 git = "https://github.com/baidu/rust-sgx-sdk.git"
 stage = 4
@@ -39,30 +53,38 @@ stage = 4
 git = "https://github.com/baidu/rust-sgx-sdk.git"
 stage = 4
 
-[dependencies.sgx_alloc]
-git = "https://github.com/baidu/rust-sgx-sdk.git"
-stage = 4
-
-[dependencies.std]
-git = "https://github.com/baidu/rust-sgx-sdk.git"
-features = ["untrusted_fs"]
-stage = 5
-
-[dependencies.sgx_rand]
-git = "https://github.com/baidu/rust-sgx-sdk.git"
-stage = 6
-
-[dependencies.sgx_serialize]
-git = "https://github.com/baidu/rust-sgx-sdk.git"
-stage = 6
-
-[dependencies.sgx_tunittest]
-git = "https://github.com/baidu/rust-sgx-sdk.git"
-stage = 6
-
 [dependencies.sgx_tprotected_fs]
 git = "https://github.com/baidu/rust-sgx-sdk.git"
 stage = 4
 
-[patch.crates-io]
-libc = { git = "https://github.com/mesalock-linux/libc-sgx" }
+[dependencies.sgx_alloc]
+git = "https://github.com/baidu/rust-sgx-sdk.git"
+stage = 4
+
+[dependencies.panic_unwind]
+git = "https://github.com/baidu/rust-sgx-sdk.git"
+stage = 5
+
+[dependencies.std]
+git = "https://github.com/baidu/rust-sgx-sdk.git"
+stage = 6
+
+[dependencies.sgx_rand]
+git = "https://github.com/baidu/rust-sgx-sdk.git"
+stage = 7
+
+[dependencies.sgx_serialize]
+git = "https://github.com/baidu/rust-sgx-sdk.git"
+stage = 7
+
+[dependencies.sgx_tunittest]
+git = "https://github.com/baidu/rust-sgx-sdk.git"
+stage = 7
+
+[dependencies.sgx_backtrace]
+git = "https://github.com/baidu/rust-sgx-sdk.git"
+stage = 8
+
+[dependencies.sgx_cov]
+git = "https://github.com/baidu/rust-sgx-sdk.git"
+stage = 8
