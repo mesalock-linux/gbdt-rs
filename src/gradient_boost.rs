@@ -609,6 +609,13 @@ impl GBDT {
         }
     }
 
+    pub fn get_feature_importances(&self) -> Vec<f64> {
+        for i in 0..self.trees.len() {
+            let _importance = self.trees[i].get_feature_importances(self.conf.feature_size);
+        }
+        Vec::new()
+    }
+
     /// This is the process to calculate the residual as the target in next iteration
     /// for squared error loss.
     #[cfg(feature = "enable_training")]

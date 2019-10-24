@@ -898,7 +898,7 @@ fn same(iv: &[usize], cache: &TrainingCache) -> bool {
 
 /// The internal node of the decision tree. It's stored in the `value` of the gbdt::binary_tree::BinaryTreeNode
 #[derive(Debug, Serialize, Deserialize)]
-struct DTNode {
+pub(crate) struct DTNode {
     /// the feature used to split the node
     feature_index: usize,
     /// the feature value used to split the node
@@ -909,6 +909,12 @@ struct DTNode {
     missing: i8,
     /// whether the node is a leaf node
     is_leaf: bool,
+    /// Used for calculating feature importance; Only used for training, so this field doesn't need to be serialized.
+    #[serde(skip_serializing)]
+    impurity: Option<f64>,
+    /// Used for calculating feature importance; Only used for training, so this field doesn't need to be serialized.
+    #[serde(skip_serializing)]
+    weighted_samples_count: Option<f64>,
 }
 
 impl DTNode {
@@ -920,6 +926,8 @@ impl DTNode {
             pred: 0.0,
             missing: 0,
             is_leaf: false,
+            impurity: None,
+            weighted_samples_count: None,
         }
     }
 }
@@ -1196,7 +1204,7 @@ impl DecisionTree {
         }
 
         // Try to find a feature and a value to split the node.
-        let (splited_data, feature_index, feature_value) = DecisionTree::split(
+        let (splited_data, feature_index, feature_value, impurity) = DecisionTree::split(
             train_data,
             self.feature_size,
             self.feature_sample_ratio,
@@ -1220,6 +1228,13 @@ impl DecisionTree {
             } else {
                 node_ref.value.feature_index = feature_index;
                 node_ref.value.feature_value = feature_value;
+                // calcuate weighted_sample_count
+                let mut weighted_samples_count: f64 = 0.0;
+                for data_index in train_data.iter() {
+                    weighted_samples_count += cache.cache_value[*data_index].c;
+                }
+                node_ref.value.weighted_samples_count = Some(weighted_samples_count);
+                node_ref.value.impurity = Some(impurity);
             }
         }
 
@@ -1464,7 +1479,7 @@ impl DecisionTree {
     ///
     /// Step 4: Use the feature and the feature value to split the data.
     ///
-    /// Output: (left set, right set, unknown set), feature index, feature value
+    /// Output: (left set, right set, unknown set), feature index, feature value, impurity
     #[cfg(feature = "enable_training")]
     fn split(
         train_data: &[usize],
@@ -1476,6 +1491,7 @@ impl DecisionTree {
         Option<(Vec<usize>, Vec<usize>, Vec<usize>)>,
         usize,
         ValueType,
+        f64,
     ) {
         let mut fs = feature_size;
         let mut fv: Vec<usize> = (0..).take(fs).collect();
@@ -1544,12 +1560,12 @@ impl DecisionTree {
                 count += 1;
             }
             if count >= 2 {
-                (None, 0, 0.0)
+                (None, 0, 0.0, 0.0)
             } else {
-                (Some((left, right, unknown)), index, value)
+                (Some((left, right, unknown)), index, value, best_fitness)
             }
         } else {
-            (None, 0, 0.0)
+            (None, 0, 0.0, 0.0)
         }
     }
 
@@ -1734,6 +1750,78 @@ impl DecisionTree {
         self.tree.print();
     }
 
+    pub fn get_feature_importances(&self, feature_size: usize) -> Vec<f64> {
+        let root = self
+            .tree
+            .get_node(self.tree.get_root_index())
+            .expect("Decision tree should have root node");
+        let mut result: Vec<f64> = vec![0.0; feature_size];
+        self.add_to_feature_importance(root, &mut result);
+        result
+    }
+
+    fn add_to_feature_importance(
+        &self,
+        node: &BinaryTreeNode<DTNode>,
+        importance_array: &mut Vec<f64>,
+    ) {
+        if node.value.is_leaf {
+            assert!(node.value.weighted_samples_count.is_none());
+            assert!(node.value.impurity.is_none());
+        } else {
+            assert!(node.value.weighted_samples_count.is_some());
+            assert!(node.value.impurity.is_some());
+
+            let left = self
+                .tree
+                .get_left_child(node)
+                .expect("Left child should not be None");
+            let right = self
+                .tree
+                .get_right_child(node)
+                .expect("Right child should not be None");
+            let node_count = node
+                .value
+                .weighted_samples_count
+                .expect("This should not happen");
+            let node_impurity = node
+                .value
+                .impurity
+                .expect("node impurity should not be null");
+            let left_count = left.value.weighted_samples_count.unwrap_or(0.0);
+            let left_impurity = left.value.impurity.unwrap_or(0.0);
+            let right_count = right.value.weighted_samples_count.unwrap_or(0.0);
+            let right_impurity = right.value.impurity.unwrap_or(0.0);
+
+            if left_count.abs() > 1e-10
+                && right_count.abs() > 1e-10
+                && (node_count - left_count - right_count).abs() > 1e-10
+            {
+                panic!("count not match");
+            }
+            let diff: f64 = node_count * node_impurity
+                - left_count * left_impurity
+                - right_count * right_impurity;
+            if diff < 0.0 {
+                panic!("diff is less than 0");
+            }
+
+            /*
+            println!(
+                "{} {} {} {} {} {} {}",
+                node_count,
+                node_impurity,
+                left_count,
+                left_impurity,
+                right_count,
+                right_impurity,
+                diff
+            );*/
+            self.add_to_feature_importance(left, importance_array);
+            self.add_to_feature_importance(right, importance_array);
+        }
+    }
+
     /// Build a decision tree from xgboost's model. xgboost can dump the model in JSON format. We used serde_json to parse a JSON string.  
     /// # Example
     /// ``` rust
@@ -1798,7 +1886,8 @@ impl DecisionTree {
                 } else if missing == right_child {
                     node_ref.value.missing = 1;
                 } else {
-                    let err: Box<dyn Error> = From::from("not support extra missing node".to_string());
+                    let err: Box<dyn Error> =
+                        From::from("not support extra missing node".to_string());
                     return Err(err);
                 }
             }
