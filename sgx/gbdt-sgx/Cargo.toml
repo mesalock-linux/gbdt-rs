@@ -1,7 +1,7 @@
 [package]
 name = "gbdt_sgx"
 version = "0.1.0"
-authors = ["Tongxin Li <litongxin@baidu.com>", "Tianyi Li <n0b0dypku@gmail.com>", "Yu Ding <dingyu02@baidu.com>"]
+authors = ["Tongxin Li <litongxin@baidu.com>", "Tianyi Li <n0b0dypku@gmail.com>", "Yu Ding <dingelish@gmail.com>"]
 homepage = "https://github.com/mesalock-linux/gbdt-rs"
 repository = "https://github.com/mesalock-linux/gbdt-rs"
 license = "Apache-2.0"
@@ -26,10 +26,10 @@ crate-type = ["rlib", "staticlib"]
 serde = { git = "https://github.com/mesalock-linux/serde-sgx" }
 serde_derive = { git = "https://github.com/mesalock-linux/serde-sgx" }
 serde_json = { git = "https://github.com/mesalock-linux/serde-json-sgx" }
-rand = { version = "0.7", optional = true, git = "https://github.com/mesalock-linux/rand-sgx", tag = "v0.6.5_sgx1.0.9" }
+rand = { version = "0.7", optional = true, git = "https://github.com/mesalock-linux/rand-sgx", tag = "v0.6.5_sgx1.1.0" }
 regex = { version = "1", git = "https://github.com/mesalock-linux/regex-sgx", optional = true }
 time = { version = "0.1", optional = true }
-sgx_tstd = { rev = "v1.0.9", git = "https://github.com/baidu/rust-sgx-sdk", optional = true }
+sgx_tstd = { rev = "v1.1.0", git = "https://github.com/apache/teaclave-sgx-sdk", optional = true }
 cfg-if = "0.1"
 
 [dev-dependencies]

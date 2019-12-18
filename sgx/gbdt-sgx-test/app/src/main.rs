@@ -96,13 +96,13 @@ fn init_enclave() -> SgxResult<SgxEnclave> {
         secs_attr: sgx_attributes_t { flags: 0, xfrm: 0 },
         misc_select: 0,
     };
-    let enclave = try!(SgxEnclave::create(
+    let enclave = SgxEnclave::create(
         ENCLAVE_FILE,
         debug,
         &mut launch_token,
         &mut launch_token_updated,
         &mut misc_attr
-    ));
+    )?;
 
     // Step 3: save the launch token if it is updated
     if use_token == true && launch_token_updated != 0 {

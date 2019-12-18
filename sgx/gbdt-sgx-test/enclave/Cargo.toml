@@ -14,6 +14,6 @@ default = []
 gbdt_sgx = { path = "../../gbdt-sgx", default-features = false, features = ["mesalock_sgx", "input", "enable_training"] }
 
 [target.'cfg(not(target_env = "sgx"))'.dependencies]
-sgx_types = { rev = "v1.0.9", git = "https://github.com/baidu/rust-sgx-sdk.git" }
-sgx_tstd = { rev = "v1.0.9", git = "https://github.com/baidu/rust-sgx-sdk.git" }
-sgx_tunittest = { rev = "v1.0.9", git = "https://github.com/baidu/rust-sgx-sdk.git" }
+sgx_types = { rev = "v1.1.0", git = "https://github.com/apache/teaclave-sgx-sdk.git" }
+sgx_tstd = { rev = "v1.1.0", git = "https://github.com/apache/teaclave-sgx-sdk.git" }
+sgx_tunittest = { rev = "v1.1.0", git = "https://github.com/apache/teaclave-sgx-sdk.git" }
