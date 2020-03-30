@@ -15,8 +15,8 @@ cargo clean
 # unit tests of gbdt
 export RUSTC_WRAPPER="./ci/gbdt-cov-rustc"
 cargo rustc --package gbdt --all-features --profile test --lib
-rm ./target/debug/gbdt-*.d
-./target/debug/gbdt-*
+rm ./target/debug/deps/gbdt-*.d
+./target/debug/deps/gbdt-*
 ${LCOV} ${LCOVOPT} --capture --directory . --base-directory . -o unittest.info
 
 # cleanup target
