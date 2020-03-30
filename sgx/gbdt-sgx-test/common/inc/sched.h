@@ -1,4 +1,6 @@
-/* Copyright (C) 1996-2018 Free Software Foundation, Inc.
+/* Definition of the cpu_set_t structure used by the POSIX 1003.1b-1993
+   scheduling interface.
+   Copyright (C) 1996-2018 Free Software Foundation, Inc.
    This file is part of the GNU C Library.
 
    The GNU C Library is free software; you can redistribute it and/or
@@ -15,14 +17,24 @@
    License along with the GNU C Library; if not, see
    <http://www.gnu.org/licenses/>.  */
 
-#ifndef _SYS_UIO_H_
-#define _SYS_UIO_H_
+#ifndef _SCHED_H
+#define _SCHED_H
+#include <sys/_types.h>
 
-/* Structure for scatter/gather I/O.  */
-struct iovec
+/* Size definition for CPU sets.  */
+#define __CPU_SETSIZE	1024
+#define __NCPUBITS	(8 * sizeof (__cpu_mask))
+
+/* Basic access functions.  */
+#define __CPUELT(cpu)	((cpu) / __NCPUBITS)
+#define __CPUMASK(cpu)	((__cpu_mask) 1 << ((cpu) % __NCPUBITS))
+
+/* Data structure to describe CPU mask.  */
+typedef struct
 {
-    void *iov_base; /* Pointer to data.  */
-    size_t iov_len; /* Length of data.  */
-};
+  __cpu_mask __bits[__CPU_SETSIZE / __NCPUBITS];
+} cpu_set_t;
+
+typedef __pid_t   pid_t;
 
 #endif
