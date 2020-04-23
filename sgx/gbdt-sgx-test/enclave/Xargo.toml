@@ -63,8 +63,8 @@ stage = 4
 
 [dependencies.std]
 git = "https://github.com/apache/teaclave-sgx-sdk.git"
+features = ["untrusted_fs", "backtrace", "net"]
 stage = 5
-features = ["backtrace"]
 
 [dependencies.sgx_no_tstd]
 git = "https://github.com/apache/teaclave-sgx-sdk.git"
@@ -87,5 +87,9 @@ git = "https://github.com/apache/teaclave-sgx-sdk.git"
 stage = 7
 
 [dependencies.sgx_cov]
+git = "https://github.com/apache/teaclave-sgx-sdk.git"
+stage = 7
+
+[dependencies.sgx_signal]
 git = "https://github.com/apache/teaclave-sgx-sdk.git"
 stage = 7
