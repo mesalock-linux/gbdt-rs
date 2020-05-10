@@ -1,8 +1,8 @@
 #!/bin/bash -e
 
 for path in /usr/lib/llvm-3.9/lib/clang/3.9.[0-9]/lib/linux/; do LLVM_PATH=$path; done
-export OPTIONS="-Ccodegen-units=1 -Copt-level=0 -Clink-dead-code -Zno-landing-pads -L$LLVM_PATH -lclang_rt.profile-x86_64"
-export COVERAGE_OPTIONS="-Ccodegen-units=1 -Copt-level=0 -Clink-dead-code -Cpasses=insert-gcov-profiling -Zno-landing-pads -L$LLVM_PATH -lclang_rt.profile-x86_64"
+export OPTIONS="-Ccodegen-units=1 -Copt-level=0 -Clink-dead-code -C panic=abort -L$LLVM_PATH -lclang_rt.profile-x86_64"
+export COVERAGE_OPTIONS="-Ccodegen-units=1 -Copt-level=0 -Clink-dead-code -Cpasses=insert-gcov-profiling -C panic=abort -L$LLVM_PATH -lclang_rt.profile-x86_64"
 export CARGO_INCREMENTAL=0
 
 LCOVOPT="--gcov-tool ./ci/llvm-gcov --rc lcov_branch_coverage=1 --rc lcov_excl_line=assert"
