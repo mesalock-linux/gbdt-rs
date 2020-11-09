@@ -17,15 +17,12 @@
 
 enclave {
 
-    from "sgx_fd.edl" import *;
-    from "sgx_asyncio.edl" import *;
-
     trusted {
         /* define ECALLs here. */
+     
     };
 
     untrusted {
-        int u_pipe_ocall([out] int *error, [out, count=2] int *pipefd);
-        int u_pipe2_ocall([out] int *error, [out, count=2] int *pipefd, int flags);
+        int u_getpid_ocall();
     };
 };

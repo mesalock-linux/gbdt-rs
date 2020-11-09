@@ -1,4 +1,4 @@
-/* Copyright (C) 1996-2018 Free Software Foundation, Inc.
+/* Copyright (C) 1991-2018 Free Software Foundation, Inc.
    This file is part of the GNU C Library.
 
    The GNU C Library is free software; you can redistribute it and/or
@@ -15,14 +15,22 @@
    License along with the GNU C Library; if not, see
    <http://www.gnu.org/licenses/>.  */
 
-#ifndef _SYS_UIO_H_
-#define _SYS_UIO_H_
+/*
+ *	POSIX Standard: 9.2.2 User Database Access	<pwd.h>
+ */
 
-/* Structure for scatter/gather I/O.  */
-struct iovec
+#ifndef _PWD_H
+#define _PWD_H
+
+struct passwd
 {
-    void *iov_base; /* Pointer to data.  */
-    size_t iov_len; /* Length of data.  */
+    char *pw_name;      /* Username.  */
+    char *pw_passwd;    /* Password.  */
+    __uid_t pw_uid;     /* User ID.  */
+    __gid_t pw_gid;     /* Group ID.  */
+    char *pw_gecos;     /* Real name.  */
+    char *pw_dir;       /* Home directory.  */
+    char *pw_shell;     /* Shell program.  */
 };
 
 #endif
