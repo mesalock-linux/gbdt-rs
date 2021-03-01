@@ -1800,7 +1800,7 @@ impl DecisionTree {
                 } else if missing == right_child {
                     node_ref.value.missing = 1;
                 } else {
-                    let err: Box<dyn Error> =
+                    let err: Box<dyn Error + Sync + Send> =
                         From::from("not support extra missing node".to_string());
                     return Err(err);
                 }
@@ -1838,7 +1838,7 @@ impl DecisionTree {
         }
 
         if (!find_left) || (!find_right) {
-            let err: Box<dyn Error> = From::from("children not found".to_string());
+            let err: Box<dyn Error + Sync + Send> = From::from("children not found".to_string());
             return Err(err);
         }
         Ok(())
