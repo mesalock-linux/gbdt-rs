@@ -1748,7 +1748,7 @@ impl DecisionTree {
     /// ```
     pub fn get_from_xgboost(
         node: &serde_json::Value,
-    ) -> Result<Self, Box<dyn Error + Sync + Send>> {
+    ) -> Result<Self, Box<dyn Error + 'static + Sync + Send>> {
         // Parameters are not used in prediction process, so we use default parameters.
         let mut tree = DecisionTree::new();
         let index = tree.tree.add_root(BinaryTreeNode::new(DTNode::new()));
@@ -1761,7 +1761,7 @@ impl DecisionTree {
         &mut self,
         index: TreeIndex,
         node: &serde_json::Value,
-    ) -> Result<(), Box<dyn Error + Sync + Send>> {
+    ) -> Result<(), Box<dyn Error + 'static + Sync + Send>> {
         {
             let node_ref = self
                 .tree

@@ -289,7 +289,7 @@ pub fn infer(file_name: &str) -> InputFormat {
 pub fn load_csv(
     file: &mut File,
     input_format: InputFormat,
-) -> Result<DataVec, Box<dyn Error + Sync + Send>> {
+) -> Result<DataVec, Box<dyn Error + 'static + Sync + Send>> {
     file.seek(SeekFrom::Start(0))?;
     let mut dv = Vec::new();
 
@@ -343,7 +343,7 @@ pub fn load_csv(
 pub fn load_txt(
     file: &mut File,
     input_format: InputFormat,
-) -> Result<DataVec, Box<dyn Error + Sync + Send>> {
+) -> Result<DataVec, Box<dyn Error + 'static + Sync + Send>> {
     file.seek(SeekFrom::Start(0))?;
     let mut dv = Vec::new();
 
@@ -423,7 +423,7 @@ pub fn load_txt(
 pub fn load(
     file_name: &str,
     input_format: InputFormat,
-) -> Result<DataVec, Box<dyn Error + Sync + Send>> {
+) -> Result<DataVec, Box<dyn Error + 'static + Sync + Send>> {
     let mut file = File::open(file_name.to_string())?;
     match input_format.ftype {
         FileFormat::CSV => load_csv(&mut file, input_format),

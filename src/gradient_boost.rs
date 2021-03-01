@@ -707,7 +707,7 @@ impl GBDT {
     /// // Save model.
     /// // gbdt.save_model("gbdt.model");
     /// ```
-    pub fn save_model(&self, filename: &str) -> Result<(), Box<dyn Error + Sync + Send>> {
+    pub fn save_model(&self, filename: &str) -> Result<(), Box<dyn Error + 'static + Sync + Send>> {
         let mut file = File::create(filename)?;
         let serialized = serde_json::to_string(self)?;
         file.write_all(serialized.as_bytes())?;
@@ -726,7 +726,7 @@ impl GBDT {
     ///
     /// # Error
     /// Error when get exception during model file parsing or deserialize.
-    pub fn load_model(filename: &str) -> Result<Self, Box<dyn Error + Sync + Send>> {
+    pub fn load_model(filename: &str) -> Result<Self, Box<dyn Error + 'static + Sync + Send>> {
         let mut file = File::open(filename)?;
         let mut contents = String::new();
         file.read_to_string(&mut contents)?;
@@ -749,7 +749,7 @@ impl GBDT {
     pub fn from_xgoost_dump(
         model_file: &str,
         objective: &str,
-    ) -> Result<Self, Box<dyn Error + Sync + Send>> {
+    ) -> Result<Self, Box<dyn Error + 'static + Sync + Send>> {
         let tree_file = File::open(&model_file)?;
         let reader = BufReader::new(tree_file);
         let mut all_lines: Vec<String> = Vec::new();
