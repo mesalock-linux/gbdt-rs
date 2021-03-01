@@ -89,13 +89,13 @@ use crate::decision_tree::DecisionTree;
 #[cfg(feature = "enable_training")]
 use crate::decision_tree::TrainingCache;
 use crate::decision_tree::{DataVec, PredVec, ValueType, VALUE_TYPE_MIN, VALUE_TYPE_UNKNOWN};
+use crate::errors::Result;
 #[cfg(feature = "enable_training")]
 use crate::fitness::{label_average, logit_loss_gradient, weighted_label_median, AUC, MAE, RMSE};
 #[cfg(feature = "enable_training")]
 use rand::prelude::SliceRandom;
 #[cfg(feature = "enable_training")]
 use rand::thread_rng;
-use std::error::Error;
 
 #[cfg(not(feature = "mesalock_sgx"))]
 use std::fs::File;
@@ -707,7 +707,7 @@ impl GBDT {
     /// // Save model.
     /// // gbdt.save_model("gbdt.model");
     /// ```
-    pub fn save_model(&self, filename: &str) -> Result<(), Box<dyn Error + 'static + Sync + Send>> {
+    pub fn save_model(&self, filename: &str) -> Result<()> {
         let mut file = File::create(filename)?;
         let serialized = serde_json::to_string(self)?;
         file.write_all(serialized.as_bytes())?;
@@ -726,7 +726,7 @@ impl GBDT {
     ///
     /// # Error
     /// Error when get exception during model file parsing or deserialize.
-    pub fn load_model(filename: &str) -> Result<Self, Box<dyn Error + 'static + Sync + Send>> {
+    pub fn load_model(filename: &str) -> Result<Self> {
         let mut file = File::open(filename)?;
         let mut contents = String::new();
         file.read_to_string(&mut contents)?;
@@ -746,10 +746,7 @@ impl GBDT {
     ///
     /// # Error
     /// Error when get exception during model file parsing.
-    pub fn from_xgoost_dump(
-        model_file: &str,
-        objective: &str,
-    ) -> Result<Self, Box<dyn Error + 'static + Sync + Send>> {
+    pub fn from_xgoost_dump(model_file: &str, objective: &str) -> Result<Self> {
         let tree_file = File::open(&model_file)?;
         let reader = BufReader::new(tree_file);
         let mut all_lines: Vec<String> = Vec::new();
@@ -769,7 +766,7 @@ impl GBDT {
         let single_line = all_lines.join("");
         let json_obj: serde_json::Value = serde_json::from_str(&single_line)?;
 
-        let nodes = json_obj.as_array().ok_or("parse trees error")?;
+        let nodes = json_obj.as_array().ok_or_else(|| "parse trees error")?;
 
         let mut cfg = Config::new();
         cfg.set_loss(objective);

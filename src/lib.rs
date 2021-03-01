@@ -43,6 +43,7 @@ extern crate sgx_tstd as std;
 pub mod binary_tree;
 pub mod config;
 pub mod decision_tree;
+pub mod errors;
 pub mod fitness;
 pub mod gradient_boost;
 

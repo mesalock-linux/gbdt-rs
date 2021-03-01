@@ -28,6 +28,7 @@
 use std::prelude::v1::*;
 
 use crate::decision_tree::{Data, DataVec, ValueType, VALUE_TYPE_UNKNOWN};
+use crate::errors::Result;
 
 cfg_if! {
     if #[cfg(all(feature = "mesalock_sgx", not(target_env = "sgx")))] {
@@ -37,7 +38,6 @@ cfg_if! {
         use std::io::{BufRead, BufReader, Seek, SeekFrom};
     } else {
         use std::collections::HashMap;
-        use std::error::Error;
         #[cfg(not(feature = "mesalock_sgx"))]
         use std::fs::File;
         #[cfg(feature = "mesalock_sgx")]
@@ -286,10 +286,7 @@ pub fn infer(file_name: &str) -> InputFormat {
 ///
 /// # Error
 /// Raise error if file cannot be read correctly.
-pub fn load_csv(
-    file: &mut File,
-    input_format: InputFormat,
-) -> Result<DataVec, Box<dyn Error + 'static + Sync + Send>> {
+pub fn load_csv(file: &mut File, input_format: InputFormat) -> Result<DataVec> {
     file.seek(SeekFrom::Start(0))?;
     let mut dv = Vec::new();
 
@@ -340,10 +337,7 @@ pub fn load_csv(
 ///
 /// # Error
 /// Raise error if file cannot be read correctly.
-pub fn load_txt(
-    file: &mut File,
-    input_format: InputFormat,
-) -> Result<DataVec, Box<dyn Error + 'static + Sync + Send>> {
+pub fn load_txt(file: &mut File, input_format: InputFormat) -> Result<DataVec> {
     file.seek(SeekFrom::Start(0))?;
     let mut dv = Vec::new();
 
@@ -420,10 +414,7 @@ pub fn load_txt(
 ///
 /// # Error
 /// Raise error if file cannot be open correctly.
-pub fn load(
-    file_name: &str,
-    input_format: InputFormat,
-) -> Result<DataVec, Box<dyn Error + 'static + Sync + Send>> {
+pub fn load(file_name: &str, input_format: InputFormat) -> Result<DataVec> {
     let mut file = File::open(file_name.to_string())?;
     match input_format.ftype {
         FileFormat::CSV => load_csv(&mut file, input_format),
