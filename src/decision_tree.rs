@@ -99,9 +99,9 @@ use crate::binary_tree::BinaryTree;
 use crate::binary_tree::BinaryTreeNode;
 use crate::binary_tree::TreeIndex;
 use crate::config::Loss;
+use crate::errors::{GbdtError, Result};
 #[cfg(feature = "enable_training")]
 use crate::fitness::almost_equal;
-use std::error::Error;
 
 #[cfg(feature = "enable_training")]
 use rand::prelude::SliceRandom;
@@ -1746,7 +1746,7 @@ impl DecisionTree {
     /// let node: Value = serde_json::from_str(data).unwrap();
     /// let dt = DecisionTree::get_from_xgboost(&node);
     /// ```
-    pub fn get_from_xgboost(node: &serde_json::Value) -> Result<Self, Box<dyn Error>> {
+    pub fn get_from_xgboost(node: &serde_json::Value) -> Result<Self> {
         // Parameters are not used in prediction process, so we use default parameters.
         let mut tree = DecisionTree::new();
         let index = tree.tree.add_root(BinaryTreeNode::new(DTNode::new()));
@@ -1755,11 +1755,7 @@ impl DecisionTree {
     }
 
     /// Recursively build the tree node from the JSON value.
-    fn add_node_from_json(
-        &mut self,
-        index: TreeIndex,
-        node: &serde_json::Value,
-    ) -> Result<(), Box<dyn Error>> {
+    fn add_node_from_json(&mut self, index: TreeIndex, node: &serde_json::Value) -> Result<()> {
         {
             let node_ref = self
                 .tree
@@ -1767,7 +1763,7 @@ impl DecisionTree {
                 .expect("node should not be empty!");
             // This is the leaf node
             if let serde_json::Value::Number(pred) = &node["leaf"] {
-                let leaf_value = pred.as_f64().ok_or("parse 'leaf' error")?;
+                let leaf_value = pred.as_f64().ok_or_else(|| "parse 'leaf' error")?;
                 node_ref.value.pred = leaf_value as ValueType;
                 node_ref.value.is_leaf = true;
                 return Ok(());
@@ -1775,14 +1771,16 @@ impl DecisionTree {
                 // feature value
                 let feature_value = node["split_condition"]
                     .as_f64()
-                    .ok_or("parse 'split condition' error")?;
+                    .ok_or_else(|| "parse 'split condition' error")?;
                 node_ref.value.feature_value = feature_value as ValueType;
 
                 // feature index
                 let feature_index = match node["split"].as_i64() {
                     Some(v) => v,
                     None => {
-                        let feature_name = node["split"].as_str().ok_or("parse 'split' error")?;
+                        let feature_name = node["split"]
+                            .as_str()
+                            .ok_or_else(|| "parse 'split' error")?;
                         let feature_str: String = feature_name.chars().skip(3).collect();
                         feature_str.parse::<i64>()?
                     }
@@ -1790,30 +1788,33 @@ impl DecisionTree {
                 node_ref.value.feature_index = feature_index as usize;
 
                 // handle unknown feature
-                let missing = node["missing"].as_i64().ok_or("parse 'missing' error")?;
-                let left_child = node["yes"].as_i64().ok_or("parse 'yes' error")?;
-                let right_child = node["no"].as_i64().ok_or("parse 'no' error")?;
+                let missing = node["missing"]
+                    .as_i64()
+                    .ok_or_else(|| "parse 'missing' error")?;
+                let left_child = node["yes"].as_i64().ok_or_else(|| "parse 'yes' error")?;
+                let right_child = node["no"].as_i64().ok_or_else(|| "parse 'no' error")?;
                 if missing == left_child {
                     node_ref.value.missing = -1;
                 } else if missing == right_child {
                     node_ref.value.missing = 1;
                 } else {
-                    let err: Box<dyn Error> = From::from("not support extra missing node".to_string());
-                    return Err(err);
+                    return Err(GbdtError::NotSupportExtraMissingNode);
                 }
             }
         }
 
         // ids for children
-        let left_child = node["yes"].as_i64().ok_or("parse 'yes' error")?;
-        let right_child = node["no"].as_i64().ok_or("parse 'no' error")?;
+        let left_child = node["yes"].as_i64().ok_or_else(|| "parse 'yes' error")?;
+        let right_child = node["no"].as_i64().ok_or_else(|| "parse 'no' error")?;
         let children = node["children"]
             .as_array()
-            .ok_or("parse 'children' error")?;
+            .ok_or_else(|| "parse 'children' error")?;
         let mut find_left = false;
         let mut find_right = false;
         for child in children.iter() {
-            let node_id = child["nodeid"].as_i64().ok_or("parse 'nodeid' error")?;
+            let node_id = child["nodeid"]
+                .as_i64()
+                .ok_or_else(|| "parse 'nodeid' error")?;
 
             // build left child
             if node_id == left_child {
@@ -1835,8 +1836,7 @@ impl DecisionTree {
         }
 
         if (!find_left) || (!find_right) {
-            let err: Box<dyn Error> = From::from("children not found".to_string());
-            return Err(err);
+            return Err(GbdtError::ChildrenNotFound);
         }
         Ok(())
     }
