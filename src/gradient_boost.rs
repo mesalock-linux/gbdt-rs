@@ -104,7 +104,7 @@ use std::fs::File;
 use std::untrusted::fs::File;
 
 use std::io::prelude::*;
-use std::io::{BufRead, BufReader};
+use std::io::BufReader;
 
 use serde_derive::{Deserialize, Serialize};
 
@@ -734,7 +734,7 @@ impl GBDT {
         Ok(ret)
     }
 
-    /// Load the model from xgboost's model. The xgboost's model should be converted by "convert_xgboost.py"
+    /// Load the model from xgboost's model using a path. The xgboost's model should be converted by "convert_xgboost.py"
     ///
     /// # Example
     ///
@@ -749,6 +749,25 @@ impl GBDT {
     pub fn from_xgoost_dump(model_file: &str, objective: &str) -> Result<Self> {
         let tree_file = File::open(&model_file)?;
         let reader = BufReader::new(tree_file);
+        Self::from_xgoost_reader(reader, objective)
+    }
+
+    /// Load the model from xgboost's model using a reader. The xgboost's model should be converted by "convert_xgboost.py"
+    ///
+    /// # Example
+    ///
+    /// ```rust
+    /// use gbdt::gradient_boost::GBDT;
+    /// let gbdt =
+    ///     GBDT::from_xgoost_reader(std::io::Cursor::new(include_str!("xgb-data/xgb_binary_logistic/gbdt.model")), "binary:logistic").unwrap();
+    /// ```
+    ///
+    /// # Error
+    /// Error when get exception during model parsing.
+    pub fn from_xgoost_reader<R>(reader: R, objective: &str) -> Result<Self>
+    where
+        R: std::io::BufRead,
+    {
         let mut all_lines: Vec<String> = Vec::new();
         let mut has_read_score = false;
         let mut base_score: ValueType = 0.0;
