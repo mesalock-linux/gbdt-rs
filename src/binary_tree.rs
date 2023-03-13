@@ -8,11 +8,11 @@
 #[cfg(all(feature = "mesalock_sgx", not(target_env = "sgx")))]
 use std::prelude::v1::*;
 
-use serde_derive::{Deserialize, Serialize};
+use serde::{Deserialize, Serialize};
 
 /// Node of the binary tree.
 #[derive(Debug, Default, Serialize, Deserialize,Clone)]
-pub struct BinaryTreeNode<T> {
+pub struct BinaryTreeNode<T>{
     /// Store information in a node.
     pub value: T,
 
@@ -26,7 +26,7 @@ pub struct BinaryTreeNode<T> {
     right: usize, // bigger than 0
 }
 
-impl<T> BinaryTreeNode<T> {
+impl<T:Copy> BinaryTreeNode<T> {
     /// Generate a node with given value
     ///
     /// # Example
@@ -55,7 +55,7 @@ pub type TreeIndex = usize;
 /// The binary tree.
 #[derive(Debug, Serialize, Deserialize,Clone)]
 pub struct BinaryTree<T> {
-    tree: Vec<BinaryTreeNode<T>>,
+    pub tree: Vec<BinaryTreeNode<T>>,
 }
 
 impl<T> Default for BinaryTree<T> {

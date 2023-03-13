@@ -36,7 +36,7 @@ fn main() {
     test_data.shrink_to_fit();
     let t2 = Instant::now();
     let duration = t2 - t1;
-    println!("split data: {}", duration.as_micros());
+    println!("split data: {}", duration.as_nanos());
 
     // Create `thread_num` threads. Call gbdt::predict in parallel
     let t1 = Instant::now();
@@ -55,6 +55,6 @@ fn main() {
 
     let t2 = Instant::now();
     let duration = t2 - t1;
-    println!("predict data: {}", duration.as_micros());
+    println!("predict data: {}", duration.as_nanos());
     assert_eq!(preds.len(), data_size);
 }

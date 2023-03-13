@@ -108,7 +108,7 @@ use rand::prelude::SliceRandom;
 #[cfg(feature = "enable_training")]
 use rand::thread_rng;
 
-use serde_derive::{Deserialize, Serialize};
+use serde::{Deserialize, Serialize};
 
 ///! For now we only support std::$t using this macro.
 /// We will generalize ValueType in future.
@@ -897,18 +897,18 @@ fn same(iv: &[usize], cache: &TrainingCache) -> bool {
 }
 
 /// The internal node of the decision tree. It's stored in the `value` of the gbdt::binary_tree::BinaryTreeNode
-#[derive(Debug, Serialize, Deserialize,Clone)]
+#[derive(Debug, Serialize, Deserialize,Clone,Copy)]
 struct DTNode {
     /// the feature used to split the node
-    feature_index: usize,
+    pub feature_index: usize,
     /// the feature value used to split the node
-    feature_value: ValueType,
+    pub feature_value: ValueType,
     /// the prediction of the leaf node
-    pred: ValueType,
+    pub pred: ValueType,
     /// how to handle missing value: -1 (left child), 0 (node prediction), 1 (right child)
-    missing: i8,
+    pub missing: i8,
     /// whether the node is a leaf node
-    is_leaf: bool,
+    pub is_leaf: bool,
 }
  
 
@@ -932,16 +932,16 @@ pub struct DecisionTree {
     /// the tree
     tree: BinaryTree<DTNode>,
     /// the size of feautures. Training data and test data should have same feature size.
-    feature_size: usize,
+    pub feature_size: usize,
     /// the max depth of the decision tree. The root node is considered to be in the layer 0.
-    max_depth: u32,
+    pub max_depth: u32,
     /// the minimum number of samples required to be at a leaf node during training.
-    min_leaf_size: usize,
+    pub min_leaf_size: usize,
     /// the loss function type.
-    loss: Loss,
+    pub loss: Loss,
     /// portion of features to be splited. When spliting a node, a subset of the features
     /// (feature_size * feature_sample_ratio) will be randomly selected to calculate impurity.
-    feature_sample_ratio: f64,
+    pub feature_sample_ratio: f64,
 }
 
 

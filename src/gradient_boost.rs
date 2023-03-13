@@ -83,7 +83,6 @@
 
 #[cfg(all(feature = "mesalock_sgx", not(target_env = "sgx")))]
 use std::prelude::v1::*;
-
 use crate::config::{Config, Loss};
 use crate::decision_tree::DecisionTree;
 #[cfg(feature = "enable_training")]
@@ -106,7 +105,7 @@ use std::untrusted::fs::File;
 use std::io::prelude::*;
 use std::io::BufReader;
 
-use serde_derive::{Deserialize, Serialize};
+use serde::{Deserialize, Serialize};
 
 
 
@@ -246,19 +245,21 @@ impl GBDT {
     /// // train the decision trees.
     /// gbdt.fit(&mut training_data);
     /// ```
+    pub fn get_decision_tree(&self) -> DecisionTree {
+        let mut tree = DecisionTree::new();
+        tree.set_feature_size(self.conf.feature_size);
+        tree.set_max_depth(self.conf.max_depth);
+        tree.set_min_leaf_size(self.conf.min_leaf_size);
+        tree.set_feature_sample_ratio(self.conf.feature_sample_ratio);
+        tree.set_loss(self.conf.loss.clone());
+        tree
+    }
     #[cfg(feature = "enable_training")]
     pub fn fit(&mut self, train_data: &mut DataVec) {
         self.trees = Vec::with_capacity(self.conf.iterations);
-        // initialize each decision tree
-        for i in 0..self.conf.iterations {
-            self.trees.push(DecisionTree::new());
-            self.trees[i].set_feature_size(self.conf.feature_size);
-            self.trees[i].set_max_depth(self.conf.max_depth);
-            self.trees[i].set_min_leaf_size(self.conf.min_leaf_size);
-            self.trees[i].set_feature_sample_ratio(self.conf.feature_sample_ratio);
-            self.trees[i].set_loss(self.conf.loss.clone());
-        }
-
+        // initialize a single decision tree and clone it parallely 
+        let tree = self.get_decision_tree();
+        self.trees = (0..self.conf.iterations).into_iter().map(move |_| tree.clone()).collect();
         // number of samples for training
         let nr_samples: usize = if self.conf.data_sample_ratio < 1.0 {
             ((train_data.len() as f64) * self.conf.data_sample_ratio) as usize
@@ -286,7 +287,7 @@ impl GBDT {
         let t2 = std::time::Instant::now();
 
         #[cfg(feature = "profiling")]
-        println!("cache {}", (t2-t1).as_millis());
+        println!("cache {}", (t2-t1).as_nanos());
 
         for i in 0..self.conf.iterations {
             #[cfg(feature = "profiling")]
@@ -339,7 +340,7 @@ impl GBDT {
             println!(
                 "iteration {} {} nodes: {}",
                 i,
-                (t2-t1).as_millis(),
+                (t2-t1).as_nanos(),
                 self.trees[i].len()
             );
         }
@@ -545,7 +546,7 @@ impl GBDT {
         (labels, probs)
     }
 
-    /// Print the tress for debug
+    /// Print the trees for debug
     ///
     /// # Example
     /// ```rust

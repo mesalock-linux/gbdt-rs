@@ -60,7 +60,7 @@
 use std::prelude::v1::*;
 
 use crate::decision_tree::ValueType;
-use serde_derive::{Deserialize, Serialize};
+use serde::{Deserialize, Serialize};
 
 /// This enum defines the loss type.
 ///
@@ -80,7 +80,7 @@ use serde_derive::{Deserialize, Serialize};
 /// 5. MultiSoftprob ("multi:softprob" in xgboost):  multiclass classification. Call [gbdt::predict_multiclass](../gradient_boost/struct.GBDT.html#method.predict_multiclass) to get the predictions.
 /// 6. MultiSoftmax ("multi:softmax" in xgboost): multiclass classification. Call [gbdt::predict_multiclass](../gradient_boost/struct.GBDT.html#method.predict_multiclass) to get the predictions.
 /// 7. RankPairwise ("rank:pairwise" in xgboost): pairwise rank. See [xgboost's demo](https://github.com/dmlc/xgboost/tree/master/demo/rank)
-#[derive(Debug, PartialEq, Clone, Serialize, Deserialize)]
+#[derive(Debug, PartialEq, Clone, Serialize, Deserialize,Copy)]
 pub enum Loss {
     /// SquaredError ("SquaredError") for regression. The label and the predicted value will be a float number.
     SquaredError,

@@ -47,7 +47,7 @@ cfg_if! {
 }
 
 use regex::Regex;
-use serde_derive::{Deserialize, Serialize};
+use serde::{Deserialize, Serialize};
 
 /// This enum type defines the data file format.
 ///
