@@ -897,7 +897,7 @@ fn same(iv: &[usize], cache: &TrainingCache) -> bool {
 }
 
 /// The internal node of the decision tree. It's stored in the `value` of the gbdt::binary_tree::BinaryTreeNode
-#[derive(Debug, Serialize, Deserialize)]
+#[derive(Debug, Serialize, Deserialize,Clone)]
 struct DTNode {
     /// the feature used to split the node
     feature_index: usize,
@@ -910,6 +910,8 @@ struct DTNode {
     /// whether the node is a leaf node
     is_leaf: bool,
 }
+ 
+
 
 impl DTNode {
     /// Return an empty DTNode
@@ -925,7 +927,7 @@ impl DTNode {
 }
 
 /// The decision tree.
-#[derive(Debug, Serialize, Deserialize)]
+#[derive(Debug, Serialize, Deserialize,Clone)]
 pub struct DecisionTree {
     /// the tree
     tree: BinaryTree<DTNode>,
@@ -941,6 +943,7 @@ pub struct DecisionTree {
     /// (feature_size * feature_sample_ratio) will be randomly selected to calculate impurity.
     feature_sample_ratio: f64,
 }
+
 
 impl Default for DecisionTree {
     fn default() -> Self {

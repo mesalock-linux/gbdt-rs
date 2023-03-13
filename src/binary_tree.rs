@@ -11,7 +11,7 @@ use std::prelude::v1::*;
 use serde_derive::{Deserialize, Serialize};
 
 /// Node of the binary tree.
-#[derive(Debug, Default, Serialize, Deserialize)]
+#[derive(Debug, Default, Serialize, Deserialize,Clone)]
 pub struct BinaryTreeNode<T> {
     /// Store information in a node.
     pub value: T,
@@ -53,7 +53,7 @@ impl<T> BinaryTreeNode<T> {
 pub type TreeIndex = usize;
 
 /// The binary tree.
-#[derive(Debug, Serialize, Deserialize)]
+#[derive(Debug, Serialize, Deserialize,Clone)]
 pub struct BinaryTree<T> {
     tree: Vec<BinaryTreeNode<T>>,
 }

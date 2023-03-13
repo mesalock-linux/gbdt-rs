@@ -112,7 +112,7 @@ use serde_derive::{Deserialize, Serialize};
 use time::PreciseTime;
 
 /// The gradient boosting decision tree.
-#[derive(Default, Serialize, Deserialize)]
+#[derive(Default, Serialize, Deserialize,Clone)]
 pub struct GBDT {
     /// The config of gbdt. See [gbdt::config](../config/) for detail.
     conf: Config,
