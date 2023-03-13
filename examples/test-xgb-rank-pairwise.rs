@@ -10,7 +10,7 @@ fn main() {
     // Call this command to convert xgboost model:
     // python examples/convert_xgboost.py xgb-data/xgb_rank_pairwise/xgb.model "rank:pairwise" xgb-data/xgb_rank_pairwise/gbdt.model
     // load model
-    let gbdt = GBDT::from_xgoost_dump("xgb-data/xgb_rank_pairwise/gbdt.model", "rank:pairwise")
+    let gbdt = GBDT::from_xgboost_dump("xgb-data/xgb_rank_pairwise/gbdt.model", "rank:pairwise")
         .expect("failed to load model");
 
     // load test data

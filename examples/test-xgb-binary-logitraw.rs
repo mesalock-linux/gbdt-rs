@@ -11,7 +11,7 @@ fn main() {
     // Call this command to convert xgboost model:
     // python examples/convert_xgboost.py xgb-data/xgb_binary_logitraw/xgb.model "binary:logitraw" xgb-data/xgb_binary_logitraw/gbdt.model
     // load model
-    let gbdt = GBDT::from_xgoost_dump("xgb-data/xgb_binary_logitraw/gbdt.model", "binary:logitraw")
+    let gbdt = GBDT::from_xgboost_dump("xgb-data/xgb_binary_logitraw/gbdt.model", "binary:logitraw")
         .expect("failed to load model");
 
     // load test data

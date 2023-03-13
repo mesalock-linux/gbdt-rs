@@ -108,8 +108,7 @@ use std::io::BufReader;
 
 use serde_derive::{Deserialize, Serialize};
 
-#[cfg(feature = "profiling")]
-use time::PreciseTime;
+
 
 /// The gradient boosting decision tree.
 #[derive(Default, Serialize, Deserialize,Clone)]
@@ -274,7 +273,7 @@ impl GBDT {
         let mut predicted_cache: PredVec = self.predict_n(train_data, 0, 0, train_data.len());
 
         #[cfg(feature = "profiling")]
-        let t1 = PreciseTime::now();
+        let t1 = std::time::Instant::now();
 
         // allocat the TrainingCache
         let mut cache = TrainingCache::get_cache(
@@ -284,14 +283,14 @@ impl GBDT {
         );
 
         #[cfg(feature = "profiling")]
-        let t2 = PreciseTime::now();
+        let t2 = std::time::Instant::now();
 
         #[cfg(feature = "profiling")]
-        println!("cache {}", t1.to(t2));
+        println!("cache {}", (t2-t1).as_millis());
 
         for i in 0..self.conf.iterations {
             #[cfg(feature = "profiling")]
-            let t1 = PreciseTime::now();
+            let t1 = std::time::Instant::now();
 
             let mut samples: Vec<usize> = (0..train_data.len()).collect();
             // randomly select some data for training
@@ -335,12 +334,12 @@ impl GBDT {
 
             //output elapsed time
             #[cfg(feature = "profiling")]
-            let t2 = PreciseTime::now();
+            let t2 = std::time::Instant::now();
             #[cfg(feature = "profiling")]
             println!(
                 "iteration {} {} nodes: {}",
                 i,
-                t1.to(t2),
+                (t2-t1).as_millis(),
                 self.trees[i].len()
             );
         }
@@ -491,7 +490,7 @@ impl GBDT {
     /// use gbdt::input::{load, InputFormat};
     /// use gbdt::decision_tree::DataVec;
     /// let gbdt =
-    ///     GBDT::from_xgoost_dump("xgb-data/xgb_multi_softmax/gbdt.model", "multi:softmax").unwrap();
+    ///     GBDT::from_xgboost_dump("xgb-data/xgb_multi_softmax/gbdt.model", "multi:softmax").unwrap();
     /// let test_file = "xgb-data/xgb_multi_softmax/dermatology.data.test";
     /// let mut fmt = InputFormat::csv_format();
     /// fmt.set_label_index(34);
@@ -741,15 +740,15 @@ impl GBDT {
     /// ```rust
     /// use gbdt::gradient_boost::GBDT;
     /// let gbdt =
-    ///     GBDT::from_xgoost_dump("xgb-data/xgb_binary_logistic/gbdt.model", "binary:logistic").unwrap();
+    ///     GBDT::from_xgboost_dump("xgb-data/xgb_binary_logistic/gbdt.model", "binary:logistic").unwrap();
     /// ```
     ///
     /// # Error
     /// Error when get exception during model file parsing.
-    pub fn from_xgoost_dump(model_file: &str, objective: &str) -> Result<Self> {
+    pub fn from_xgboost_dump(model_file: &str, objective: &str) -> Result<Self> {
         let tree_file = File::open(&model_file)?;
         let reader = BufReader::new(tree_file);
-        Self::from_xgoost_reader(reader, objective)
+        Self::from_xgboost_reader(reader, objective)
     }
 
     /// Load the model from xgboost's model using a reader. The xgboost's model should be converted by "convert_xgboost.py"
@@ -759,12 +758,12 @@ impl GBDT {
     /// ```rust
     /// use gbdt::gradient_boost::GBDT;
     /// let gbdt =
-    ///     GBDT::from_xgoost_reader(std::io::Cursor::new(include_str!("xgb-data/xgb_binary_logistic/gbdt.model")), "binary:logistic").unwrap();
+    ///     GBDT::from_xgboost_reader(std::io::Cursor::new(include_str!("../xgb-data/xgb_binary_logistic/gbdt.model")), "binary:logistic").unwrap();
     /// ```
     ///
     /// # Error
     /// Error when get exception during model parsing.
-    pub fn from_xgoost_reader<R>(reader: R, objective: &str) -> Result<Self>
+    pub fn from_xgboost_reader<R>(reader: R, objective: &str) -> Result<Self>
     where
         R: std::io::BufRead,
     {

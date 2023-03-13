@@ -2,12 +2,11 @@ extern crate gbdt;
 
 use gbdt::gradient_boost::GBDT;
 
-use time::PreciseTime;
+use std::time::Instant;
 
 use gbdt::input;
 use std::sync::Arc;
-use std::thread;
-
+use std::thread; 
 fn main() {
     let thread_num = 12;
     let feature_size = 36;
@@ -15,7 +14,7 @@ fn main() {
     let test_file = "xgb-data/xgb_reg_linear/machine.txt.test";
 
     // load model
-    let gbdt = GBDT::from_xgoost_dump(model_path, "reg:linear").expect("faild to load model");
+    let gbdt = GBDT::from_xgboost_dump(model_path, "reg:linear").expect("faild to load model");
 
     // load test data
     let mut fmt = input::InputFormat::txt_format();
@@ -24,7 +23,7 @@ fn main() {
     let mut test_data = input::load(test_file, fmt).unwrap();
 
     // split test data to `thread_num` vectors.
-    let t1 = PreciseTime::now();
+    let t1 = Instant::now();
     let mut handles = vec![];
     let mut test_data_vec = vec![];
     let data_size = test_data.len();
@@ -35,11 +34,12 @@ fn main() {
 
     test_data.clear();
     test_data.shrink_to_fit();
-    let t2 = PreciseTime::now();
-    println!("split data: {}", t1.to(t2));
+    let t2 = Instant::now();
+    let duration = t2 - t1;
+    println!("split data: {}", duration.as_micros());
 
     // Create `thread_num` threads. Call gbdt::predict in parallel
-    let t1 = PreciseTime::now();
+    let t1 = Instant::now();
     let gbdt_arc = Arc::new(gbdt);
     for data in test_data_vec.into_iter() {
         let gbdt_clone = Arc::clone(&gbdt_arc);
@@ -53,7 +53,8 @@ fn main() {
         preds.append(&mut handle.join().unwrap());
     }
 
-    let t2 = PreciseTime::now();
-    println!("predict data: {}", t1.to(t2));
+    let t2 = Instant::now();
+    let duration = t2 - t1;
+    println!("predict data: {}", duration.as_micros());
     assert_eq!(preds.len(), data_size);
 }
