@@ -187,7 +187,16 @@ impl GBDT {
             _ => label_average(dv, len),
         }
     }
-
+    /// Get the decision tree with the config specified in gbdt.
+    pub fn get_decision_tree(&self) -> DecisionTree {
+        let mut tree = DecisionTree::new();
+        tree.set_feature_size(self.conf.feature_size);
+        tree.set_max_depth(self.conf.max_depth);
+        tree.set_min_leaf_size(self.conf.min_leaf_size);
+        tree.set_feature_sample_ratio(self.conf.feature_sample_ratio);
+        tree.set_loss(self.conf.loss.clone());
+        tree
+    }
     /// Fit the train data.
     ///
     /// First, initialize and configure decision trees. Then train the model with certain
@@ -245,15 +254,6 @@ impl GBDT {
     /// // train the decision trees.
     /// gbdt.fit(&mut training_data);
     /// ```
-    pub fn get_decision_tree(&self) -> DecisionTree {
-        let mut tree = DecisionTree::new();
-        tree.set_feature_size(self.conf.feature_size);
-        tree.set_max_depth(self.conf.max_depth);
-        tree.set_min_leaf_size(self.conf.min_leaf_size);
-        tree.set_feature_sample_ratio(self.conf.feature_sample_ratio);
-        tree.set_loss(self.conf.loss.clone());
-        tree
-    }
     #[cfg(feature = "enable_training")]
     pub fn fit(&mut self, train_data: &mut DataVec) {
         self.trees = Vec::with_capacity(self.conf.iterations);

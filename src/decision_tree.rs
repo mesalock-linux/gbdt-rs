@@ -898,7 +898,7 @@ fn same(iv: &[usize], cache: &TrainingCache) -> bool {
 
 /// The internal node of the decision tree. It's stored in the `value` of the gbdt::binary_tree::BinaryTreeNode
 #[derive(Debug, Serialize, Deserialize,Clone,Copy)]
-struct DTNode {
+pub struct DTNode {
     /// the feature used to split the node
     pub feature_index: usize,
     /// the feature value used to split the node
@@ -930,7 +930,7 @@ impl DTNode {
 #[derive(Debug, Serialize, Deserialize,Clone)]
 pub struct DecisionTree {
     /// the tree
-    tree: BinaryTree<DTNode>,
+    pub tree: BinaryTree<DTNode>,
     /// the size of feautures. Training data and test data should have same feature size.
     pub feature_size: usize,
     /// the max depth of the decision tree. The root node is considered to be in the layer 0.
@@ -1412,7 +1412,7 @@ impl DecisionTree {
     /// Inference a `sample` from current `node`
     /// If the current node is a leaf node, return the node's prediction. Otherwise, choose a child
     /// node according to the feature and feature value of the node. Then call this function recursively.
-    fn predict_one(&self, node: &BinaryTreeNode<DTNode>, sample: &Data) -> ValueType {
+    pub fn predict_one(&self, node: &BinaryTreeNode<DTNode>, sample: &Data) -> ValueType {
         let mut is_node_value = false;
         let mut is_left_child = false;
         let mut _is_right_child = false;
