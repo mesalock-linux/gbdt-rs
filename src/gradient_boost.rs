@@ -256,6 +256,7 @@ impl GBDT {
     /// ```
     #[cfg(feature = "enable_training")]
     pub fn fit(&mut self, train_data: &mut DataVec) {
+
         self.trees = Vec::with_capacity(self.conf.iterations);
         // initialize a single decision tree and clone it parallely 
         let tree = self.get_decision_tree();
@@ -269,7 +270,7 @@ impl GBDT {
 
         self.init(train_data.len(), &train_data);
 
-        let mut rng = thread_rng();
+
         // initialize the predicted_cache, which records the predictions for training data
         let mut predicted_cache: PredVec = self.predict_n(train_data, 0, 0, train_data.len());
 
@@ -296,7 +297,7 @@ impl GBDT {
             let mut samples: Vec<usize> = (0..train_data.len()).collect();
             // randomly select some data for training
             let (subset, remaining) = if nr_samples < train_data.len() {
-                samples.shuffle(&mut rng);
+                samples.shuffle(&mut thread_rng());
                 let (left, right) = samples.split_at(nr_samples);
                 let mut left = left.to_vec();
                 let mut right = right.to_vec();
