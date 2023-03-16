@@ -113,7 +113,7 @@ use serde::{Deserialize, Serialize};
 #[derive(Default, Serialize, Deserialize,Clone)]
 pub struct GBDT {
     /// The config of gbdt. See [gbdt::config](../config/) for detail.
-    conf: Config,
+    pub conf: Config,
     /// The trained decision trees.
     trees: Vec<DecisionTree>,
     /// The bias estimated.
@@ -256,9 +256,6 @@ impl GBDT {
     /// ```
     #[cfg(feature = "enable_training")]
     pub fn fit(&mut self, train_data: &mut DataVec) {
-
-        self.trees = Vec::with_capacity(self.conf.iterations);
-        // initialize a single decision tree and clone it parallely 
         let tree = self.get_decision_tree();
         self.trees = (0..self.conf.iterations).into_iter().map(move |_| tree.clone()).collect();
         // number of samples for training
