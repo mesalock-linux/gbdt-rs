@@ -169,7 +169,7 @@ impl GBDT {
     fn init(&mut self, len: usize, dv: &DataVec) {
         assert!(dv.len() >= len);
 
-        if !self.check_valid_data(&dv) {
+        if !self.check_valid_data(dv) {
             panic!("There are invalid data in data vector, check your data please.");
         }
 
@@ -194,7 +194,7 @@ impl GBDT {
         tree.set_max_depth(self.conf.max_depth);
         tree.set_min_leaf_size(self.conf.min_leaf_size);
         tree.set_feature_sample_ratio(self.conf.feature_sample_ratio);
-        tree.set_loss(self.conf.loss.clone());
+        tree.set_loss(self.conf.loss);
         tree
     }
     /// Fit the train data.
@@ -257,7 +257,7 @@ impl GBDT {
     #[cfg(feature = "enable_training")]
     pub fn fit(&mut self, train_data: &mut DataVec) {
         let tree = self.get_decision_tree();
-        self.trees = (0..self.conf.iterations).into_iter().map(move |_| tree.clone()).collect();
+        self.trees = (0..self.conf.iterations).map(move |_| tree.clone()).collect();
         // number of samples for training
         let nr_samples: usize = if self.conf.data_sample_ratio < 1.0 {
             ((train_data.len() as f64) * self.conf.data_sample_ratio) as usize
@@ -265,7 +265,7 @@ impl GBDT {
             train_data.len()
         };
 
-        self.init(train_data.len(), &train_data);
+        self.init(train_data.len(), train_data);
 
 
         // initialize the predicted_cache, which records the predictions for training data
@@ -277,7 +277,7 @@ impl GBDT {
         // allocat the TrainingCache
         let mut cache = TrainingCache::get_cache(
             self.conf.feature_size,
-            &train_data,
+            train_data,
             self.conf.training_optimization_level,
         );
 
@@ -372,7 +372,7 @@ impl GBDT {
         // inference the data with individual decision tree.
         let subset: Vec<usize> = (0..n).collect();
         for i in begin..(iters + begin) {
-            let v: PredVec = self.trees[i].predict_n(&test_data, &subset);
+            let v: PredVec = self.trees[i].predict_n(test_data, &subset);
             for (e, v) in predicted.iter_mut().take(n).zip(v.iter()) {
                 *e += self.conf.shrinkage * v;
             }
@@ -615,7 +615,7 @@ impl GBDT {
             dv[i].target = dv[i].label - predicted[i];
         }
         if self.conf.debug {
-            println!("RMSE = {}", RMSE(&dv, &predicted, samples));
+            println!("RMSE = {}", RMSE(dv, predicted, samples));
         }
     }
 
@@ -631,7 +631,7 @@ impl GBDT {
                 .iter()
                 .map(|x| 1.0 / (1.0 + ((-2.0 * x).exp())))
                 .collect();
-            println!("AUC = {}", AUC(&dv, &normalized_preds, dv.len()));
+            println!("AUC = {}", AUC(dv, &normalized_preds, dv.len()));
         }
     }
 
@@ -644,7 +644,7 @@ impl GBDT {
             dv[i].target = if dv[i].residual >= 0.0 { 1.0 } else { -1.0 };
         }
         if self.conf.debug {
-            println!("MAE {}", MAE(&dv, &predicted, samples));
+            println!("MAE {}", MAE(dv, predicted, samples));
         }
     }
 
@@ -745,7 +745,7 @@ impl GBDT {
     /// # Error
     /// Error when get exception during model file parsing.
     pub fn from_xgboost_dump(model_file: &str, objective: &str) -> Result<Self> {
-        let tree_file = File::open(&model_file)?;
+        let tree_file = File::open(model_file)?;
         let reader = BufReader::new(tree_file);
         Self::from_xgboost_reader(reader, objective)
     }
@@ -783,7 +783,7 @@ impl GBDT {
         let single_line = all_lines.join("");
         let json_obj: serde_json::Value = serde_json::from_str(&single_line)?;
 
-        let nodes = json_obj.as_array().ok_or_else(|| "parse trees error")?;
+        let nodes = json_obj.as_array().ok_or("parse trees error")?;
 
         let mut cfg = Config::new();
         cfg.set_loss(objective);

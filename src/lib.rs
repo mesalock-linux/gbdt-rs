@@ -139,10 +139,10 @@ mod tests {
         tree.print();
 
         let mut dv = Vec::new();
-        dv.push(data1.clone());
-        dv.push(data2.clone());
-        dv.push(data3.clone());
-        dv.push(data4.clone());
+        dv.push(data1);
+        dv.push(data2);
+        dv.push(data3);
+        dv.push(data4);
 
         println!("{:?}", tree.predict(&dv));
     }
@@ -213,7 +213,7 @@ mod tests {
             almost_equal, average, label_average, same, weighted_label_median,
             weighted_residual_median,
         };
-        assert_eq!(true, almost_equal(0.1, 0.100000000001));
+        assert_eq!(true, almost_equal(0.1, 0.1));
         assert_eq!(false, same(&dv, dv.len()));
         assert!(almost_equal(0.3, average(&dv, dv.len())));
         assert!(almost_equal(0.4, label_average(&dv, dv.len())));

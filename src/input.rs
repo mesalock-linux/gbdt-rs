@@ -24,6 +24,7 @@
 //! let test_data = input::load(test_file, fmt);
 //! ```
 
+use core::fmt::{Display, Formatter};
 #[cfg(all(feature = "mesalock_sgx", not(target_env = "sgx")))]
 use std::prelude::v1::*;
 
@@ -48,7 +49,7 @@ cfg_if! {
 
 use regex::Regex;
 use serde::{Deserialize, Serialize};
-
+use std::fmt;
 /// This enum type defines the data file format.
 ///
 /// We support two data format:
@@ -88,6 +89,30 @@ pub struct InputFormat {
     pub feature_size: usize,
 }
 
+impl Display for InputFormat {
+    fn fmt(&self, f: &mut Formatter) -> fmt::Result {
+        write!(
+            f,
+            "File type: {}\n\
+             Has header: {}\n\
+             Label index: {}\n\
+             Enable unknown value: {}\n\
+             Delimeter: {}\n\
+             Feature size: {}",
+            match self.ftype {
+                FileFormat::CSV => "CSV",
+                FileFormat::TXT => "TXT",
+            },
+            self.header,
+            self.label_idx,
+            self.enable_unknown_value,
+            self.delimeter,
+            self.feature_size
+        )
+    }
+}
+
+
 impl InputFormat {
     /// Return a default CSV input format.
     /// # Example
@@ -124,35 +149,6 @@ impl InputFormat {
             feature_size: 0,
         }
     }
-    /// Transform the input format to human readable string.
-    /// # Example
-    /// ```rust
-    /// use gbdt::input::InputFormat;
-    /// let mut fmt = InputFormat::csv_format();
-    /// println!("{}", fmt.to_string());
-    /// ```
-    pub fn to_string(&self) -> String {
-        let mut s = String::from("");
-        s.push_str(&format!(
-            "File type: {}\n",
-            match self.ftype {
-                FileFormat::CSV => "CSV",
-                FileFormat::TXT => "TXT",
-            }
-        ));
-        match self.ftype {
-            FileFormat::CSV => {
-                s.push_str(&format!("Has header: {}\n", self.header));
-                s.push_str(&format!("Label index: {}\n", self.label_idx));
-            }
-            FileFormat::TXT => {
-                s.push_str(&format!("Feature size: {}\n", self.feature_size));
-            }
-        }
-        s.push_str(&format!("Delemeter: [{}]", self.delimeter));
-        s
-    }
-
     /// Set feature size for the LibSVM input format.
     /// # Example
     /// ```rust
@@ -208,7 +204,7 @@ fn count(mut hash_map: HashMap<char, u32>, word: char) -> HashMap<char, u32> {
 /// println!("{}", fmt.to_string());
 /// ```
 pub fn infer(file_name: &str) -> InputFormat {
-    let file = File::open(file_name.to_string()).unwrap();
+    let file = File::open(file_name).unwrap();
     let mut reader = BufReader::new(file);
 
     // check CSV or TXT
@@ -256,7 +252,7 @@ pub fn infer(file_name: &str) -> InputFormat {
         flag = true;
     }
     // we shouldn't reach here
-    assert_eq!(flag, true);
+    assert!(flag);
 
     // if CSV, check header
     // use the first value as label or target value by default
@@ -351,13 +347,13 @@ pub fn load_txt(file: &mut File, input_format: InputFormat) -> Result<DataVec> {
             let splited_token: Vec<&str> = token.split(':').collect();
             if splited_token.len() == 2 {
                 let mut err = false;
-                match splited_token[0 as usize].parse::<usize>() {
+                match splited_token[0_usize].parse::<usize>() {
                     Ok(kk) => {
                         idx = kk;
                     }
                     Err(_) => err = true,
                 }
-                match splited_token[1 as usize].parse::<ValueType>() {
+                match splited_token[1_usize].parse::<ValueType>() {
                     Ok(vv) => {
                         val = vv;
                     }
@@ -371,7 +367,7 @@ pub fn load_txt(file: &mut File, input_format: InputFormat) -> Result<DataVec> {
                 }
             }
             if splited_token.len() == 1 {
-                label = splited_token[0 as usize].parse::<ValueType>().unwrap();
+                label = splited_token[0_usize].parse::<ValueType>().unwrap();
             } else {
                 // report error
             }
@@ -415,7 +411,7 @@ pub fn load_txt(file: &mut File, input_format: InputFormat) -> Result<DataVec> {
 /// # Error
 /// Raise error if file cannot be open correctly.
 pub fn load(file_name: &str, input_format: InputFormat) -> Result<DataVec> {
-    let mut file = File::open(file_name.to_string())?;
+    let mut file = File::open(file_name)?;
     match input_format.ftype {
         FileFormat::CSV => load_csv(&mut file, input_format),
         FileFormat::TXT => load_txt(&mut file, input_format),
@@ -539,7 +535,7 @@ mod tests {
     fn doc_test_load_csv() {
         use std::fs::File;
         let train_file = "dataset/iris/train.txt";
-        let mut file = File::open(train_file.to_string()).unwrap();
+        let mut file = File::open(train_file).unwrap();
         let mut fmt = InputFormat::csv_format();
         fmt.set_label_index(4);
         let train_dv = input::load_csv(&mut file, fmt);
@@ -550,7 +546,7 @@ mod tests {
     fn doc_test_load_txt() {
         use std::fs::File;
         let test_file = "xgb-data/xgb_binary_logistic/agaricus.txt.test";
-        let mut file = File::open(test_file.to_string()).unwrap();
+        let mut file = File::open(test_file).unwrap();
         let mut fmt = InputFormat::csv_format();
         fmt.set_feature_size(126);
         fmt.set_delimeter(' ');

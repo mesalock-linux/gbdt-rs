@@ -56,9 +56,10 @@
 //! // initial guess enabled = false
 //! ```
 
+use core::fmt::{Display, Formatter};
 #[cfg(all(feature = "mesalock_sgx", not(target_env = "sgx")))]
 use std::prelude::v1::*;
-
+use std::fmt;
 use crate::decision_tree::ValueType;
 use serde::{Deserialize, Serialize};
 
@@ -350,7 +351,7 @@ impl Config {
     /// cfg.set_loss(&loss2string(&Loss::SquaredError));
     /// ```
     pub fn set_loss(&mut self, l: &str) {
-        self.loss = string2loss(&l);
+        self.loss = string2loss(l);
     }
 
     /// Set debug mode.
@@ -376,34 +377,33 @@ impl Config {
     pub fn enabled_initial_guess(&mut self, option: bool) {
         self.initial_guess_enabled = option;
     }
+}
 
-    /// Dump the config to string for presentation.
-    ///
-    /// # Example
-    /// ```rust
-    /// use gbdt::config::Config;
-    /// let mut cfg = Config::new();
-    /// println!("{}", cfg.to_string());
-    /// ```
-    pub fn to_string(&self) -> String {
-        let mut s = String::from("");
-        s.push_str(&format!("number of features = {}\n", self.feature_size));
-        s.push_str(&format!("min leaf size = {}\n", self.min_leaf_size));
-        s.push_str(&format!("maximum depth = {}\n", self.max_depth));
-        s.push_str(&format!("iterations = {}\n", self.iterations));
-        s.push_str(&format!("shrinkage = {}\n", self.shrinkage));
-        s.push_str(&format!(
-            "feature sample ratio = {}\n",
-            self.feature_sample_ratio
-        ));
-        s.push_str(&format!("data sample ratio = {}\n", self.data_sample_ratio));
-        s.push_str(&format!("debug enabled = {}\n", self.debug));
-        s.push_str(&format!("loss type = {}\n", loss2string(&self.loss)));
-        s.push_str(&format!(
-            "initial guess enabled = {}\n",
+impl Display for Config {
+    fn fmt(&self, f: &mut Formatter) -> fmt::Result {
+        write!(
+            f,
+            "number of features = {}\n\
+             min leaf size = {}\n\
+             maximum depth = {}\n\
+             iterations = {}\n\
+             shrinkage = {}\n\
+             feature sample ratio = {}\n\
+             data sample ratio = {}\n\
+             debug enabled = {}\n\
+             loss type = {}\n\
+             initial guess enabled = {}\n",
+            self.feature_size,
+            self.min_leaf_size,
+            self.max_depth,
+            self.iterations,
+            self.shrinkage,
+            self.feature_sample_ratio,
+            self.data_sample_ratio,
+            self.debug,
+            loss2string(&self.loss),
             self.initial_guess_enabled
-        ));
-        s
+        )
     }
 }
 
@@ -411,7 +411,7 @@ impl Config {
 mod tests {
     use crate::config::{loss2string, string2loss, Config, Loss};
 
-    const STRINGLOSS: [(&'static str, Loss); 11] = [
+    const STRINGLOSS: [(&str, Loss); 11] = [
         ("LogLikelyhood", Loss::LogLikelyhood),
         ("SquaredError", Loss::SquaredError),
         ("LAD", Loss::LAD),
