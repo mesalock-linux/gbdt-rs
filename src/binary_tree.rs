@@ -11,8 +11,8 @@ use std::prelude::v1::*;
 use serde::{Deserialize, Serialize};
 
 /// Node of the binary tree.
-#[derive(Debug, Default, Serialize, Deserialize,Clone)]
-pub struct BinaryTreeNode<T>{
+#[derive(Debug, Default, Serialize, Deserialize, Clone)]
+pub struct BinaryTreeNode<T> {
     /// Store information in a node.
     pub value: T,
 
@@ -26,7 +26,7 @@ pub struct BinaryTreeNode<T>{
     right: usize, // bigger than 0
 }
 
-impl<T:Copy> BinaryTreeNode<T> {
+impl<T: Copy> BinaryTreeNode<T> {
     /// Generate a node with given value
     ///
     /// # Example
@@ -53,7 +53,7 @@ impl<T:Copy> BinaryTreeNode<T> {
 pub type TreeIndex = usize;
 
 /// The binary tree.
-#[derive(Debug, Serialize, Deserialize,Clone)]
+#[derive(Debug, Serialize, Deserialize, Clone)]
 pub struct BinaryTree<T> {
     pub tree: Vec<BinaryTreeNode<T>>,
 }
@@ -295,8 +295,7 @@ impl<T> BinaryTree<T> {
         let root = self.get_node(self.get_root_index());
         stack.push((0, root));
         while !stack.is_empty() {
-            let next = stack.pop();
-            if let Some((deep, node_opt)) = next {
+            if let Some((deep, node_opt)) = stack.pop() {
                 if let Some(node) = node_opt {
                     for _i in 0..deep {
                         print!("    ");
@@ -456,25 +455,25 @@ mod tests {
     fn doc_test_print() {
         let mut tree: BinaryTree<f32> = BinaryTree::new();
         let root = BinaryTreeNode::new(10.0);
-        
+
         let root_index = tree.add_root(root);
-        
+
         let n1 = BinaryTreeNode::new(5.0);
         let n2 = BinaryTreeNode::new(6.0);
-        
+
         let n1_index = tree.add_left_node(root_index, n1);
         let n2_index = tree.add_right_node(root_index, n2);
-        
+
         let n3 = BinaryTreeNode::new(7.0);
         let n4 = BinaryTreeNode::new(8.0);
-        
+
         tree.add_left_node(n2_index, n3);
         tree.add_right_node(n2_index, n4);
-        
+
         let n5 = BinaryTreeNode::new(9.0);
-        
+
         tree.add_left_node(n1_index, n5);
-        
+
         tree.print();
     }
 
@@ -482,15 +481,15 @@ mod tests {
     fn doc_test_tree_len() {
         let mut tree: BinaryTree<f32> = BinaryTree::new();
         let root = BinaryTreeNode::new(10.0);
-        
+
         let root_index = tree.add_root(root);
-        
+
         let n1 = BinaryTreeNode::new(5.0);
         let n2 = BinaryTreeNode::new(6.0);
-        
+
         let _n1_index = tree.add_left_node(root_index, n1);
         let _n2_index = tree.add_right_node(root_index, n2);
-        
+
         assert_eq!(3, tree.len());
     }
 }

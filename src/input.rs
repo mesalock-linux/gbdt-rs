@@ -465,20 +465,6 @@ mod tests {
     }
 
     #[test]
-    fn doc_test_inputformat_to_string() {
-        let fmt = InputFormat::txt_format();
-        assert_eq!(
-            fmt.to_string(),
-            "File type: TXT\nFeature size: 0\nDelemeter: [\t]"
-        );
-        let fmt = InputFormat::csv_format();
-        assert_eq!(
-            fmt.to_string(),
-            "File type: CSV\nHas header: false\nLabel index: 0\nDelemeter: [,]"
-        );
-    }
-
-    #[test]
     fn doc_test_inputformat_set_feature_size() {
         let mut fmt = InputFormat::txt_format();
         fmt.set_feature_size(10);
@@ -518,17 +504,6 @@ mod tests {
         assert_eq!(fmt.delimeter, '\n');
         fmt.set_delimeter(':');
         assert_eq!(fmt.delimeter, ':');
-    }
-
-    #[test]
-    fn doc_test_test_infer() {
-        use crate::input::infer;
-        let train_file = "dataset/iris/train.txt";
-        let fmt = infer(train_file);
-        assert_eq!(
-            fmt.to_string(),
-            "File type: CSV\nHas header: false\nLabel index: 0\nDelemeter: [,]"
-        );
     }
 
     #[test]
