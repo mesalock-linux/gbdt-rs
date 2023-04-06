@@ -95,6 +95,7 @@ use crate::fitness::{label_average, logit_loss_gradient, weighted_label_median, 
 use rand::prelude::SliceRandom;
 #[cfg(feature = "enable_training")]
 use rand::thread_rng;
+use rayon::prelude::{IntoParallelRefIterator, ParallelIterator, IndexedParallelIterator, IntoParallelRefMutIterator};
 
 #[cfg(not(feature = "mesalock_sgx"))]
 use std::fs::File;
@@ -258,41 +259,21 @@ impl GBDT {
     pub fn fit(&mut self, train_data: &mut DataVec) {
         let tree = self.get_decision_tree();
         self.trees = (0..self.conf.iterations).map(move |_| tree.clone()).collect();
-        // number of samples for training
         let nr_samples: usize = if self.conf.data_sample_ratio < 1.0 {
             ((train_data.len() as f64) * self.conf.data_sample_ratio) as usize
         } else {
             train_data.len()
         };
-
         self.init(train_data.len(), train_data);
-
-
-        // initialize the predicted_cache, which records the predictions for training data
         let mut predicted_cache: PredVec = self.predict_n(train_data, 0, 0, train_data.len());
 
-        #[cfg(feature = "profiling")]
-        let t1 = std::time::Instant::now();
-
-        // allocat the TrainingCache
         let mut cache = TrainingCache::get_cache(
             self.conf.feature_size,
             train_data,
             self.conf.training_optimization_level,
         );
-
-        #[cfg(feature = "profiling")]
-        let t2 = std::time::Instant::now();
-
-        #[cfg(feature = "profiling")]
-        println!("cache {}", (t2-t1).as_nanos());
-
         for i in 0..self.conf.iterations {
-            #[cfg(feature = "profiling")]
-            let t1 = std::time::Instant::now();
-
             let mut samples: Vec<usize> = (0..train_data.len()).collect();
-            // randomly select some data for training
             let (subset, remaining) = if nr_samples < train_data.len() {
                 samples.shuffle(&mut thread_rng());
                 let (left, right) = samples.split_at(nr_samples);
@@ -304,8 +285,6 @@ impl GBDT {
             } else {
                 (samples, Vec::new())
             };
-
-            // Update the target for training
             match self.conf.loss {
                 Loss::SquaredError => {
                     self.square_loss_process(train_data, train_data.len(), &predicted_cache)
@@ -314,36 +293,27 @@ impl GBDT {
                     self.log_loss_process(train_data, train_data.len(), &predicted_cache)
                 }
                 Loss::LAD => self.lad_loss_process(train_data, train_data.len(), &predicted_cache),
-
                 _ => self.square_loss_process(train_data, train_data.len(), &predicted_cache),
             }
-            // train a new decision tree
             self.trees[i].fit_n(train_data, &subset, &mut cache);
-
-            // update the predicted_cache for the data in the `subset`
-            let train_preds = cache.get_preds();
-            for index in subset.iter() {
-                predicted_cache[*index] += train_preds[*index] * self.conf.shrinkage;
-            }
-            // update the predicted_cache for the data in the `remaining`
+            // Get the predictions for the subset
+            let subset_preds = cache.get_preds();
+            // Parallel update for the predicted_cache in the `subset`
+            predicted_cache.par_iter_mut().enumerate().for_each(|(index, pred)| {
+                if subset.contains(&index) {
+                    *pred += subset_preds[index] * self.conf.shrinkage;
+                }
+            });
+            // Get the predictions for the remaining
             let predicted_tmp = self.trees[i].predict_n(train_data, &remaining);
-            for index in remaining.iter() {
-                predicted_cache[*index] += predicted_tmp[*index] * self.conf.shrinkage;
-            }
-
-            //output elapsed time
-            #[cfg(feature = "profiling")]
-            let t2 = std::time::Instant::now();
-            #[cfg(feature = "profiling")]
-            println!(
-                "iteration {} {} nodes: {}",
-                i,
-                (t2-t1).as_nanos(),
-                self.trees[i].len()
-            );
+            // Parallel update for the predicted_cache in the `remaining`
+            predicted_cache.par_iter_mut().enumerate().for_each(|(index, pred)| {
+                if remaining.contains(&index) {
+                    *pred += predicted_tmp[index] * self.conf.shrinkage;
+                }
+            });
         }
     }
-
     /// Predict the first `n` data in data vector with the [`begin`, `begin`+iters) trees.
     ///
     /// The output will be a vector, having same size as the `test_data`. The first n elements are the predicted values, the others are `VALUE_TYPE_UNKNOWN`
@@ -357,25 +327,27 @@ impl GBDT {
     fn predict_n(&self, test_data: &DataVec, begin: usize, iters: usize, n: usize) -> PredVec {
         assert!((begin + iters) <= self.trees.len());
         assert!(n <= test_data.len());
-
         if self.trees.is_empty() {
             return vec![VALUE_TYPE_UNKNOWN; test_data.len()];
         }
-
-        // initialize the vector with bias/initial_guess
+        // Initialize the vector with bias/initial_guess
         let mut predicted: PredVec = if !self.conf.initial_guess_enabled {
             vec![self.bias; n]
         } else {
-            test_data.iter().take(n).map(|x| x.initial_guess).collect()
+            test_data.par_iter().take(n).map(|x| x.initial_guess).collect()
         };
-
-        // inference the data with individual decision tree.
+        // Inference the data with individual decision trees
         let subset: Vec<usize> = (0..n).collect();
         for i in begin..(iters + begin) {
             let v: PredVec = self.trees[i].predict_n(test_data, &subset);
-            for (e, v) in predicted.iter_mut().take(n).zip(v.iter()) {
-                *e += self.conf.shrinkage * v;
-            }
+            // Parallelize the loop for updating the predicted vector
+            predicted
+                .par_iter_mut()
+                .take(n)
+                .zip(v.par_iter())
+                .for_each(|(e, v)| {
+                    *e += self.conf.shrinkage * v;
+                });
         }
         predicted
     }
@@ -459,16 +431,11 @@ impl GBDT {
             Loss::LogLikelyhood => predicted
                 .iter()
                 .map(|x| {
-                    //if (1.0 / (1.0 + ((-2.0 * x).exp()))) >= 0.5 {
-                    //    1.0
-                    //} else {
-                    //    -1.0
-                    //}
                     1.0 / (1.0 + ((-2.0 * x).exp()))
                 })
                 .collect(),
             Loss::BinaryLogistic | Loss::RegLogistic => {
-                predicted.iter().map(|x| 1.0 / (1.0 + (-x).exp())).collect()
+                predicted.par_iter().map(|x| 1.0 / (1.0 + (-x).exp())).collect()
             }
             _ => predicted,
         }
@@ -606,43 +573,43 @@ impl GBDT {
             self.trees[i].print();
         }
     }
-
     /// This is the process to calculate the residual as the target in next iteration
     /// for squared error loss.
     #[cfg(feature = "enable_training")]
     fn square_loss_process(&self, dv: &mut DataVec, samples: usize, predicted: &PredVec) {
-        for i in 0..samples {
-            dv[i].target = dv[i].label - predicted[i];
-        }
+        dv.par_iter_mut().take(samples).enumerate().for_each(|(i, d)| {
+            d.target = d.label - predicted[i];
+        });
         if self.conf.debug {
             println!("RMSE = {}", RMSE(dv, predicted, samples));
         }
     }
-
     /// This is the process to calculate the residual as the target in next iteration
     /// for negative binomial log-likehood loss.
     #[cfg(feature = "enable_training")]
     fn log_loss_process(&self, dv: &mut DataVec, samples: usize, predicted: &PredVec) {
-        for i in 0..samples {
-            dv[i].target = logit_loss_gradient(dv[i].label, predicted[i]);
-        }
+        // Parallelize the loop
+        dv.par_iter_mut().take(samples).enumerate().for_each(|(i, d)| {
+            d.target = logit_loss_gradient(d.label, predicted[i]);
+        });
         if self.conf.debug {
-            let normalized_preds = predicted
-                .iter()
+            // Parallelize the mapping operation for creating normalized_preds
+            let normalized_preds: Vec<f32> = predicted
+                .par_iter()
                 .map(|x| 1.0 / (1.0 + ((-2.0 * x).exp())))
                 .collect();
             println!("AUC = {}", AUC(dv, &normalized_preds, dv.len()));
         }
     }
-
     /// This is the process to calculate the residual as the target in next iteration
     /// for LAD loss.
     #[cfg(feature = "enable_training")]
     fn lad_loss_process(&self, dv: &mut DataVec, samples: usize, predicted: &PredVec) {
-        for i in 0..samples {
-            dv[i].residual = dv[i].label - predicted[i];
-            dv[i].target = if dv[i].residual >= 0.0 { 1.0 } else { -1.0 };
-        }
+        // Parallelize the loop
+        dv.par_iter_mut().take(samples).enumerate().for_each(|(i, d)| {
+            d.residual = d.label - predicted[i];
+            d.target = if d.residual >= 0.0 { 1.0 } else { -1.0 };
+        });
         if self.conf.debug {
             println!("MAE {}", MAE(dv, predicted, samples));
         }
