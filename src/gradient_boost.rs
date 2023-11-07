@@ -109,7 +109,7 @@ use std::io::BufReader;
 use serde_derive::{Deserialize, Serialize};
 
 #[cfg(feature = "profiling")]
-use time::PreciseTime;
+use std::time::Instant;
 
 /// The gradient boosting decision tree.
 #[derive(Default, Serialize, Deserialize)]
@@ -171,7 +171,7 @@ impl GBDT {
     fn init(&mut self, len: usize, dv: &DataVec) {
         assert!(dv.len() >= len);
 
-        if !self.check_valid_data(&dv) {
+        if !self.check_valid_data(dv) {
             panic!("There are invalid data in data vector, check your data please.");
         }
 
@@ -267,31 +267,31 @@ impl GBDT {
             train_data.len()
         };
 
-        self.init(train_data.len(), &train_data);
+        self.init(train_data.len(), train_data);
 
         let mut rng = thread_rng();
         // initialize the predicted_cache, which records the predictions for training data
         let mut predicted_cache: PredVec = self.predict_n(train_data, 0, 0, train_data.len());
 
         #[cfg(feature = "profiling")]
-        let t1 = PreciseTime::now();
+        let t1 = Instant::now();
 
         // allocat the TrainingCache
         let mut cache = TrainingCache::get_cache(
             self.conf.feature_size,
-            &train_data,
+            train_data,
             self.conf.training_optimization_level,
         );
 
         #[cfg(feature = "profiling")]
-        let t2 = PreciseTime::now();
+        let t2 = Instant::now();
 
         #[cfg(feature = "profiling")]
-        println!("cache {}", t1.to(t2));
+        println!("cache {:?}", t2 - t1);
 
         for i in 0..self.conf.iterations {
             #[cfg(feature = "profiling")]
-            let t1 = PreciseTime::now();
+            let t1 = Instant::now();
 
             let mut samples: Vec<usize> = (0..train_data.len()).collect();
             // randomly select some data for training
@@ -335,12 +335,12 @@ impl GBDT {
 
             //output elapsed time
             #[cfg(feature = "profiling")]
-            let t2 = PreciseTime::now();
+            let t2 = Instant::now();
             #[cfg(feature = "profiling")]
             println!(
-                "iteration {} {} nodes: {}",
+                "iteration {} {:?} nodes: {}",
                 i,
-                t1.to(t2),
+                t2 - t1,
                 self.trees[i].len()
             );
         }
@@ -374,7 +374,7 @@ impl GBDT {
         // inference the data with individual decision tree.
         let subset: Vec<usize> = (0..n).collect();
         for i in begin..(iters + begin) {
-            let v: PredVec = self.trees[i].predict_n(&test_data, &subset);
+            let v: PredVec = self.trees[i].predict_n(test_data, &subset);
             for (e, v) in predicted.iter_mut().take(n).zip(v.iter()) {
                 *e += self.conf.shrinkage * v;
             }
@@ -617,7 +617,7 @@ impl GBDT {
             dv[i].target = dv[i].label - predicted[i];
         }
         if self.conf.debug {
-            println!("RMSE = {}", RMSE(&dv, &predicted, samples));
+            println!("RMSE = {}", RMSE(dv, predicted, samples));
         }
     }
 
@@ -633,7 +633,7 @@ impl GBDT {
                 .iter()
                 .map(|x| 1.0 / (1.0 + ((-2.0 * x).exp())))
                 .collect();
-            println!("AUC = {}", AUC(&dv, &normalized_preds, dv.len()));
+            println!("AUC = {}", AUC(dv, &normalized_preds, dv.len()));
         }
     }
 
@@ -646,7 +646,7 @@ impl GBDT {
             dv[i].target = if dv[i].residual >= 0.0 { 1.0 } else { -1.0 };
         }
         if self.conf.debug {
-            println!("MAE {}", MAE(&dv, &predicted, samples));
+            println!("MAE {}", MAE(dv, predicted, samples));
         }
     }
 
@@ -747,7 +747,7 @@ impl GBDT {
     /// # Error
     /// Error when get exception during model file parsing.
     pub fn from_xgoost_dump(model_file: &str, objective: &str) -> Result<Self> {
-        let tree_file = File::open(&model_file)?;
+        let tree_file = File::open(model_file)?;
         let reader = BufReader::new(tree_file);
         Self::from_xgoost_reader(reader, objective)
     }
@@ -759,7 +759,7 @@ impl GBDT {
     /// ```rust
     /// use gbdt::gradient_boost::GBDT;
     /// let gbdt =
-    ///     GBDT::from_xgoost_reader(std::io::Cursor::new(include_str!("xgb-data/xgb_binary_logistic/gbdt.model")), "binary:logistic").unwrap();
+    ///     GBDT::from_xgoost_reader(std::io::Cursor::new(include_str!("../xgb-data/xgb_binary_logistic/gbdt.model")), "binary:logistic").unwrap();
     /// ```
     ///
     /// # Error
@@ -785,7 +785,7 @@ impl GBDT {
         let single_line = all_lines.join("");
         let json_obj: serde_json::Value = serde_json::from_str(&single_line)?;
 
-        let nodes = json_obj.as_array().ok_or_else(|| "parse trees error")?;
+        let nodes = json_obj.as_array().ok_or("parse trees error")?;
 
         let mut cfg = Config::new();
         cfg.set_loss(objective);

@@ -110,7 +110,7 @@ use rand::thread_rng;
 
 use serde_derive::{Deserialize, Serialize};
 
-///! For now we only support std::$t using this macro.
+/// For now we only support std::$t using this macro.
 /// We will generalize ValueType in future.
 macro_rules! def_value_type {
     ($t: tt) => {
@@ -1507,7 +1507,7 @@ impl DecisionTree {
                 &mut impurity,
                 cache,
                 &mut impurity_cache,
-                &sub_cache,
+                sub_cache,
             );
             if best_fitness > impurity {
                 find = true;
@@ -1763,7 +1763,7 @@ impl DecisionTree {
                 .expect("node should not be empty!");
             // This is the leaf node
             if let serde_json::Value::Number(pred) = &node["leaf"] {
-                let leaf_value = pred.as_f64().ok_or_else(|| "parse 'leaf' error")?;
+                let leaf_value = pred.as_f64().ok_or("parse 'leaf' error")?;
                 node_ref.value.pred = leaf_value as ValueType;
                 node_ref.value.is_leaf = true;
                 return Ok(());
@@ -1771,7 +1771,7 @@ impl DecisionTree {
                 // feature value
                 let feature_value = node["split_condition"]
                     .as_f64()
-                    .ok_or_else(|| "parse 'split condition' error")?;
+                    .ok_or("parse 'split condition' error")?;
                 node_ref.value.feature_value = feature_value as ValueType;
 
                 // feature index
@@ -1780,7 +1780,7 @@ impl DecisionTree {
                     None => {
                         let feature_name = node["split"]
                             .as_str()
-                            .ok_or_else(|| "parse 'split' error")?;
+                            .ok_or("parse 'split' error")?;
                         let feature_str: String = feature_name.chars().skip(3).collect();
                         feature_str.parse::<i64>()?
                     }
@@ -1790,9 +1790,9 @@ impl DecisionTree {
                 // handle unknown feature
                 let missing = node["missing"]
                     .as_i64()
-                    .ok_or_else(|| "parse 'missing' error")?;
-                let left_child = node["yes"].as_i64().ok_or_else(|| "parse 'yes' error")?;
-                let right_child = node["no"].as_i64().ok_or_else(|| "parse 'no' error")?;
+                    .ok_or("parse 'missing' error")?;
+                let left_child = node["yes"].as_i64().ok_or("parse 'yes' error")?;
+                let right_child = node["no"].as_i64().ok_or("parse 'no' error")?;
                 if missing == left_child {
                     node_ref.value.missing = -1;
                 } else if missing == right_child {
@@ -1804,17 +1804,17 @@ impl DecisionTree {
         }
 
         // ids for children
-        let left_child = node["yes"].as_i64().ok_or_else(|| "parse 'yes' error")?;
-        let right_child = node["no"].as_i64().ok_or_else(|| "parse 'no' error")?;
+        let left_child = node["yes"].as_i64().ok_or("parse 'yes' error")?;
+        let right_child = node["no"].as_i64().ok_or("parse 'no' error")?;
         let children = node["children"]
             .as_array()
-            .ok_or_else(|| "parse 'children' error")?;
+            .ok_or("parse 'children' error")?;
         let mut find_left = false;
         let mut find_right = false;
         for child in children.iter() {
             let node_id = child["nodeid"]
                 .as_i64()
-                .ok_or_else(|| "parse 'nodeid' error")?;
+                .ok_or("parse 'nodeid' error")?;
 
             // build left child
             if node_id == left_child {

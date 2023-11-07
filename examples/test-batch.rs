@@ -24,10 +24,8 @@ fn main() {
     // inference
     println!("start prediction");
     let mut predicted = Vec::with_capacity(test_data.len());
-    let mut count = 0;
-    for data in test_data.chunks(12) {
+    for (count, data) in test_data.chunks(12).enumerate() {
         println!("batch {}: size {}", count, data.len());
-        count += 1;
         let mut predicted_batch = gbdt.predict(&data.to_vec());
         predicted.append(&mut predicted_batch);
     }

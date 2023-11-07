@@ -296,16 +296,14 @@ impl<T> BinaryTree<T> {
         stack.push((0, root));
         while !stack.is_empty() {
             let next = stack.pop();
-            if let Some((deep, node_opt)) = next {
-                if let Some(node) = node_opt {
-                    for _i in 0..deep {
-                        print!("    ");
-                    }
-                    println!("----{:?}", node.value);
-
-                    stack.push((deep + 1, self.get_right_child(node)));
-                    stack.push((deep + 1, self.get_left_child(node)));
+            if let Some((deep, Some(node))) = next {
+                for _i in 0..deep {
+                    print!("    ");
                 }
+                println!("----{:?}", node.value);
+
+                stack.push((deep + 1, self.get_right_child(node)));
+                stack.push((deep + 1, self.get_left_child(node)));
             }
         }
     }
@@ -363,7 +361,7 @@ mod tests {
         assert!(bt.is_empty());
         let root = BinaryTreeNode::new(10.0);
         bt.add_root(root);
-        assert_eq!(bt.is_empty(), false);
+        assert!(!bt.is_empty());
     }
 
     #[test]
