@@ -28,6 +28,7 @@
 //(INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE
 //OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
+#![allow(clippy::vec_init_then_push)]
 #![allow(clippy::ptr_arg)]
 #![allow(clippy::type_complexity)]
 #![cfg_attr(all(feature = "mesalock_sgx", not(target_env = "sgx")), no_std)]
@@ -213,8 +214,8 @@ mod tests {
             almost_equal, average, label_average, same, weighted_label_median,
             weighted_residual_median,
         };
-        assert_eq!(true, almost_equal(0.1, 0.100000000001));
-        assert_eq!(false, same(&dv, dv.len()));
+        assert!(almost_equal(0.1, 0.100000000001));
+        assert!(!same(&dv, dv.len()));
         assert!(almost_equal(0.3, average(&dv, dv.len())));
         assert!(almost_equal(0.4, label_average(&dv, dv.len())));
         assert!(almost_equal(0.0, weighted_label_median(&dv, dv.len())));

@@ -2,7 +2,7 @@ extern crate gbdt;
 
 use gbdt::gradient_boost::GBDT;
 
-use time::Instant;
+use std::time::Instant;
 
 use gbdt::input;
 use std::sync::Arc;
@@ -36,7 +36,7 @@ fn main() {
     test_data.clear();
     test_data.shrink_to_fit();
     let t2 = Instant::now();
-    println!("split data: {}", t2 - t1);
+    println!("split data: {:?}", t2 - t1);
 
     // Create `thread_num` threads. Call gbdt::predict in parallel
     let t1 = Instant::now();
@@ -54,6 +54,6 @@ fn main() {
     }
 
     let t2 = Instant::now();
-    println!("predict data: {}", t2 - t1);
+    println!("predict data: {:?}", t2 - t1);
     assert_eq!(preds.len(), data_size);
 }

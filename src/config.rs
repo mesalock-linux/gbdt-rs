@@ -350,7 +350,7 @@ impl Config {
     /// cfg.set_loss(&loss2string(&Loss::SquaredError));
     /// ```
     pub fn set_loss(&mut self, l: &str) {
-        self.loss = string2loss(&l);
+        self.loss = string2loss(l);
     }
 
     /// Set debug mode.
@@ -411,7 +411,7 @@ impl Config {
 mod tests {
     use crate::config::{loss2string, string2loss, Config, Loss};
 
-    const STRINGLOSS: [(&'static str, Loss); 11] = [
+    const STRINGLOSS: [(&str, Loss); 11] = [
         ("LogLikelyhood", Loss::LogLikelyhood),
         ("SquaredError", Loss::SquaredError),
         ("LAD", Loss::LAD),
@@ -464,8 +464,8 @@ mod tests {
         assert_eq!(cfg.data_sample_ratio, 1.0);
         assert_eq!(cfg.min_leaf_size, 1);
         assert_eq!(cfg.loss, Loss::SquaredError);
-        assert_eq!(cfg.debug, false);
-        assert_eq!(cfg.initial_guess_enabled, false);
+        assert!(!cfg.debug);
+        assert!(!cfg.initial_guess_enabled);
         assert_eq!(cfg.training_optimization_level, 2);
     }
 
@@ -559,9 +559,9 @@ mod tests {
     fn doc_test_set_debug() {
         let mut cfg = Config::new();
         cfg.set_debug(true);
-        assert_eq!(cfg.debug, true);
+        assert!(cfg.debug);
         cfg.set_debug(false);
-        assert_eq!(cfg.debug, false);
+        assert!(!cfg.debug);
     }
 
     #[test]
