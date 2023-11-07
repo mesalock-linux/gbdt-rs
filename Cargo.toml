@@ -1,6 +1,6 @@
 [package]
 name = "gbdt"
-version = "0.1.1"
+version = "0.1.2"
 authors = ["Tongxin Li <litongxin@baidu.com>", "Tianyi Li <n0b0dypku@gmail.com>", "Yu Ding <dingelish@gmail.com>"]
 homepage = "https://github.com/mesalock-linux/gbdt-rs"
 repository = "https://github.com/mesalock-linux/gbdt-rs"
@@ -29,13 +29,13 @@ name = "gbdt"
 crate-type = ["rlib", "staticlib"]
 
 [dependencies]
-rand="0.7"
+rand="0.8"
 serde = "1.0"
 serde_derive = "1.0"
 serde_json = "1.0"
 regex = { version = "1", optional = true }
-time = { version = "0.1", optional = true }
-cfg-if = "0.1"
+time = { version = "0.3", optional = true }
+cfg-if = "1.0"
 
 [dev-dependencies]
-time = "0.1"
+time = "0.3"

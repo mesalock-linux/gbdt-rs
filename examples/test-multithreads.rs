@@ -2,7 +2,7 @@ extern crate gbdt;
 
 use gbdt::gradient_boost::GBDT;
 
-use time::PreciseTime;
+use time::Instant;
 
 use gbdt::input;
 use std::sync::Arc;
@@ -24,7 +24,7 @@ fn main() {
     let mut test_data = input::load(test_file, fmt).unwrap();
 
     // split test data to `thread_num` vectors.
-    let t1 = PreciseTime::now();
+    let t1 = Instant::now();
     let mut handles = vec![];
     let mut test_data_vec = vec![];
     let data_size = test_data.len();
@@ -35,11 +35,11 @@ fn main() {
 
     test_data.clear();
     test_data.shrink_to_fit();
-    let t2 = PreciseTime::now();
-    println!("split data: {}", t1.to(t2));
+    let t2 = Instant::now();
+    println!("split data: {}", t2 - t1);
 
     // Create `thread_num` threads. Call gbdt::predict in parallel
-    let t1 = PreciseTime::now();
+    let t1 = Instant::now();
     let gbdt_arc = Arc::new(gbdt);
     for data in test_data_vec.into_iter() {
         let gbdt_clone = Arc::clone(&gbdt_arc);
@@ -53,7 +53,7 @@ fn main() {
         preds.append(&mut handle.join().unwrap());
     }
 
-    let t2 = PreciseTime::now();
-    println!("predict data: {}", t1.to(t2));
+    let t2 = Instant::now();
+    println!("predict data: {}", t2 - t1);
     assert_eq!(preds.len(), data_size);
 }

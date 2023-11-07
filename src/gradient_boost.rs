@@ -108,8 +108,8 @@ use std::io::BufReader;
 
 use serde_derive::{Deserialize, Serialize};
 
-#[cfg(feature = "profiling")]
-use time::PreciseTime;
+// #[cfg(feature = "profiling")]
+// use time::PreciseTime;
 
 /// The gradient boosting decision tree.
 #[derive(Default, Serialize, Deserialize)]
@@ -249,6 +249,8 @@ impl GBDT {
     /// ```
     #[cfg(feature = "enable_training")]
     pub fn fit(&mut self, train_data: &mut DataVec) {
+        use time::Instant;
+
         self.trees = Vec::with_capacity(self.conf.iterations);
         // initialize each decision tree
         for i in 0..self.conf.iterations {
@@ -274,7 +276,7 @@ impl GBDT {
         let mut predicted_cache: PredVec = self.predict_n(train_data, 0, 0, train_data.len());
 
         #[cfg(feature = "profiling")]
-        let t1 = PreciseTime::now();
+        let t1 = Instant::now();
 
         // allocat the TrainingCache
         let mut cache = TrainingCache::get_cache(
@@ -284,14 +286,14 @@ impl GBDT {
         );
 
         #[cfg(feature = "profiling")]
-        let t2 = PreciseTime::now();
+        let t2 = Instant::now();
 
         #[cfg(feature = "profiling")]
-        println!("cache {}", t1.to(t2));
+        println!("cache {}", t2 - t1);
 
         for i in 0..self.conf.iterations {
             #[cfg(feature = "profiling")]
-            let t1 = PreciseTime::now();
+            let t1 = Instant::now();
 
             let mut samples: Vec<usize> = (0..train_data.len()).collect();
             // randomly select some data for training
@@ -335,12 +337,12 @@ impl GBDT {
 
             //output elapsed time
             #[cfg(feature = "profiling")]
-            let t2 = PreciseTime::now();
+            let t2 = Instant::now();
             #[cfg(feature = "profiling")]
             println!(
                 "iteration {} {} nodes: {}",
                 i,
-                t1.to(t2),
+                t2 - t1,
                 self.trees[i].len()
             );
         }
@@ -759,7 +761,7 @@ impl GBDT {
     /// ```rust
     /// use gbdt::gradient_boost::GBDT;
     /// let gbdt =
-    ///     GBDT::from_xgoost_reader(std::io::Cursor::new(include_str!("xgb-data/xgb_binary_logistic/gbdt.model")), "binary:logistic").unwrap();
+    ///     GBDT::from_xgoost_reader(std::io::Cursor::new(include_str!("../xgb-data/xgb_binary_logistic/gbdt.model")), "binary:logistic").unwrap();
     /// ```
     ///
     /// # Error
