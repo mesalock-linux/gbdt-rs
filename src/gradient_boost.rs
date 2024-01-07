@@ -491,7 +491,7 @@ impl GBDT {
     /// use gbdt::input::{load, InputFormat};
     /// use gbdt::decision_tree::DataVec;
     /// let gbdt =
-    ///     GBDT::from_xgoost_dump("xgb-data/xgb_multi_softmax/gbdt.model", "multi:softmax").unwrap();
+    ///     GBDT::from_xgboost_dump("xgb-data/xgb_multi_softmax/gbdt.model", "multi:softmax").unwrap();
     /// let test_file = "xgb-data/xgb_multi_softmax/dermatology.data.test";
     /// let mut fmt = InputFormat::csv_format();
     /// fmt.set_label_index(34);
@@ -741,15 +741,15 @@ impl GBDT {
     /// ```rust
     /// use gbdt::gradient_boost::GBDT;
     /// let gbdt =
-    ///     GBDT::from_xgoost_dump("xgb-data/xgb_binary_logistic/gbdt.model", "binary:logistic").unwrap();
+    ///     GBDT::from_xgboost_dump("xgb-data/xgb_binary_logistic/gbdt.model", "binary:logistic").unwrap();
     /// ```
     ///
     /// # Error
     /// Error when get exception during model file parsing.
-    pub fn from_xgoost_dump(model_file: &str, objective: &str) -> Result<Self> {
+    pub fn from_xgboost_dump(model_file: &str, objective: &str) -> Result<Self> {
         let tree_file = File::open(model_file)?;
         let reader = BufReader::new(tree_file);
-        Self::from_xgoost_reader(reader, objective)
+        Self::from_xgboost_reader(reader, objective)
     }
 
     /// Load the model from xgboost's model using a reader. The xgboost's model should be converted by "convert_xgboost.py"
@@ -759,12 +759,12 @@ impl GBDT {
     /// ```rust
     /// use gbdt::gradient_boost::GBDT;
     /// let gbdt =
-    ///     GBDT::from_xgoost_reader(std::io::Cursor::new(include_str!("../xgb-data/xgb_binary_logistic/gbdt.model")), "binary:logistic").unwrap();
+    ///     GBDT::from_xgboost_reader(std::io::Cursor::new(include_str!("../xgb-data/xgb_binary_logistic/gbdt.model")), "binary:logistic").unwrap();
     /// ```
     ///
     /// # Error
     /// Error when get exception during model parsing.
-    pub fn from_xgoost_reader<R>(reader: R, objective: &str) -> Result<Self>
+    pub fn from_xgboost_reader<R>(reader: R, objective: &str) -> Result<Self>
     where
         R: std::io::BufRead,
     {

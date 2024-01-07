@@ -1781,8 +1781,10 @@ impl DecisionTree {
                         let feature_name = node["split"]
                             .as_str()
                             .ok_or("parse 'split' error")?;
-                        let feature_str: String = feature_name.chars().skip(3).collect();
-                        feature_str.parse::<i64>()?
+                        let digits = feature_name
+                        .rsplit_once(|c: char| !c.is_ascii_digit())
+                        .map_or(feature_name, |(_head, digits)| digits);
+                        digits.parse::<i64>()?
                     }
                 };
                 node_ref.value.feature_index = feature_index as usize;

@@ -11,6 +11,7 @@ Cargo.lock
 
 # ignore files
 .vscode/*
+.idea/*
 .DS_Store
 
 # Automatically generated during cargo test
