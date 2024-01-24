@@ -11,7 +11,7 @@ fn main() {
     // Call this command to convert xgboost model:
     // python examples/convert_xgboost.py xgb-data/xgb_reg_linear/xgb.model "reg:linear" xgb-data/xgb_reg_linear/gbdt.model
     // load model
-    let gbdt = GBDT::from_xgoost_dump("xgb-data/xgb_reg_linear/gbdt.model", "reg:linear")
+    let gbdt = GBDT::from_xgboost_dump("xgb-data/xgb_reg_linear/gbdt.model", "reg:linear")
         .expect("failed to load model");
 
     // load test data

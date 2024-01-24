@@ -11,7 +11,7 @@ fn main() {
     // Call this command to convert xgboost model:
     // python examples/convert_xgboost.py xgb-data/xgb_multi_softprob/xgb.model "multi:softprob" xgb-data/xgb_multi_softprob/gbdt.model
     // load model
-    let gbdt = GBDT::from_xgoost_dump("xgb-data/xgb_multi_softprob/gbdt.model", "multi:softprob")
+    let gbdt = GBDT::from_xgboost_dump("xgb-data/xgb_multi_softprob/gbdt.model", "multi:softprob")
         .expect("failed to load model");
 
     // load test data

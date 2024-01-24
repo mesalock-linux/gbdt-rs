@@ -11,7 +11,7 @@ fn main() {
     // Call this command to convert xgboost model:
     // python examples/convert_xgboost.py xgb-data/xgb_reg_logistic/xgb.model "reg:logistic" xgb-data/xgb_reg_logistic/gbdt.model
     // load model
-    let gbdt = GBDT::from_xgoost_dump("xgb-data/xgb_reg_logistic/gbdt.model", "reg:logistic")
+    let gbdt = GBDT::from_xgboost_dump("xgb-data/xgb_reg_logistic/gbdt.model", "reg:logistic")
         .expect("failed to load model");
 
     // load test data

@@ -15,7 +15,7 @@ fn main() {
     let test_file = "xgb-data/xgb_reg_linear/machine.txt.test";
 
     // load model
-    let gbdt = GBDT::from_xgoost_dump(model_path, "reg:linear").expect("faild to load model");
+    let gbdt = GBDT::from_xgboost_dump(model_path, "reg:linear").expect("faild to load model");
 
     // load test data
     let mut fmt = input::InputFormat::txt_format();
