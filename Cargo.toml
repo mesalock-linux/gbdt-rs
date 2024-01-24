@@ -1,6 +1,6 @@
 [package]
 name = "gbdt"
-version = "0.1.2"
+version = "0.1.3"
 authors = ["Tongxin Li <litongxin@baidu.com>", "Tianyi Li <n0b0dypku@gmail.com>", "Yu Ding <dingelish@gmail.com>"]
 homepage = "https://github.com/mesalock-linux/gbdt-rs"
 repository = "https://github.com/mesalock-linux/gbdt-rs"
