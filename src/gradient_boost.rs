@@ -382,6 +382,27 @@ impl GBDT {
         predicted
     }
 
+    /// Compute raw decision scores for the given test data.
+    ///
+    /// This function returns the unnormalized raw scores (logits) from the gradient boosting model.
+    /// It does not apply any transformation such as the logistic sigmoid function, allowing the user
+    /// to interpret the raw values directly. Higher values indicate stronger confidence in the positive class.
+    ///
+    /// This is similar to `decision_function` in scikit-learn or `BinaryLogisticRaw` in XGBoost.
+    ///
+    /// # Example
+    /// ```rust
+    /// let raw_scores = gbdt.decision_function(&test_data);
+    /// ```
+    ///
+    /// # Panic
+    /// If the number of trained trees does not match the configured iterations, it will panic.
+    pub fn decision_function(&self, test_data: &DataVec) -> PredVec {
+        assert_eq!(self.conf.iterations, self.trees.len());
+        self.predict_n(test_data, 0, self.conf.iterations, test_data.len())
+    }
+
+
     /// Predict the given data.
     ///
     /// Note that for log likelyhood loss type, the predicted value will be
